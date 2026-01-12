@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-import frc.auton.Autos;
+import frc.robot.auton.Autos;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
