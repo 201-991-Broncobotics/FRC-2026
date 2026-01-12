@@ -7,11 +7,17 @@ import edu.wpi.first.math.controller.PIDController;
  * The point of this class is to house all the variables that may need to be tuned or changed
  * often so that they are easier to find than scrolling through a massive constants class
  */
+
 public class Settings {
 
     public static boolean useNormalControls = false; // false is for single player/Aidan controls
     public static boolean tuningTelemetryEnabled = true;
 
+    public static class RollerSettings {
+
+        public static double startingVoltage = 6; 
+        
+    }
     public static class SomethingSettings {
         /*public static double kSE = 0.001;
         public static double kGE = 0.300;

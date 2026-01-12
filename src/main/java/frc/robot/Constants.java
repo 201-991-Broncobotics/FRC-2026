@@ -16,13 +16,16 @@ public final class Constants {
   
    public static class MotorConstants{
         public static final int algaePivotID = 12;
+        public static final int rollerIntakeID = 1; 
       
     }
     public static class OperatorConstants {
         public static final int kDriverControllerPort = 0;
     }
 
-    public static class SometingConstants {
+    public static class RollerConstants {
+
+
         public static final double LowerSegmentLength = 20.375; // inches
         public static final double UpperSegmentLength = 23; // inches
 
