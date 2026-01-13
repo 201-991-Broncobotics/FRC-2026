@@ -15,25 +15,40 @@ package frc.robot;
 public final class Constants {
   
    public static class MotorConstants{
-        public static final int algaePivotID = 12;
-        public static final int rollerIntakeID = 1; 
+    
+        public static final int rollerIntakeID = 0; 
+        public static final int rollerIntake2ID = 1; 
+        public static final int pivotID = 2; 
+        public static final int agitatorID = 3; 
+        public static final int transferID = 4; 
       
     }
     public static class OperatorConstants {
-        public static final int kDriverControllerPort = 0;
+
+        public static final int driverControllerPort = 0;
+        public static final int operatorControllerPort = 1; 
+
     }
 
     public static class RollerConstants {
 
+        public static final double maxForwardVoltage = 12; 
+        public static final double maxReverseVoltage = -12; 
 
-        public static final double LowerSegmentLength = 20.375; // inches
-        public static final double UpperSegmentLength = 23; // inches
+        public static final double x60ShaftRadius = 4/25.4; //inches
+        public static final double startingPosition = 0; //radians
+        public static final double highLimitAngle = Math.toRadians(106); //radians
+        public static final double gearRatio = 44; //may or may not need idk
 
-        public static final double LowerJointForward = 9.25; // inches between lower joint and center of robot frame
-        public static final double LowerJointHeight = 14.227224; // inches between lower joint and floor
+    }
 
-        public static final double maxVoltage = 12; 
-        public static final double minVoltage = 6; 
+    public static class StorageConstants {
 
+        public static final double maxForwardVoltage = 12; 
+        public static final double maxReverseVoltage = -12; 
+        
+        public static final int vortexCurrentLimit = 80; //in amps 
+
+        
     }
 }

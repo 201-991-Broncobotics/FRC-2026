@@ -11,14 +11,23 @@ import edu.wpi.first.math.controller.PIDController;
 public class Settings {
 
     public static boolean useNormalControls = false; // false is for single player/Aidan controls
-    public static boolean tuningTelemetryEnabled = true;
 
     public static class RollerSettings {
 
-        public static double startingVoltage = 6; 
+        public static double runningVoltage = 10; 
+        public static double defaultVoltage = 0; 
+
+        public static double pivotMotorVelocity = 0.4; 
+        public static double pivotMotorAcceleration = 1.2; 
+
+        public static double pivotkP = 5; 
+        public static double pivotkI = 0; 
+        public static double pivotkD = 0.2; 
+        public static double pivotkG = 0.35; 
         
     }
-    public static class SomethingSettings {
+
+    public static class ExampleSettings {
         /*public static double kSE = 0.001;
         public static double kGE = 0.300;
         public static double kVE = 0.9;
@@ -43,27 +52,6 @@ public class Settings {
         */ 
     }
 
-    public static class OtherSettings {
-        //public static double startRoll = Math.toRadians(0);
-        //public static double startPitch = Math.toRadians(0);
 
-        //public static PIDController LeftDiffyPID = new PIDController(0.09, 0, 0); 
-        //public static PIDController RightDiffyPID = new PIDController(0.09, 0, 0); 
 
-    }
-
-    public static class AutoTargetingSettings {
-
-        public static boolean AutoAimingEnabled = true;
-        public static PIDController AutoAimPID = new PIDController(0, 0, 0);
-
-        public static boolean AutoDrivingEnabled = false;
-        public static double AutoDrivingPower = 0;
-        public static double targetPercentageOfVisionBlocked = 0.2;
-
-        public static double searchingSpeed = 0.5;
-
-        public static double leftReefCrosshairOffset = 0;
-
-    }
 }
