@@ -27,6 +27,19 @@ public class Settings {
         
     }
 
+    public static class StorageSettings {
+
+        public static double runningAgitatorVoltage = 10; //will probably need to be as slow as possible
+        public static double runningTransferVoltage = 10; 
+
+    }
+
+    public static class TurretSettings {
+
+        public static double runningLeftFlyVoltage = 10; 
+        public static double runningRightFlyVoltage = 10; 
+        
+    }
     public static class ExampleSettings {
         /*public static double kSE = 0.001;
         public static double kGE = 0.300;

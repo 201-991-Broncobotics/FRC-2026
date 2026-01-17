@@ -21,33 +21,30 @@ import frc.robot.Settings.RollerSettings;
 public class RollerSubsystem extends SubsystemBase {
 
     private TalonFX intakeMotor, intakeMotor2, pivotMotor; 
-    private TalonFXConfiguration intakeMotorConfig, intakeMotor2Config, pivotMotorConfig;
+    private TalonFXConfiguration intakeMotorConfigs, pivotMotorConfig;
     private StatusCode intakeMotorStatus, intakeMotor2Status, pivotMotorStatus; 
     private double highTargetPosition, lastVelo, lastAcc, lastkP, lastkI, lastkD, lastkG; 
     //private CurrentLimitsConfigs currentLimits; 
 
     public RollerSubsystem(){
 
-        highTargetPosition = (RollerConstants.highLimitAngle/(2.0 * Math.PI)) * RollerConstants.gearRatio; 
+        highTargetPosition = (RollerConstants.highLimitAngle/(2.0 * Math.PI))/(RollerConstants.gearRatio); 
 
         intakeMotor = new TalonFX(MotorConstants.rollerIntakeID); 
         intakeMotor2 = new TalonFX(MotorConstants.rollerIntake2ID); 
         pivotMotor = new TalonFX(MotorConstants.pivotID); 
 
-        intakeMotorConfig = new TalonFXConfiguration();
-        intakeMotor2Config = new TalonFXConfiguration();
+        intakeMotorConfigs = new TalonFXConfiguration();
         pivotMotorConfig = new TalonFXConfiguration();
 
-        intakeMotorConfig.Voltage.PeakForwardVoltage = RollerConstants.maxForwardVoltage; 
-        intakeMotorConfig.Voltage.PeakReverseVoltage = RollerConstants.maxReverseVoltage; 
-        intakeMotor2Config.Voltage.PeakForwardVoltage = RollerConstants.maxForwardVoltage; 
-        intakeMotor2Config.Voltage.PeakReverseVoltage = RollerConstants.maxReverseVoltage; 
+        intakeMotorConfigs.Voltage.PeakForwardVoltage = RollerConstants.maxForwardVoltage; 
+        intakeMotorConfigs.Voltage.PeakReverseVoltage = RollerConstants.maxReverseVoltage; 
+        //Add Time Constant if absolutely needed???? 
+        //pivotMotorConfig.Voltage.SupplyVoltageTimeConstant = RollerConstants.voltageTimeConstant;
         pivotMotorConfig.Voltage.PeakForwardVoltage = RollerConstants.maxForwardVoltage; 
         pivotMotorConfig.Voltage.PeakReverseVoltage = RollerConstants.maxReverseVoltage; 
 
-        intakeMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        intakeMotor2Config.MotorOutput.NeutralMode = NeutralModeValue.Brake; 
-        intakeMotor2Config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
+        intakeMotorConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
        
         //Set current if needed 
@@ -69,12 +66,12 @@ public class RollerSubsystem extends SubsystemBase {
         pivotMotorConfig.Slot0.kG = RollerSettings.pivotkG;
     
 
-        intakeMotor.getConfigurator().apply(intakeMotorConfig); 
-        intakeMotor2.getConfigurator().apply(intakeMotor2Config); 
+        intakeMotor.getConfigurator().apply(intakeMotorConfigs); 
+        intakeMotor2.getConfigurator().apply(intakeMotorConfigs); 
         pivotMotor.getConfigurator().apply(pivotMotorConfig); 
 
-        intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfig);
-        intakeMotor2Status = intakeMotor2.getConfigurator().apply(intakeMotor2Config); 
+        intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfigs);
+        intakeMotor2Status = intakeMotor2.getConfigurator().apply(intakeMotorConfigs); 
         pivotMotorStatus = pivotMotor.getConfigurator().apply(pivotMotorConfig);
 
         lastVelo = RollerSettings.pivotMotorVelocity; 

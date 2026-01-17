@@ -21,6 +21,9 @@ public final class Constants {
         public static final int pivotID = 2; 
         public static final int agitatorID = 3; 
         public static final int transferID = 4; 
+        public static final int leftFlyID = 5; 
+        public static final int rightFlyID = 6;
+        public static final int turntableID = 7;  
       
     }
     public static class OperatorConstants {
@@ -38,7 +41,7 @@ public final class Constants {
         public static final double x60ShaftRadius = 4/25.4; //inches
         public static final double startingPosition = 0; //radians
         public static final double highLimitAngle = Math.toRadians(106); //radians
-        public static final double gearRatio = 44; //may or may not need idk
+        public static final double gearRatio = (1/36); 
 
     }
 
@@ -49,6 +52,13 @@ public final class Constants {
         
         public static final int vortexCurrentLimit = 80; //in amps 
 
+        
+    }
+
+    public static class TurretConstants {
+
+        public static final double maxForwardVoltage = 12; 
+        public static final double maxReverseVoltage = -12; 
         
     }
 }
