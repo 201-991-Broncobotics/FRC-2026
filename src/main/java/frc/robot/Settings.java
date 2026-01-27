@@ -14,7 +14,7 @@ public class Settings {
 
     public static class RollerSettings {
 
-        public static double runningVoltage = 10; 
+        public static double runningVoltage = 6; 
         public static double defaultVoltage = 0; 
 
         public static double pivotMotorVelocity = 0.4; 
@@ -29,8 +29,8 @@ public class Settings {
 
     public static class StorageSettings {
 
-        public static double runningAgitatorVoltage = 10; //will probably need to be as slow as possible
-        public static double runningTransferVoltage = 10; 
+        public static double runningTraverseMotor = 6; 
+
 
     }
 
@@ -39,6 +39,27 @@ public class Settings {
         public static double runningLeftFlyVoltage = 10; 
         public static double runningRightFlyVoltage = 10; 
         
+    }
+
+    public static class ClimbingSettings{
+
+        public static double runningClimbingVoltage = 12; 
+        public static double runningElevatorVoltage = 12; 
+
+        public static double climberMotorVelocity = 0.4; 
+        public static double climberMotorAcceleration = 1.2; 
+        public static double climberkP = 5; 
+        public static double climberkI = 0; 
+        public static double climberkD = 0.2; 
+        public static double climberkG = 0.35; 
+
+        public static double elevatorMotorVelocity = 0.4; 
+        public static double elevatorMotorAcceleration = 1.2; 
+        public static double elevatorkP = 5; 
+        public static double elevatorkI = 0; 
+        public static double elevatorkD = 0.2; 
+        public static double elevatorkG = 0.35; 
+
     }
     public static class ExampleSettings {
         /*public static double kSE = 0.001;

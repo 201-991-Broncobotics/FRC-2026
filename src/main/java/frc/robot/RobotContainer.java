@@ -66,9 +66,8 @@ public class RobotContainer {
     operator.y().whileTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
     operator.leftBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed, intakeSubsystem)); 
     operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
-    operator.rightBumper().toggleOnTrue(new InstantCommand(storageSubsystem::agitate, storageSubsystem));
     operator.rightBumper().toggleOnTrue(new InstantCommand(storageSubsystem::transfer, storageSubsystem));
-    operator.rightBumper().toggleOnFalse(new InstantCommand(storageSubsystem::stop, storageSubsystem));  
+    operator.rightBumper().toggleOnTrue(new InstantCommand(storageSubsystem::stop, storageSubsystem));
     
   }
 

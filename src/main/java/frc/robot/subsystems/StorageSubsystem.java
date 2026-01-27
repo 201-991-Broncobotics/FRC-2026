@@ -1,21 +1,11 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.PersistMode;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.LimitSwitchConfig;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.MotorConstants;
@@ -24,73 +14,62 @@ import frc.robot.Settings.StorageSettings;
 
 public class StorageSubsystem extends SubsystemBase {
 
-    private TalonFX transferMotor, agitatorMotor;
-    private TalonFXConfiguration transferMotorConfig, agitatorMotorConfig; 
-    private StatusCode transferMotorStatus, agitatorMotorStatus; 
+    private TalonFX traverseMotor; 
+    private TalonFXConfiguration traverseMotorConfig; 
+    private StatusCode traverseMotorStatus;
+    private CurrentLimitsConfigs currentLimits; 
 
     public StorageSubsystem(){
 
-        transferMotor = new TalonFX(MotorConstants.transferID); 
-        agitatorMotor = new TalonFX(MotorConstants.agitatorID);
+        traverseMotor = new TalonFX(MotorConstants.traverseMotor);
 
-        transferMotorConfig = new TalonFXConfiguration(); 
-        agitatorMotorConfig = new TalonFXConfiguration();
+        traverseMotorConfig = new TalonFXConfiguration();
 
-        transferMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; 
-        transferMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; //cus backwards = towards outtake
-        transferMotorConfig.Voltage.PeakForwardVoltage = StorageConstants.maxForwardVoltage; 
-        transferMotorConfig.Voltage.PeakReverseVoltage = StorageConstants.maxReverseVoltage; 
-
-        agitatorMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; 
-        agitatorMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
-        agitatorMotorConfig.Voltage.PeakForwardVoltage = StorageConstants.maxForwardVoltage; 
-        agitatorMotorConfig.Voltage.PeakReverseVoltage = StorageConstants.maxReverseVoltage; 
+        traverseMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; 
+        traverseMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        traverseMotorConfig.Voltage.PeakForwardVoltage = StorageConstants.maxForwardVoltage; 
+        traverseMotorConfig.Voltage.PeakReverseVoltage = StorageConstants.maxReverseVoltage; 
 
         //add Current Limits? 
+        currentLimits = new CurrentLimitsConfigs();
+        currentLimits.SupplyCurrentLimitEnable = StorageConstants.currentLimitsEnabled; 
+        currentLimits.SupplyCurrentLimit = StorageConstants.supplyCurrent; 
+        currentLimits.StatorCurrentLimitEnable = StorageConstants.currentLimitsEnabled; 
+        currentLimits.StatorCurrentLimit = StorageConstants.statorCurrent; 
+        traverseMotorConfig.CurrentLimits = currentLimits; 
 
-        transferMotor.getConfigurator().apply(transferMotorConfig); 
-        agitatorMotor.getConfigurator().apply(agitatorMotorConfig);
+        traverseMotor.getConfigurator().apply(traverseMotorConfig);
 
-        //agitatorMotorConfig.idleMode(IdleMode.kCoast);
-        //agitatorMotorConfig.smartCurrentLimit(StorageConstants.vortexCurrentLimit);
+        traverseMotorStatus = traverseMotor.getConfigurator().apply(traverseMotorConfig);
 
-        //agitatorMotor.configure(agitatorMotorConfig, ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters); 
+        if (!traverseMotorStatus.isOK()) System.out.println("Motor with ID " + MotorConstants.traverseMotor + " is broken!");
 
-        transferMotorStatus = transferMotor.getConfigurator().apply(transferMotorConfig);
-        agitatorMotorStatus = agitatorMotor.getConfigurator().apply(agitatorMotorConfig);
-
-        if (!transferMotorStatus.isOK()) System.out.println("Transfer motor with ID " + MotorConstants.transferID + " is broken!");
-        if (!agitatorMotorStatus.isOK()) System.out.println("Agitator motor with ID " + MotorConstants.agitatorID + " is broken!");
-
-        SmartDashboard.putNumber("Running Transfer Voltage", StorageSettings.runningTransferVoltage); 
-        SmartDashboard.putNumber("Running Agitator Voltage", StorageSettings.runningAgitatorVoltage); 
-
-    }
-
-    public void agitate(){
-
-        agitatorMotor.setVoltage(StorageSettings.runningAgitatorVoltage);
+        SmartDashboard.putNumber("Running Traverse Voltage", StorageSettings.runningTraverseMotor);
 
     }
 
     public void transfer(){
 
-        transferMotor.setVoltage(StorageSettings.runningTransferVoltage);
+        traverseMotor.setVoltage(StorageSettings.runningTraverseMotor);
 
+    }
+
+    public void emergencyReverse(){
+
+        traverseMotor.setVoltage(-StorageSettings.runningTraverseMotor);
     }
 
     public void stop(){
 
-        agitatorMotor.stopMotor();
-        transferMotor.stopMotor();
+        traverseMotor.stopMotor();
         
     }
 
     @Override
     public void periodic(){
 
-        StorageSettings.runningAgitatorVoltage = SmartDashboard.getNumber("Running Agitator Voltage", StorageSettings.runningAgitatorVoltage); 
-        StorageSettings.runningTransferVoltage = SmartDashboard.getNumber("Running Transfer Voltage", StorageSettings.runningTransferVoltage);
+        StorageSettings.runningTraverseMotor =  SmartDashboard.getNumber("Running Traverse Voltage", StorageSettings.runningTraverseMotor);
+       
 
     }
     
