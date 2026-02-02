@@ -1,12 +1,9 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -24,7 +21,7 @@ public class RollerSubsystem extends SubsystemBase {
 
     private TalonFX intakeMotor, pivotMotor, pivotMotor2; 
     private TalonFXConfiguration intakeMotorConfig, pivotMotorConfig;
-    private StatusCode intakeMotorStatus, pivotMotorStatus, pivotMotor2Status; 
+    private StatusCode intakeMotorStatus, pivotMotorStatus;
     private double highTargetPosition, lastVelo, lastAcc, lastkP, lastkI, lastkD, lastkG; 
     private CurrentLimitsConfigs currentLimits;
     //private CurrentLimitsConfigs currentLimits; 
@@ -33,9 +30,9 @@ public class RollerSubsystem extends SubsystemBase {
 
         highTargetPosition = (RollerConstants.highLimitAngle/(2.0 * Math.PI))/(RollerConstants.gearRatio); 
 
-        intakeMotor = new TalonFX(MotorConstants.rollerIntakeID); 
-        pivotMotor = new TalonFX(MotorConstants.pivotID); 
-        pivotMotor2 = new TalonFX(MotorConstants.pivot2ID); 
+        intakeMotor = new TalonFX(MotorConstants.intakeID); 
+        pivotMotor = new TalonFX(MotorConstants.rollerPivotID); 
+        pivotMotor2 = new TalonFX(MotorConstants.rollerPivot2ID); 
 
         intakeMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig = new TalonFXConfiguration();
@@ -75,7 +72,6 @@ public class RollerSubsystem extends SubsystemBase {
 
         intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfig);
         pivotMotorStatus = pivotMotor.getConfigurator().apply(pivotMotorConfig);
-        pivotMotor2Status = pivotMotor2.getConfigurator().apply(pivotMotorConfig);
         
         lastVelo = RollerSettings.pivotMotorVelocity; 
         lastAcc = RollerSettings.pivotMotorAcceleration; 
@@ -84,9 +80,9 @@ public class RollerSubsystem extends SubsystemBase {
         lastkP = RollerSettings.pivotkD; 
         lastkG = RollerSettings.pivotkG; 
 
-        if (!intakeMotorStatus.isOK()) System.out.println("Intake Motor with ID " + MotorConstants.rollerIntakeID + " is broken!");
-        if (!pivotMotorStatus.isOK()) System.out.println("Intake Motor with ID " + MotorConstants.pivotID + " is broken!");
-        if (!pivotMotor2Status.isOK()) System.out.println("Intake Motor with ID " + MotorConstants.pivot2ID + " is broken!");
+        if (!intakeMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Roller motor with ID " + MotorConstants.intakeID + " is broken!");
+        if (!pivotMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motors are broken!");
+   
 
         SmartDashboard.putNumber("Roller Intake Default Voltage", RollerSettings.defaultVoltage);
         SmartDashboard.putNumber("Roller Intake Running Voltage", RollerSettings.runningVoltage);
@@ -114,14 +110,14 @@ public class RollerSubsystem extends SubsystemBase {
     }
 
     public void lift(){
-        pivotMotor.setControl(new MotionMagicVoltage(highTargetPosition)); 
-        pivotMotor2.setControl(new Follower(MotorConstants.pivotID, MotorAlignmentValue.Opposed));
+        pivotMotor.setControl(new MotionMagicVoltage(highTargetPosition).withSlot(0)); 
+        pivotMotor2.setControl(new Follower(MotorConstants.rollerPivotID, MotorAlignmentValue.Opposed));
 
     }
 
     public void drop(){
-        pivotMotor.setControl(new MotionMagicVoltage(RollerConstants.startingPosition)); 
-        pivotMotor2.setControl(new Follower(MotorConstants.pivotID, MotorAlignmentValue.Opposed));
+        pivotMotor.setControl(new MotionMagicVoltage(RollerConstants.startingPosition).withSlot(0)); 
+        pivotMotor2.setControl(new Follower(MotorConstants.rollerPivotID, MotorAlignmentValue.Opposed));
     }
 
     private void checkForTuning(){ //Updates values to allow tuning while robot is enabled

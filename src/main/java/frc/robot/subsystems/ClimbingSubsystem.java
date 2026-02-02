@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -20,10 +22,15 @@ public class ClimbingSubsystem extends SubsystemBase {
     private TalonFXConfiguration climberMotorConfig, elevatorMotorConfig; 
     private StatusCode climberMotorStatus, elevatorMotorStatus; 
     private double lastCVelo, lastCAcc, lastCkP, lastCkI, lastCkD, lastCkG,
-                    lastEVelo, lastEAcc, lastEkP, lastEkI, lastEkD, lastEkG;  
+                    lastEVelo, lastEAcc, lastEkP, lastEkI, lastEkD, lastEkG,
+                    climberRotations, elevatorRotations;  
     private CurrentLimitsConfigs currentLimits; 
 
     public ClimbingSubsystem(){
+
+        
+        climberRotations = ((ClimbingSettings.climberDistance)/(2 * Math.PI * ClimbingConstants.x60ShaftRadius)) * ClimbingConstants.gearRatio;
+        elevatorRotations = ((ClimbingSettings.elevatorDistance)/(2 * Math.PI * ClimbingConstants.x60ShaftRadius)) * ClimbingConstants.gearRatio;
 
         climberMotor = new TalonFX(MotorConstants.climberID);
         elevatorMotor = new TalonFX(MotorConstants.elevatorID); 
@@ -89,8 +96,8 @@ public class ClimbingSubsystem extends SubsystemBase {
         climberMotorStatus = climberMotor.getConfigurator().apply(climberMotorConfig);
         elevatorMotorStatus = elevatorMotor.getConfigurator().apply(elevatorMotorConfig); 
 
-        if (!climberMotorStatus.isOK()) System.out.println("Climbig Motor with ID " + MotorConstants.climberID + " is broken!");
-        if (!elevatorMotorStatus.isOK()) System.out.println("Elevator Motor with ID " + MotorConstants.elevatorID + " is broken!");
+        if (!climberMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Climbing motor with ID " + MotorConstants.climberID + " is broken!");
+        if (!elevatorMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Elevator motor with ID " + MotorConstants.elevatorID + " is broken!");
 
         SmartDashboard.putNumber("Climber Cruise Velocity", ClimbingSettings.climberMotorVelocity); 
         SmartDashboard.putNumber("Climber Acceleration", ClimbingSettings.climberMotorAcceleration);
@@ -109,12 +116,20 @@ public class ClimbingSubsystem extends SubsystemBase {
     }
 
     public void extend(){
-        
+
+        climberMotor.setControl(new MotionMagicVoltage(climberRotations).withSlot(0));
+        elevatorMotor.setControl(new MotionMagicVoltage(elevatorRotations).withSlot(0)); 
+
     }
 
     public void retract(){
 
+        climberMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));
+        elevatorMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));  
+
     }
+
+    
 
     private void checkForTuning(){ //Updates values to allow tuning while robot is enabled
         boolean climberValueHasChanged = false; 

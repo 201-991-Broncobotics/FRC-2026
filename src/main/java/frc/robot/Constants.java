@@ -16,15 +16,16 @@ public final class Constants {
   
    public static class MotorConstants{
     
-        public static final int rollerIntakeID = 0; 
-        public static final int pivotID = 2; 
-        public static final int pivot2ID = 3; 
+        public static final int intakeID = 0; 
+        public static final int rollerPivotID = 2; 
+        public static final int rollerPivot2ID = 3; 
         public static final int traverseMotor = 4; 
         public static final int leftFlyID = 5; 
         public static final int rightFlyID = 6;
         public static final int turntableID = 7;  
-        public static final int climberID = 8; 
-        public static final int elevatorID = 9; 
+        public static final int turretPivotID = 8; 
+        public static final int climberID = 9; 
+        public static final int elevatorID = 10; 
       
     }
     public static class OperatorConstants {
@@ -73,12 +74,23 @@ public final class Constants {
         public static final double supplyCurrent = 60; 
         public static final double statorCurrent = 80; 
 
+        public static final double x60ShaftRadius = 4/25.4; //inches
+        public static final double gearRatio = 15; 
+        public static final double ticksPerRev = 2048; 
+
     }
 
     public static class TurretConstants {
 
+        public static final String limelightName = "limelight";
         public static final double maxForwardVoltage = 12; 
         public static final double maxReverseVoltage = -12; 
+        public static final double x44MaxRPM = 7750; 
+
+        public static final boolean currentLimitsEnabled = true; 
+        public static final double supplyCurrent = 60; 
+        public static final double statorCurrent = 80; 
+        
         
     }
 }

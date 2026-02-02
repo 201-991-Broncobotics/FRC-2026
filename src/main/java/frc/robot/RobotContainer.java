@@ -7,9 +7,12 @@ package frc.robot;
 import frc.robot.auton.Autos;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.subsystems.ClimbingSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.RollerSubsystem;
 import frc.robot.subsystems.StorageSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -26,6 +29,8 @@ public class RobotContainer {
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final RollerSubsystem intakeSubsystem = new RollerSubsystem();
   private final StorageSubsystem storageSubsystem = new StorageSubsystem();
+  private final TurretSubsystem turretSubsystem = new TurretSubsystem(); 
+  private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController driver =
@@ -54,21 +59,22 @@ public class RobotContainer {
 
 
 
-
-
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     new Trigger(m_exampleSubsystem::exampleCondition)
         .onTrue(new ExampleCommand(m_exampleSubsystem));
 
 
     //OPERATOR CONTROLS 
-    operator.b().whileTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
-    operator.y().whileTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-    operator.leftBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed, intakeSubsystem)); 
-    operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
-    operator.rightBumper().toggleOnTrue(new InstantCommand(storageSubsystem::transfer, storageSubsystem));
-    operator.rightBumper().toggleOnTrue(new InstantCommand(storageSubsystem::stop, storageSubsystem));
-    
+    operator.leftTrigger(0.05).toggleOnTrue(new InstantCommand(storageSubsystem::transfer, storageSubsystem)); 
+    operator.leftTrigger(0.05).toggleOnFalse(new InstantCommand(storageSubsystem::stop, storageSubsystem));
+    operator.leftBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
+    operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+    operator.povUp().whileTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem)); 
+    operator.povDown().whileTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem)); 
+    operator.rightTrigger(0.05).whileTrue(new InstantCommand(turretSubsystem::tuneFlywheel, turretSubsystem)); 
+    operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed, intakeSubsystem)); 
+    operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
+  
   }
 
   /**
