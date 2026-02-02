@@ -1,12 +1,9 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -114,13 +111,13 @@ public class RollerSubsystem extends SubsystemBase {
     }
 
     public void lift(){
-        pivotMotor.setControl(new MotionMagicVoltage(highTargetPosition)); 
+        pivotMotor.setControl(new MotionMagicVoltage(highTargetPosition).withSlot(0)); 
         pivotMotor2.setControl(new Follower(MotorConstants.pivotID, MotorAlignmentValue.Opposed));
 
     }
 
     public void drop(){
-        pivotMotor.setControl(new MotionMagicVoltage(RollerConstants.startingPosition)); 
+        pivotMotor.setControl(new MotionMagicVoltage(RollerConstants.startingPosition).withSlot(0)); 
         pivotMotor2.setControl(new Follower(MotorConstants.pivotID, MotorAlignmentValue.Opposed));
     }
 

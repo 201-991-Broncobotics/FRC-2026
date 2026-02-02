@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.util.ArrayList;
 import edu.wpi.first.math.controller.PIDController;
+import frc.robot.Constants.TurretConstants;
 
 /**
  * The point of this class is to house all the variables that may need to be tuned or changed
@@ -20,7 +21,7 @@ public class Settings {
         public static double pivotMotorVelocity = 0.4; 
         public static double pivotMotorAcceleration = 1.2; 
 
-        public static double pivotkP = 5; 
+        public static double pivotkP = 1; 
         public static double pivotkI = 0; 
         public static double pivotkD = 0.2; 
         public static double pivotkG = 0.35; 
@@ -34,56 +35,42 @@ public class Settings {
 
     }
 
-    public static class TurretSettings {
-
-        public static double runningLeftFlyVoltage = 10; 
-        public static double runningRightFlyVoltage = 10; 
-        
-    }
-
     public static class ClimbingSettings{
+
+        public static double startingDistance = 0; 
+
+        public static double climberDistance = 13; //inches
+        public static double elevatorDistance = 8; //inches
 
         public static double runningClimbingVoltage = 12; 
         public static double runningElevatorVoltage = 12; 
 
         public static double climberMotorVelocity = 0.4; 
         public static double climberMotorAcceleration = 1.2; 
-        public static double climberkP = 5; 
+        public static double climberkP = 1; 
         public static double climberkI = 0; 
         public static double climberkD = 0.2; 
         public static double climberkG = 0.35; 
 
         public static double elevatorMotorVelocity = 0.4; 
         public static double elevatorMotorAcceleration = 1.2; 
-        public static double elevatorkP = 5; 
+        public static double elevatorkP = 1; 
         public static double elevatorkI = 0; 
         public static double elevatorkD = 0.2; 
         public static double elevatorkG = 0.35; 
 
     }
-    public static class ExampleSettings {
-        /*public static double kSE = 0.001;
-        public static double kGE = 0.300;
-        public static double kVE = 0.9;
 
-        public static double kSA = 0.001;
-        public static double kGA = 0.05; 
-        public static double kVA = 0.05; 
+    public static class TurretSettings {
 
-        public static double elevatorTolerance =.8;
-        public static double armTolerance = 5;
-        public static double elevatorSpeedControl = 1;
-        public static double elevatorRotationsToInches;
-
-        public static double startingPosition = 0;
-        public static double maxHeight = 50;
-        public static double minHeight = 0;
-
-        public static double manualControlSpeed = 25; // max speed in inches per second 
-
-
-        public static double delayBeforeStaging = 750; // milliseconds that after holding the change stage button, will cause it to skip to max/min stage
-        */ 
+        public static double kP = 1; 
+        public static double kI = 0; 
+        public static double kD = 0.2; 
+        public static double kS = 0; 
+        public static double kV = TurretConstants.maxForwardVoltage/TurretConstants.x44MaxRPM; 
+        public static double kA = 0; 
+        public static double setVelocities = 0; 
+        
     }
 
 
