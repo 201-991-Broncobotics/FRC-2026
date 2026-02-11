@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import frc.robot.utility.Vector2d;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -92,5 +94,14 @@ public final class Constants {
         public static final double statorCurrent = 80; 
         
         
+    }
+
+    public static class AutoDrivingConstants {
+        public static double FieldLength = 17.5483;
+        public static double FieldWidth = 8.0519;
+
+        public static Vector2d RedReefCenter = new Vector2d(4.284788875 + FieldLength/2, -0.000099 + FieldWidth/2);
+        public static Vector2d BlueReefCenter = new Vector2d(-4.284788875 + FieldLength/2, -0.000099 + FieldWidth/2);
+
     }
 }
