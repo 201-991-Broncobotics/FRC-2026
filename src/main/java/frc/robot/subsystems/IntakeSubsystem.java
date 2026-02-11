@@ -17,7 +17,7 @@ import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.RollerConstants;
 import frc.robot.Settings.RollerSettings;
 
-public class RollerSubsystem extends SubsystemBase {
+public class IntakeSubsystem extends SubsystemBase {
 
     private TalonFX intakeMotor, pivotMotor, pivotMotor2; 
     private TalonFXConfiguration intakeMotorConfig, pivotMotorConfig;
@@ -26,7 +26,7 @@ public class RollerSubsystem extends SubsystemBase {
     private CurrentLimitsConfigs currentLimits;
     //private CurrentLimitsConfigs currentLimits; 
 
-    public RollerSubsystem(){
+    public IntakeSubsystem(){
 
         highTargetPosition = (RollerConstants.highLimitAngle/(2.0 * Math.PI))/(RollerConstants.gearRatio); 
 

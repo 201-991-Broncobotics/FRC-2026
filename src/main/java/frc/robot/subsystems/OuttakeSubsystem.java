@@ -33,14 +33,14 @@ import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.analysis.polynomials.*;
 
-public class TurretSubsystem extends SubsystemBase {
+public class OuttakeSubsystem extends SubsystemBase {
 
-    private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor, pivotMotor;
-    private TalonFXConfiguration flywheelConfig, turntableConfig, pivotConfig; 
-    private StatusCode flywheelStatus, turntableStatus, pivotStatus; 
+    private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor, hoodMotor;
+    private TalonFXConfiguration flywheelConfig, turntableConfig, hoodConfig; 
+    private StatusCode flywheelStatus, turntableStatus, hoodStatus; 
     private CurrentLimitsConfigs currentLimits; 
     private double lastkP, lastkI, lastkD, lastkS, lastkV, lastkA, 
-                   lastTkP, lastTkI, lastTkD, lastPkP, lastPkI, lastPkD, x, y;
+                   lastTkP, lastTkI, lastTkD, lastPkP, lastPkI, lastPkD;
     private Vector2d distanceVector;  
     private PolynomialCurveFitter regression; 
     private PolynomialFunction function;
@@ -51,9 +51,9 @@ public class TurretSubsystem extends SubsystemBase {
     private LimelightResults results; 
 
 
-    public TurretSubsystem(){
+    public OuttakeSubsystem(){
         Optional<Alliance> alliance = DriverStation.getAlliance();
-        distanceVector = new Vector2d(x, y);
+        distanceVector = new Vector2d();
         
 
         results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
@@ -84,11 +84,11 @@ public class TurretSubsystem extends SubsystemBase {
 
         turntableMotor = new TalonFX(MotorConstants.turntableID); 
 
-        pivotMotor = new TalonFX(MotorConstants.turretPivotID); 
+        hoodMotor = new TalonFX(MotorConstants.turretPivotID); 
 
         flywheelConfig = new TalonFXConfiguration(); 
         turntableConfig = new TalonFXConfiguration(); 
-        pivotConfig = new TalonFXConfiguration(); 
+        hoodConfig = new TalonFXConfiguration(); 
 
         flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; 
         flywheelConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
@@ -114,15 +114,15 @@ public class TurretSubsystem extends SubsystemBase {
         turntableConfig.Slot0.kI = TurretSettings.tkI; 
         turntableConfig.Slot0.kD = TurretSettings.tkD; 
 
-        pivotConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; 
-        pivotConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
-        pivotConfig.Voltage.PeakForwardVoltage = TurretConstants.maxForwardVoltage; 
-        pivotConfig.Voltage.PeakReverseVoltage = TurretConstants.maxReverseVoltage; 
+        hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; 
+        hoodConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
+        hoodConfig.Voltage.PeakForwardVoltage = TurretConstants.maxForwardVoltage; 
+        hoodConfig.Voltage.PeakReverseVoltage = TurretConstants.maxReverseVoltage; 
 
-        pivotConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor; 
-        pivotConfig.Slot0.kP = TurretSettings.pkP; 
-        pivotConfig.Slot0.kI = TurretSettings.pkI; 
-        pivotConfig.Slot0.kD = TurretSettings.pkD; 
+        hoodConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor; 
+        hoodConfig.Slot0.kP = TurretSettings.pkP; 
+        hoodConfig.Slot0.kI = TurretSettings.pkI; 
+        hoodConfig.Slot0.kD = TurretSettings.pkD; 
 
         //add current limits
         currentLimits = new CurrentLimitsConfigs();
@@ -133,18 +133,18 @@ public class TurretSubsystem extends SubsystemBase {
 
         flywheelConfig.CurrentLimits = currentLimits; 
         turntableConfig.CurrentLimits = currentLimits; 
-        pivotConfig.CurrentLimits = currentLimits; 
+        hoodConfig.CurrentLimits = currentLimits; 
 
         leftFlyMotor.getConfigurator().apply(flywheelConfig); 
         rightFlyMotor.getConfigurator().apply(flywheelConfig); 
 
         turntableMotor.getConfigurator().apply(turntableConfig);
 
-        pivotMotor.getConfigurator().apply(pivotConfig);
+        hoodMotor.getConfigurator().apply(hoodConfig);
 
         flywheelStatus = rightFlyMotor.getConfigurator().apply(flywheelConfig); 
         turntableStatus = turntableMotor.getConfigurator().apply(turntableConfig); 
-        pivotStatus = pivotMotor.getConfigurator().apply(pivotConfig); 
+        hoodStatus = hoodMotor.getConfigurator().apply(hoodConfig); 
 
         lastkP = TurretSettings.kP;
         lastkI = TurretSettings.kI;
@@ -161,7 +161,7 @@ public class TurretSubsystem extends SubsystemBase {
 
         if (!flywheelStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Flywheel motors are broken!");
         if (!turntableStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Turntable motor with ID " + MotorConstants.turntableID + " is broken!"); 
-        if (!pivotStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.turretPivotID + " is broken!"); 
+        if (!hoodStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.turretPivotID + " is broken!"); 
 
         SmartDashboard.putNumber("Flywheel kP", TurretSettings.kP);
         SmartDashboard.putNumber("Flywheel kI", TurretSettings.kI);
@@ -271,19 +271,19 @@ public class TurretSubsystem extends SubsystemBase {
 
         if (TurretSettings.pkP != lastPkP){
             lastPkP = TurretSettings.pkP;
-            pivotConfig.Slot0.kP = lastPkP; 
+            hoodConfig.Slot0.kP = lastPkP; 
             pivotValueHasChanged = true;  
         }
 
         if (TurretSettings.pkI != lastPkI){
             lastPkI = TurretSettings.pkI;
-            pivotConfig.Slot0.kI = lastPkI; 
+            hoodConfig.Slot0.kI = lastPkI; 
             pivotValueHasChanged = true;  
         }
 
         if (TurretSettings.pkD != lastPkD){
             lastPkD = TurretSettings.pkD;
-            pivotConfig.Slot0.kD = lastPkD; 
+            hoodConfig.Slot0.kD = lastPkD; 
             pivotValueHasChanged = true;  
         }
 
@@ -293,7 +293,7 @@ public class TurretSubsystem extends SubsystemBase {
         }
 
         if (turntableValueHasChanged) turntableMotor.getConfigurator().apply(turntableConfig); 
-        if (pivotValueHasChanged) pivotMotor.getConfigurator().apply(pivotConfig); 
+        if (pivotValueHasChanged) hoodMotor.getConfigurator().apply(hoodConfig); 
 
     }
 

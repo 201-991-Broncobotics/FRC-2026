@@ -1,8 +1,14 @@
 package frc.robot;
 
 import java.util.ArrayList;
+
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
+
 import edu.wpi.first.math.controller.PIDController;
 import frc.robot.Constants.TurretConstants;
+import edu.wpi.first.math.util.Units;
 
 /**
  * The point of this class is to house all the variables that may need to be tuned or changed
@@ -12,6 +18,18 @@ import frc.robot.Constants.TurretConstants;
 public class Settings {
 
     public static boolean useNormalControls = false; // false is for single player/Aidan controls
+
+    public static boolean tuningTelemetryEnabled = true;
+
+    public static PPHolonomicDriveController PathFollowerController = new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+        new PIDConstants(10.0, 0.0, 0.0), // Translation PID constants
+        new PIDConstants(7.0, 0.0, 0.0) // Rotation PID constants
+    );
+
+    // Auto PathFinding constraints
+    public static PathConstraints FollowerConstraints = new PathConstraints(
+                    3.0, 4.0,
+                    Units.degreesToRadians(540), Units.degreesToRadians(720));
 
     public static class RollerSettings {
 
@@ -80,5 +98,23 @@ public class Settings {
     }
 
 
+
+    public static class AutoTargetingSettings {
+
+        public static boolean AutoAimingEnabled = true;
+        public static PIDController AutoTurningPID = new PIDController(0.9, 0, 0);
+        public static PIDController AutoDrivingPID = new PIDController(0.9, 0, 0);
+        public static double AutoDrivingMaxPower = 0.5;
+
+        public static boolean AutoDrivingEnabled = true;
+        public static double AutoDrivingPower = 0;
+        public static double targetPercentageOfVisionBlocked = 0.2;
+
+        public static double searchingSpeed = 0.5;
+
+        public static double leftCorrectX = 0;
+        public static double rightCorrectX = 0;
+
+    }
 
 }
