@@ -11,16 +11,22 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Settings.TurretSettings;
+import frc.robot.utility.ElapsedTime;
+import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
 import frc.robot.utility.Vector2d;
 import frc.robot.utility.LimelightHelpers.LimelightResults;
@@ -49,11 +55,22 @@ public class OuttakeSubsystem extends SubsystemBase {
             p1, p2, p3, p4, p5,
             p6, p7, p8, p9, p10; 
     private LimelightResults results; 
+    private SwerveDriveState RobotState;
+    private CommandSwerveDrivetrain drivetrain;
+    private double FrameTime = 0.1;
+    private ElapsedTime FrameTimer;
+
+    // Only for testing
+    private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
 
 
-    public OuttakeSubsystem(){
+    public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain){
+        this.drivetrain = Drivetrain;
         Optional<Alliance> alliance = DriverStation.getAlliance();
         distanceVector = new Vector2d();
+
+        if (drivetrain != null) RobotState = drivetrain.getState();
+        FrameTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         
 
         results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
@@ -181,11 +198,59 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
+    public void target(double X, double Y, double H) { // h is height
+
+        double Speed = Math.hypot(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
+        double VelocityAngle = RobotState.Pose.getRotation().getRadians() + Math.atan2(RobotState.Speeds.vyMetersPerSecond, RobotState.Speeds.vxMetersPerSecond);
+
+        Pose2d predictedRobotPose = new Pose2d(
+            RobotState.Pose.getX() + FrameTime * Speed * Math.cos(VelocityAngle), 
+            RobotState.Pose.getY() + FrameTime * Speed * Math.sin(VelocityAngle), 
+            RobotState.Pose.getRotation().plus(new Rotation2d(FrameTime * RobotState.Speeds.omegaRadiansPerSecond))
+            );
+
+        
+        double Distance = Math.hypot(predictedRobotPose.getX() - X, predictedRobotPose.getY() - Y); // TODO: needs to be from center of turret
+
+        double Velocity = 1; // TODO: Can't use the Distance above because that doesn't incude height which messes up the quadratic regression
+
+        double StartingLaunchHeight = 23; // TODO: get more accurate calculation
+        double a = 1 - ((2 * TurretConstants.gravityInches * (H - StartingLaunchHeight)) / Math.pow(Velocity, 2)) - 
+            ((Math.pow(TurretConstants.gravityInches, 2) * Math.pow(Distance, 2)) / Math.pow(Velocity, 4));
+        
+        if (a >= 0) TargetHoodAngle = Math.atan((Math.pow(Velocity, 2) / (TurretConstants.gravityInches * Distance)) * (1 + Math.sqrt(a)));
+        else TargetHoodAngle = 0;
+
+        setHood(TargetHoodAngle);
+
+        // TODO: set flywheel rpm based on ball velocity
+
+    }
+
+
+    public boolean setHood(double Angle) {
+        if (Angle >= TurretConstants.minHoodAngle && Angle <= TurretConstants.maxHoodAngle) {
+            // TODO: set hood motor
+            TargetHoodAngle = Angle;
+            return true;
+        } else {
+            // TODO: set hood motor
+            TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
+            return false;
+        }
+    }
+
+    
+
+    public void neutralPosition() {
+
+    }
+
+
+
     public double getFlywheelTrajectory(){
-        results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
-        Pose3d robotPos = results.getBotPose3d();
-        distanceVector.x = robotPos.getX();
-        distanceVector.y = robotPos.getZ();
+        distanceVector.x = RobotState.Pose.getX();
+        distanceVector.y = RobotState.Pose.getY();
 
         return distanceVector.mag(); 
 
@@ -213,7 +278,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void checkForTuning(){
         boolean flywheelValueHasChanged = false; 
         boolean turntableValueHasChanged = false; 
-        boolean pivotValueHasChanged = false; 
+        boolean hoodValueHasChanged = false; 
 
         if (TurretSettings.kP != lastkP){
             lastkP = TurretSettings.kP;
@@ -272,19 +337,19 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (TurretSettings.pkP != lastPkP){
             lastPkP = TurretSettings.pkP;
             hoodConfig.Slot0.kP = lastPkP; 
-            pivotValueHasChanged = true;  
+            hoodValueHasChanged = true;  
         }
 
         if (TurretSettings.pkI != lastPkI){
             lastPkI = TurretSettings.pkI;
             hoodConfig.Slot0.kI = lastPkI; 
-            pivotValueHasChanged = true;  
+            hoodValueHasChanged = true;  
         }
 
         if (TurretSettings.pkD != lastPkD){
             lastPkD = TurretSettings.pkD;
             hoodConfig.Slot0.kD = lastPkD; 
-            pivotValueHasChanged = true;  
+            hoodValueHasChanged = true;  
         }
 
         if (flywheelValueHasChanged){
@@ -293,13 +358,19 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         if (turntableValueHasChanged) turntableMotor.getConfigurator().apply(turntableConfig); 
-        if (pivotValueHasChanged) hoodMotor.getConfigurator().apply(hoodConfig); 
+        if (hoodValueHasChanged) hoodMotor.getConfigurator().apply(hoodConfig); 
 
     }
 
 
     @Override
     public void periodic(){
+        FrameTime = FrameTimer.time();
+        FrameTimer.reset();
+
+        if (drivetrain != null) {
+            RobotState = drivetrain.getState();
+        }
 
         TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
         TurretSettings.kI = SmartDashboard.getNumber("Flywheel kI", TurretSettings.kI);

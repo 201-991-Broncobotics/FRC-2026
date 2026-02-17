@@ -53,7 +53,7 @@ public class RobotContainer {
     private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final StorageSubsystem storageSubsystem = new StorageSubsystem();
-    private final OuttakeSubsystem turretSubsystem = new OuttakeSubsystem(); 
+    private final OuttakeSubsystem turretSubsystem = new OuttakeSubsystem(drivetrain); 
     private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 

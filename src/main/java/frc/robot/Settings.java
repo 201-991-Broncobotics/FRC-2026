@@ -98,6 +98,12 @@ public class Settings {
     }
 
 
+    public static class OuttakeTrajectorySettings {
+        public static double HubXOffset = 10.4;
+        public static double HubYOffset = 64;
+    }
+
+
 
     public static class AutoTargetingSettings {
 

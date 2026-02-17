@@ -49,7 +49,7 @@ public class DrivingProfiles extends SubsystemBase {
     private boolean useAutoDrivingThrottle = true;
     private DoubleSupplier AutoDrivingThrottle;
 
-    private static Pose2d RobotPose;
+    public static Pose2d RobotPose;
 
     private ElapsedTime FPSTimer;
 
