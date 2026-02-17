@@ -34,6 +34,7 @@ import frc.robot.utility.LimelightHelpers.LimelightResults;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Vector;
+import java.util.function.DoubleSupplier;
 
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
@@ -62,6 +63,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     // Only for testing
     private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
+
+    private DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
 
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain){
@@ -195,6 +198,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Flywheel Speeds", TurretSettings.setVelocities);
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
+
+
+        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble();
+        CurrentHoodAngle = () -> hoodMotor.getPosition().getValueAsDouble();
+        CurrentFlywheelRPM = () -> 0;
 
     }
 
@@ -361,6 +369,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (hoodValueHasChanged) hoodMotor.getConfigurator().apply(hoodConfig); 
 
     }
+
+
+    public double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
+    public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
+    public double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
 
 
     @Override

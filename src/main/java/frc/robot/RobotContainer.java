@@ -53,7 +53,7 @@ public class RobotContainer {
     private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final StorageSubsystem storageSubsystem = new StorageSubsystem();
-    private final OuttakeSubsystem turretSubsystem = new OuttakeSubsystem(drivetrain); 
+    private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
     private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 
@@ -121,7 +121,7 @@ public class RobotContainer {
         operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
         operator.povUp().whileTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem)); 
         operator.povDown().whileTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem)); 
-        operator.rightTrigger(0.05).whileTrue(new InstantCommand(turretSubsystem::tuneFlywheel, turretSubsystem)); 
+        operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
         operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed, intakeSubsystem)); 
         operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
 
@@ -135,6 +135,7 @@ public class RobotContainer {
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
+
     }
 
     /**
