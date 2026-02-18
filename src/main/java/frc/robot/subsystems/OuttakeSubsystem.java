@@ -28,6 +28,7 @@ import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
+import frc.robot.utility.ThroughBoreEncoder;
 import frc.robot.utility.Vector2d;
 import frc.robot.utility.LimelightHelpers.LimelightResults;
 
@@ -60,6 +61,9 @@ public class OuttakeSubsystem extends SubsystemBase {
     private CommandSwerveDrivetrain drivetrain;
     private double FrameTime = 0.1;
     private ElapsedTime FrameTimer;
+    private double TurretStartingOffset = 0;
+
+    private ThroughBoreEncoder throughBore21, throughBore19, throughBoreCounter;
 
     // Only for testing
     private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
@@ -80,7 +84,15 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (alliance.get() == Alliance.Red) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 1);
             
-        
+        throughBore21 = new ThroughBoreEncoder(0);
+        throughBore19 = new ThroughBoreEncoder(1);
+        throughBoreCounter = new ThroughBoreEncoder(2, 3);
+
+
+
+
+
+
         p1 = new WeightedObservedPoint(1, distanceVector.mag(), 3);
         
         table.add(p1);
@@ -200,7 +212,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
 
 
-        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble();
+        CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
         CurrentHoodAngle = () -> hoodMotor.getPosition().getValueAsDouble();
         CurrentFlywheelRPM = () -> 0;
 
@@ -374,6 +386,12 @@ public class OuttakeSubsystem extends SubsystemBase {
     public double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
     public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
     public double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
+
+    private double absoluteTurretAngle() {
+        double R = throughBore19.getAbsoluteAngle() - throughBore21.getAbsoluteAngle();
+        if (R < 0) R += 2* Math.PI;
+        return 0.9975 * R; // fixes angle being slightly off, also means the turret can't keep rotating
+    }
 
 
     @Override

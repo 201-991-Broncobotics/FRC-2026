@@ -8,6 +8,7 @@ public class ThroughBoreEncoder {
     private Encoder relativeEncoder;
     private DutyCycleEncoder absoluteEncoder;
 
+    private final double absoluteResolution = 1024;
     private final double relativeResolution = 8192;
 
     private double absoluteEncoderZero = 0, relativeEncoderZero = 0;
@@ -43,6 +44,9 @@ public class ThroughBoreEncoder {
     public double getRelativeRaw() { return relativeEncoder.getRaw(); }
     public double getAbsoluteRaw() { return absoluteEncoder.get(); }
 
+    public double getRelativeTicks() { return relativeEncoder.getRaw(); }
+    public double getAbsoluteTicks() { return absoluteEncoder.get() * absoluteResolution; }
+
     /**
      * Gets the relative angle in radians
      * @return angle in radians
@@ -63,8 +67,8 @@ public class ThroughBoreEncoder {
     public double getAbsoluteAngleWithoutZero() { return Functions.normalizeAnglePositive(getAbsoluteRaw() * 2*Math.PI); }
 
     public void resetRelative() { relativeEncoder.reset(); }
-    public void setRelativeZero(double relativeZero) { relativeEncoderZero = relativeZero; }
-    public void setAbsoluteZero(double absoluteZero) { absoluteEncoderZero = absoluteZero; }
+    public void setRelativeZero(double radians) { relativeEncoderZero = radians; }
+    public void setAbsoluteZero(double radians) { absoluteEncoderZero = radians; }
 
     public boolean encoderExists() { return this.relativeEncoder != null; }
     public boolean encoderConnected() { return absoluteEncoder.isConnected(); }
