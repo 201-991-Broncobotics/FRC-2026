@@ -19,7 +19,7 @@ import frc.robot.Settings.RollerSettings;
 
 public class IntakeSubsystem extends SubsystemBase {
 
-    private TalonFX intakeMotor, pivotMotor, pivotMotor2; 
+    private TalonFX intakeMotor, rightPivotMotor, leftPivotMotor; 
     private TalonFXConfiguration intakeMotorConfig, pivotMotorConfig;
     private StatusCode intakeMotorStatus, pivotMotorStatus;
     private double highTargetPosition, lastVelo, lastAcc, lastkP, lastkI, lastkD, lastkG; 
@@ -31,8 +31,8 @@ public class IntakeSubsystem extends SubsystemBase {
         highTargetPosition = (RollerConstants.highLimitAngle/(2.0 * Math.PI))/(RollerConstants.gearRatio); 
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
-        pivotMotor = new TalonFX(MotorConstants.rollerPivotID); 
-        pivotMotor2 = new TalonFX(MotorConstants.rollerPivot2ID); 
+        rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
+        leftPivotMotor = new TalonFX(MotorConstants.leftIntakePivotID); 
 
         intakeMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig = new TalonFXConfiguration();
@@ -67,11 +67,11 @@ public class IntakeSubsystem extends SubsystemBase {
     
 
         intakeMotor.getConfigurator().apply(intakeMotorConfig); 
-        pivotMotor.getConfigurator().apply(pivotMotorConfig); 
-        pivotMotor2.getConfigurator().apply(pivotMotorConfig);
+        rightPivotMotor.getConfigurator().apply(pivotMotorConfig); 
+        leftPivotMotor.getConfigurator().apply(pivotMotorConfig);
 
         intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfig);
-        pivotMotorStatus = pivotMotor.getConfigurator().apply(pivotMotorConfig);
+        pivotMotorStatus = rightPivotMotor.getConfigurator().apply(pivotMotorConfig);
         
         lastVelo = RollerSettings.pivotMotorVelocity; 
         lastAcc = RollerSettings.pivotMotorAcceleration; 
@@ -110,14 +110,14 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void lift(){
-        pivotMotor.setControl(new MotionMagicVoltage(highTargetPosition).withSlot(0)); 
-        pivotMotor2.setControl(new Follower(MotorConstants.rollerPivotID, MotorAlignmentValue.Opposed));
+        rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition).withSlot(0)); 
+        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
 
     }
 
     public void drop(){
-        pivotMotor.setControl(new MotionMagicVoltage(RollerConstants.startingPosition).withSlot(0)); 
-        pivotMotor2.setControl(new Follower(MotorConstants.rollerPivotID, MotorAlignmentValue.Opposed));
+        rightPivotMotor.setControl(new MotionMagicVoltage(RollerConstants.startingPosition).withSlot(0)); 
+        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
     private void checkForTuning(){ //Updates values to allow tuning while robot is enabled
@@ -165,7 +165,7 @@ public class IntakeSubsystem extends SubsystemBase {
             valueHasChanged = true; 
         }
 
-        if (valueHasChanged) pivotMotor.getConfigurator().apply(pivotMotorConfig);
+        if (valueHasChanged) rightPivotMotor.getConfigurator().apply(pivotMotorConfig);
     }
 
     @Override

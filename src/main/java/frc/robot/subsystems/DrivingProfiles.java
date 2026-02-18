@@ -46,10 +46,10 @@ public class DrivingProfiles extends SubsystemBase {
 
     private static CommandSwerveDrivetrain drivetrain;
 
-    private boolean useAutoDrivingThrottle = true;
-    private DoubleSupplier AutoDrivingThrottle;
+    //private boolean useAutoDrivingThrottle = true;
+    //private DoubleSupplier AutoDrivingThrottle;
 
-    public static Pose2d RobotPose;
+    private static Pose2d RobotPose;
 
     private ElapsedTime FPSTimer;
 
@@ -101,11 +101,13 @@ public class DrivingProfiles extends SubsystemBase {
         if (updateController());
         else stopDriving();
 
-        if (useAutoDrivingThrottle) autoDriving = (AutoDrivingThrottle.getAsDouble() > AutoThrottleDeadband);
+        //if (useAutoDrivingThrottle) autoDriving = (AutoDrivingThrottle.getAsDouble() > AutoThrottleDeadband);
         if (autoDriving) updateAutoDriving();
 
     }
 
+// 6/7/1956 - TODO: Fix. This is temporary. - John Maxwell
+// 2/16/2026 - This is was NOT temporary.
 
     private boolean updateController() {
         double forward = fowardControllerInput.getAsDouble();
@@ -147,7 +149,7 @@ public class DrivingProfiles extends SubsystemBase {
                 else throttle = autoThrottleControllerInput.getAsDouble();
             } */
 
-            throttle = Functions.deadbandValue(AutoDrivingThrottle.getAsDouble(), AutoThrottleDeadband);
+            //throttle = Functions.deadbandValue(AutoDrivingThrottle.getAsDouble(), AutoThrottleDeadband);
 
             autoForwardOutput = autoDrivingDirection.y * throttle;
             autoStrafeOutput = autoDrivingDirection.x * throttle;
@@ -189,8 +191,8 @@ public class DrivingProfiles extends SubsystemBase {
     public void disableAutoDriving() { autoDriving = false; }
 
     public void setupAutoDrivingThrottle(DoubleSupplier AutoThrottle) {
-        useAutoDrivingThrottle = true;
-        AutoDrivingThrottle = AutoThrottle;
+        //useAutoDrivingThrottle = true;
+        //AutoDrivingThrottle = AutoThrottle;
     }
 
 

@@ -95,7 +95,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         p1 = new WeightedObservedPoint(1, distanceVector.mag(), 3);
         
-        table.add(p1);
+
+        /*table.add(p1);
         table.add(p2);
         table.add(p3);
         table.add(p4);
@@ -109,14 +110,14 @@ public class OuttakeSubsystem extends SubsystemBase {
         regression = PolynomialCurveFitter.create(2);
 
         function = new PolynomialFunction(regression.fit(table));
-        function.value(2);
+        function.value(2);*/
 
         leftFlyMotor = new TalonFX(MotorConstants.leftFlyID); //follower
         rightFlyMotor = new TalonFX(MotorConstants.rightFlyID); //leader
 
         turntableMotor = new TalonFX(MotorConstants.turntableID); 
 
-        hoodMotor = new TalonFX(MotorConstants.turretPivotID); 
+        hoodMotor = new TalonFX(MotorConstants.hoodMotorID); 
 
         flywheelConfig = new TalonFXConfiguration(); 
         turntableConfig = new TalonFXConfiguration(); 
@@ -193,7 +194,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         if (!flywheelStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Flywheel motors are broken!");
         if (!turntableStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Turntable motor with ID " + MotorConstants.turntableID + " is broken!"); 
-        if (!hoodStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.turretPivotID + " is broken!"); 
+        if (!hoodStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.hoodMotorID + " is broken!"); 
 
         SmartDashboard.putNumber("Flywheel kP", TurretSettings.kP);
         SmartDashboard.putNumber("Flywheel kI", TurretSettings.kI);
@@ -284,7 +285,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     }    
 
     public void tuneFlywheel(){
-        function.value(getFlywheelTrajectory()); //put this inside motionmagic later 
+        //function.value(getFlywheelTrajectory()); //put this inside motionmagic later 
 
         rightFlyMotor.setControl(new MotionMagicVelocityDutyCycle(TurretSettings.setVelocities).withSlot(0)); 
         leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 

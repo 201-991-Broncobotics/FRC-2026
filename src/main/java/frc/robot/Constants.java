@@ -18,16 +18,16 @@ public final class Constants {
   
    public static class MotorConstants{
     
-        public static final int intakeID = 0; 
-        public static final int rollerPivotID = 2; 
-        public static final int rollerPivot2ID = 3; 
-        public static final int traverseMotor = 4; 
-        public static final int leftFlyID = 5; 
-        public static final int rightFlyID = 6;
-        public static final int turntableID = 7;  
-        public static final int turretPivotID = 8; 
-        public static final int climberID = 9; 
-        public static final int elevatorID = 10; 
+        public static final int intakeID = 14; 
+        public static final int rightIntakePivotID = 16; 
+        public static final int leftIntakePivotID = 17; 
+        public static final int traverseRollerID = 18; 
+        public static final int traverseScoopID = 9; 
+        public static final int leftFlyID = 11; 
+        public static final int rightFlyID = 12;
+        public static final int turntableID = 13;  
+        public static final int hoodMotorID = 10; 
+        public static final int elevatorID = 15; 
       
     }
     public static class OperatorConstants {

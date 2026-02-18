@@ -29,15 +29,14 @@ public class ClimbingSubsystem extends SubsystemBase {
     public ClimbingSubsystem(){
 
         
-        climberRotations = ((ClimbingSettings.climberDistance)/(2 * Math.PI * ClimbingConstants.x60ShaftRadius)) * ClimbingConstants.gearRatio;
+        //climberRotations = ((ClimbingSettings.climberDistance)/(2 * Math.PI * ClimbingConstants.x60ShaftRadius)) * ClimbingConstants.gearRatio;
         elevatorRotations = ((ClimbingSettings.elevatorDistance)/(2 * Math.PI * ClimbingConstants.x60ShaftRadius)) * ClimbingConstants.gearRatio;
 
-        climberMotor = new TalonFX(MotorConstants.climberID);
         elevatorMotor = new TalonFX(MotorConstants.elevatorID); 
 
-        climberMotorConfig = new TalonFXConfiguration(); 
+        //climberMotorConfig = new TalonFXConfiguration(); 
         elevatorMotorConfig = new TalonFXConfiguration();
-
+        /* 
         climberMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         climberMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
         climberMotorConfig.Voltage.PeakForwardVoltage = ClimbingConstants.maxForwardVoltage; 
@@ -49,8 +48,8 @@ public class ClimbingSubsystem extends SubsystemBase {
         climberMotorConfig.Slot0.kI = ClimbingSettings.climberkI; 
         climberMotorConfig.Slot0.kD = ClimbingSettings.climberkD; 
         climberMotorConfig.MotionMagic.MotionMagicCruiseVelocity = ClimbingSettings.climberMotorVelocity; 
-        climberMotorConfig.MotionMagic.MotionMagicAcceleration = ClimbingSettings.climberMotorAcceleration; 
-
+        climberMotorConfig.MotionMagic.MotionMagicAcceleration = ClimbingSettings.climberMotorAcceleration; */
+        /* 
         //add current limits
         currentLimits = new CurrentLimitsConfigs();
         currentLimits.SupplyCurrentLimitEnable = ClimbingConstants.currentLimitsEnabled;
@@ -65,7 +64,7 @@ public class ClimbingSubsystem extends SubsystemBase {
         lastCkI = ClimbingSettings.climberkI; 
         lastCkD = ClimbingSettings.climberkD; 
         lastCVelo = ClimbingSettings.climberMotorVelocity; 
-        lastCAcc = ClimbingSettings.climberMotorAcceleration; 
+        lastCAcc = ClimbingSettings.climberMotorAcceleration; */
         
         elevatorMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; 
         elevatorMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
@@ -90,21 +89,21 @@ public class ClimbingSubsystem extends SubsystemBase {
         lastEVelo = ClimbingSettings.elevatorMotorVelocity; 
         lastEAcc = ClimbingSettings.elevatorMotorAcceleration;
 
-        climberMotor.getConfigurator().apply(climberMotorConfig);
+        //climberMotor.getConfigurator().apply(climberMotorConfig);
         elevatorMotor.getConfigurator().apply(elevatorMotorConfig); 
 
-        climberMotorStatus = climberMotor.getConfigurator().apply(climberMotorConfig);
+        //climberMotorStatus = climberMotor.getConfigurator().apply(climberMotorConfig);
         elevatorMotorStatus = elevatorMotor.getConfigurator().apply(elevatorMotorConfig); 
 
-        if (!climberMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Climbing motor with ID " + MotorConstants.climberID + " is broken!");
+        //if (!climberMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Climbing motor with ID " + MotorConstants.climberID + " is broken!");
         if (!elevatorMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Elevator motor with ID " + MotorConstants.elevatorID + " is broken!");
 
-        SmartDashboard.putNumber("Climber Cruise Velocity", ClimbingSettings.climberMotorVelocity); 
+        /*SmartDashboard.putNumber("Climber Cruise Velocity", ClimbingSettings.climberMotorVelocity); 
         SmartDashboard.putNumber("Climber Acceleration", ClimbingSettings.climberMotorAcceleration);
         SmartDashboard.putNumber("Climber kP", ClimbingSettings.climberkP); 
         SmartDashboard.putNumber("Climber kI", ClimbingSettings.climberkI); 
         SmartDashboard.putNumber("Climber kD", ClimbingSettings.climberkD); 
-        SmartDashboard.putNumber("Climber kG", ClimbingSettings.climberkG); 
+        SmartDashboard.putNumber("Climber kG", ClimbingSettings.climberkG); */
 
         SmartDashboard.putNumber("Elevator Cruise Velocity", ClimbingSettings.elevatorMotorVelocity); 
         SmartDashboard.putNumber("Elevator Acceleration", ClimbingSettings.elevatorMotorAcceleration); 
@@ -117,14 +116,14 @@ public class ClimbingSubsystem extends SubsystemBase {
 
     public void extend(){
 
-        climberMotor.setControl(new MotionMagicVoltage(climberRotations).withSlot(0));
+        //climberMotor.setControl(new MotionMagicVoltage(climberRotations).withSlot(0));
         elevatorMotor.setControl(new MotionMagicVoltage(elevatorRotations).withSlot(0)); 
 
     }
 
     public void retract(){
 
-        climberMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));
+        //climberMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));
         elevatorMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));  
 
     }
@@ -132,9 +131,9 @@ public class ClimbingSubsystem extends SubsystemBase {
     
 
     private void checkForTuning(){ //Updates values to allow tuning while robot is enabled
-        boolean climberValueHasChanged = false; 
+        //boolean climberValueHasChanged = false; 
         boolean elevatorValueHasChanged = false; 
-
+        /* 
         if (ClimbingSettings.climberMotorVelocity != lastCVelo){
 
             lastCVelo = ClimbingSettings.climberMotorVelocity;  
@@ -175,7 +174,7 @@ public class ClimbingSubsystem extends SubsystemBase {
             lastCkG = ClimbingSettings.climberkG;  
             climberMotorConfig.Slot0.kG = lastCkG;  
             climberValueHasChanged = true;
-        }
+        }*/
 
         if (ClimbingSettings.elevatorMotorVelocity != lastEVelo){
 
@@ -219,7 +218,7 @@ public class ClimbingSubsystem extends SubsystemBase {
             elevatorValueHasChanged = true;
         }
 
-        if (climberValueHasChanged) climberMotor.getConfigurator().apply(climberMotorConfig);
+        //if (climberValueHasChanged) climberMotor.getConfigurator().apply(climberMotorConfig);
         if (elevatorValueHasChanged) elevatorMotor.getConfigurator().apply(elevatorMotorConfig); 
     }
 
@@ -228,12 +227,12 @@ public class ClimbingSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
 
-        ClimbingSettings.climberMotorVelocity = SmartDashboard.getNumber("Climber Cruise Velocity", ClimbingSettings.climberMotorVelocity); 
+        /*ClimbingSettings.climberMotorVelocity = SmartDashboard.getNumber("Climber Cruise Velocity", ClimbingSettings.climberMotorVelocity); 
         ClimbingSettings.climberMotorAcceleration = SmartDashboard.getNumber("Climber Acceleration", ClimbingSettings.climberMotorAcceleration);
         ClimbingSettings.climberkP = SmartDashboard.getNumber("Climber kP", ClimbingSettings.climberkP); 
         ClimbingSettings.climberkI = SmartDashboard.getNumber("Climber kI", ClimbingSettings.climberkI); 
         ClimbingSettings.climberkD = SmartDashboard.getNumber("Climber kD", ClimbingSettings.climberkD); 
-        ClimbingSettings.climberkG = SmartDashboard.getNumber("Climber kG", ClimbingSettings.climberkG); 
+        ClimbingSettings.climberkG = SmartDashboard.getNumber("Climber kG", ClimbingSettings.climberkG); */
 
         ClimbingSettings.elevatorMotorVelocity = SmartDashboard.getNumber("Elevator Cruise Velocity", ClimbingSettings.elevatorMotorVelocity); 
         ClimbingSettings.elevatorMotorAcceleration = SmartDashboard.getNumber("Elevator Acceleration", ClimbingSettings.elevatorMotorAcceleration); 
