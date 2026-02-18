@@ -6,12 +6,10 @@ package frc.robot;
 
 import frc.robot.auton.Autos;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.ExampleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ClimbingSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DrivingProfiles;
-import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TraverseSubsystem;
 import frc.robot.subsystems.OuttakeSubsystem;
@@ -88,8 +86,8 @@ public class RobotContainer {
             () -> -driver.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
             () -> driver.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
             () -> -driver.getRightX(), 
-            () -> 0.3 + 0.7 * driver.getRightTriggerAxis(), 
-            2, 2
+            () -> 0.4 + 0.6 * driver.getRightTriggerAxis(), 
+            2, 3
         );
 
         drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
