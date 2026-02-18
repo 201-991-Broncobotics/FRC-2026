@@ -50,11 +50,11 @@ public class RobotContainer {
 
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-    private final StorageSubsystem storageSubsystem = new StorageSubsystem();
-    private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
-    private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
+    //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+    //private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    //private final StorageSubsystem storageSubsystem = new StorageSubsystem();
+    //private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
+    //private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -107,7 +107,7 @@ public class RobotContainer {
         driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
 
-
+        /* 
 
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(m_exampleSubsystem::exampleCondition)
@@ -126,7 +126,7 @@ public class RobotContainer {
         operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
 
 
-
+        */
 
 
         // Idle while the robot is disabled. This ensures the configured
@@ -145,6 +145,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return Autos.exampleAuto(m_exampleSubsystem);
+        return null; //Autos.exampleAuto(m_exampleSubsystem);
     }
 }

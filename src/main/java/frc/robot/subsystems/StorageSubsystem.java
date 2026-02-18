@@ -21,7 +21,7 @@ public class StorageSubsystem extends SubsystemBase {
 
     public StorageSubsystem(){
 
-        traverseMotor = new TalonFX(MotorConstants.traverseMotor);
+        traverseMotor = new TalonFX(MotorConstants.traverseRollerID);
 
         traverseMotorConfig = new TalonFXConfiguration();
 
@@ -42,7 +42,7 @@ public class StorageSubsystem extends SubsystemBase {
 
         traverseMotorStatus = traverseMotor.getConfigurator().apply(traverseMotorConfig);
 
-        if (!traverseMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Traverse motor with ID " + MotorConstants.traverseMotor + " is broken!");
+        if (!traverseMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Traverse motor with ID " + MotorConstants.traverseRollerID + " is broken!");
 
         SmartDashboard.putNumber("Running Traverse Voltage", StorageSettings.runningTraverseMotor);
 
