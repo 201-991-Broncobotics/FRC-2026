@@ -37,7 +37,7 @@ public final class Constants {
 
     }
 
-    public static class RollerConstants {
+    public static class IntakeConstants {
 
         public static final double maxForwardVoltage = 12; 
         public static final double maxReverseVoltage = -12; 
@@ -53,14 +53,17 @@ public final class Constants {
 
     }
 
-    public static class StorageConstants {
+    public static class TraverseConstants {
 
         public static final double maxForwardVoltage = 12; 
         public static final double maxReverseVoltage = -12; 
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double supplyCurrent = 40; 
-        public static final double statorCurrent = 60; 
+        public static final double rollerSupplyCurrent = 40; 
+        public static final double rollerStatorCurrent = 60; 
+        public static final double scoopSupplyCurrent = 40; 
+        public static final double scoopStatorCurrent = 60; 
+
         
         public static final int vortexCurrentLimit = 80; //in amps 
 

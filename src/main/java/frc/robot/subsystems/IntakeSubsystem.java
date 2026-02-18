@@ -14,8 +14,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.MotorConstants;
-import frc.robot.Constants.RollerConstants;
-import frc.robot.Settings.RollerSettings;
+import frc.robot.Constants.IntakeConstants;
+import frc.robot.Settings.IntakeSettings;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -28,7 +28,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public IntakeSubsystem(){
 
-        highTargetPosition = (RollerConstants.highLimitAngle/(2.0 * Math.PI))/(RollerConstants.gearRatio); 
+        highTargetPosition = (IntakeConstants.highLimitAngle/(2.0 * Math.PI))/(IntakeConstants.gearRatio); 
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
         rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
@@ -37,33 +37,33 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig = new TalonFXConfiguration();
  
-        intakeMotorConfig.Voltage.PeakForwardVoltage = RollerConstants.maxForwardVoltage; 
-        intakeMotorConfig.Voltage.PeakReverseVoltage = RollerConstants.maxReverseVoltage; 
+        intakeMotorConfig.Voltage.PeakForwardVoltage = IntakeConstants.maxForwardVoltage; 
+        intakeMotorConfig.Voltage.PeakReverseVoltage = IntakeConstants.maxReverseVoltage; 
         //Add Time Constant if absolutely needed???? 
-        //pivotMotorConfig.Voltage.SupplyVoltageTimeConstant = RollerConstants.voltageTimeConstant;
-        pivotMotorConfig.Voltage.PeakForwardVoltage = RollerConstants.maxForwardVoltage; 
-        pivotMotorConfig.Voltage.PeakReverseVoltage = RollerConstants.maxReverseVoltage; 
+        //pivotMotorConfig.Voltage.SupplyVoltageTimeConstant = IntakeConstants.voltageTimeConstant;
+        pivotMotorConfig.Voltage.PeakForwardVoltage = IntakeConstants.maxForwardVoltage; 
+        pivotMotorConfig.Voltage.PeakReverseVoltage = IntakeConstants.maxReverseVoltage; 
 
         intakeMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     
         //Set currents if needed 
         currentLimits = new CurrentLimitsConfigs();
-        currentLimits.SupplyCurrentLimitEnable = RollerConstants.currentLimitsEnabled; 
-        currentLimits.SupplyCurrentLimit = RollerConstants.supplyCurrent;
-        currentLimits.StatorCurrentLimitEnable = RollerConstants.currentLimitsEnabled; 
-        currentLimits.StatorCurrentLimit = RollerConstants.statorCurrent; 
+        currentLimits.SupplyCurrentLimitEnable = IntakeConstants.currentLimitsEnabled; 
+        currentLimits.SupplyCurrentLimit = IntakeConstants.supplyCurrent;
+        currentLimits.StatorCurrentLimitEnable = IntakeConstants.currentLimitsEnabled; 
+        currentLimits.StatorCurrentLimit = IntakeConstants.statorCurrent; 
         
         intakeMotorConfig.CurrentLimits = currentLimits;
         pivotMotorConfig.CurrentLimits = currentLimits;
 
         pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
-        pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = RollerSettings.pivotMotorVelocity; 
-        pivotMotorConfig.MotionMagic.MotionMagicAcceleration = RollerSettings.pivotMotorAcceleration; 
-        pivotMotorConfig.Slot0.kP = RollerSettings.pivotkP; 
-        pivotMotorConfig.Slot0.kI = RollerSettings.pivotkI; 
-        pivotMotorConfig.Slot0.kD = RollerSettings.pivotkD; 
-        pivotMotorConfig.Slot0.kG = RollerSettings.pivotkG;
+        pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = IntakeSettings.pivotMotorVelocity; 
+        pivotMotorConfig.MotionMagic.MotionMagicAcceleration = IntakeSettings.pivotMotorAcceleration; 
+        pivotMotorConfig.Slot0.kP = IntakeSettings.pivotkP; 
+        pivotMotorConfig.Slot0.kI = IntakeSettings.pivotkI; 
+        pivotMotorConfig.Slot0.kD = IntakeSettings.pivotkD; 
+        pivotMotorConfig.Slot0.kG = IntakeSettings.pivotkG;
     
 
         intakeMotor.getConfigurator().apply(intakeMotorConfig); 
@@ -73,36 +73,34 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfig);
         pivotMotorStatus = rightPivotMotor.getConfigurator().apply(pivotMotorConfig);
         
-        lastVelo = RollerSettings.pivotMotorVelocity; 
-        lastAcc = RollerSettings.pivotMotorAcceleration; 
-        lastkP = RollerSettings.pivotkP; 
-        lastkI = RollerSettings.pivotkI; 
-        lastkP = RollerSettings.pivotkD; 
-        lastkG = RollerSettings.pivotkG; 
+        lastVelo = IntakeSettings.pivotMotorVelocity; 
+        lastAcc = IntakeSettings.pivotMotorAcceleration; 
+        lastkP = IntakeSettings.pivotkP; 
+        lastkI = IntakeSettings.pivotkI; 
+        lastkP = IntakeSettings.pivotkD; 
+        lastkG = IntakeSettings.pivotkG; 
 
         if (!intakeMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Roller motor with ID " + MotorConstants.intakeID + " is broken!");
         if (!pivotMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motors are broken!");
    
 
-        SmartDashboard.putNumber("Roller Intake Default Voltage", RollerSettings.defaultVoltage);
-        SmartDashboard.putNumber("Roller Intake Running Voltage", RollerSettings.runningVoltage);
-        SmartDashboard.putNumber("Pivot Cruise Velocity", RollerSettings.pivotMotorVelocity); 
-        SmartDashboard.putNumber("Pivot Acceleration", RollerSettings.pivotMotorAcceleration); 
-        SmartDashboard.putNumber("Pivot kP", RollerSettings.pivotkP);
-        SmartDashboard.putNumber("Pivot kI", RollerSettings.pivotkI); 
-        SmartDashboard.putNumber("Pivot kD", RollerSettings.pivotkD);  
-        SmartDashboard.putNumber("Pivot kG", RollerSettings.pivotkG); 
+        SmartDashboard.putNumber("Roller Intake Default Power", IntakeSettings.defaultPower);
+        SmartDashboard.putNumber("Roller Intake Running Power", IntakeSettings.runningPower);
+        SmartDashboard.putNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
+        SmartDashboard.putNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
+        SmartDashboard.putNumber("Pivot kP", IntakeSettings.pivotkP);
+        SmartDashboard.putNumber("Pivot kI", IntakeSettings.pivotkI); 
+        SmartDashboard.putNumber("Pivot kD", IntakeSettings.pivotkD);  
+        SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); 
       
     }
 
     public void feed(){
-        intakeMotor.setVoltage(RollerSettings.runningVoltage); 
-        
-
+        intakeMotor.set(IntakeSettings.runningPower); 
     }
 
     public void stall(){
-        intakeMotor.setVoltage(RollerSettings.defaultVoltage);
+        intakeMotor.set(IntakeSettings.defaultPower);
     }
 
     public void stopRollers(){
@@ -116,52 +114,52 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void drop(){
-        rightPivotMotor.setControl(new MotionMagicVoltage(RollerConstants.startingPosition).withSlot(0)); 
+        rightPivotMotor.setControl(new MotionMagicVoltage(IntakeConstants.startingPosition).withSlot(0)); 
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
     private void checkForTuning(){ //Updates values to allow tuning while robot is enabled
         boolean valueHasChanged = false; 
 
-        if (RollerSettings.pivotMotorVelocity != lastVelo){
+        if (IntakeSettings.pivotMotorVelocity != lastVelo){
 
-            lastVelo = RollerSettings.pivotMotorVelocity; 
+            lastVelo = IntakeSettings.pivotMotorVelocity; 
             pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = lastVelo; 
             valueHasChanged = true;
         }
 
-        if (RollerSettings.pivotMotorAcceleration != lastAcc){
+        if (IntakeSettings.pivotMotorAcceleration != lastAcc){
 
-            lastAcc = RollerSettings.pivotMotorAcceleration; 
+            lastAcc = IntakeSettings.pivotMotorAcceleration; 
             pivotMotorConfig.MotionMagic.MotionMagicAcceleration = lastAcc;
             valueHasChanged = true; 
         }
 
-        if (RollerSettings.pivotkP != lastkP){
+        if (IntakeSettings.pivotkP != lastkP){
 
-            lastkP = RollerSettings.pivotkP; 
+            lastkP = IntakeSettings.pivotkP; 
             pivotMotorConfig.Slot0.kP = lastkP; 
             valueHasChanged = true; 
         }
 
-        if (RollerSettings.pivotkI != lastkI){
+        if (IntakeSettings.pivotkI != lastkI){
 
-            lastkI = RollerSettings.pivotkI; 
+            lastkI = IntakeSettings.pivotkI; 
             pivotMotorConfig.Slot0.kI = lastkI; 
             valueHasChanged = true;
         }
 
-        if (RollerSettings.pivotkD != lastkD){
+        if (IntakeSettings.pivotkD != lastkD){
 
-            lastkD = RollerSettings.pivotkD; 
+            lastkD = IntakeSettings.pivotkD; 
             pivotMotorConfig.Slot0.kD = lastkD;
             valueHasChanged = true;
         }
 
-        if (RollerSettings.pivotkG != lastkG){
+        if (IntakeSettings.pivotkG != lastkG){
 
-            lastkG = RollerSettings.pivotkG; 
-            pivotMotorConfig.Slot0.kG = RollerSettings.pivotkG; 
+            lastkG = IntakeSettings.pivotkG; 
+            pivotMotorConfig.Slot0.kG = IntakeSettings.pivotkG; 
             valueHasChanged = true; 
         }
 
@@ -171,14 +169,14 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
 
-        RollerSettings.defaultVoltage = SmartDashboard.getNumber("Roller Intake Default Voltage", RollerSettings.defaultVoltage);
-        RollerSettings.runningVoltage = SmartDashboard.getNumber("Roller Intake Running Voltage", RollerSettings.runningVoltage); 
-        RollerSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", RollerSettings.pivotMotorVelocity); 
-        RollerSettings.pivotMotorAcceleration = SmartDashboard.getNumber("Pivot Acceleration", RollerSettings.pivotMotorAcceleration); 
-        RollerSettings.pivotkP = SmartDashboard.getNumber("Pivot kP", RollerSettings.pivotkP);
-        RollerSettings.pivotkI = SmartDashboard.getNumber("Pivot kI", RollerSettings.pivotkI); 
-        RollerSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", RollerSettings.pivotkD);  
-        RollerSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", RollerSettings.pivotkG); 
+        IntakeSettings.defaultPower = SmartDashboard.getNumber("Roller Intake Default Voltage", IntakeSettings.defaultPower);
+        IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Voltage", IntakeSettings.runningPower); 
+        IntakeSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
+        IntakeSettings.pivotMotorAcceleration = SmartDashboard.getNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
+        IntakeSettings.pivotkP = SmartDashboard.getNumber("Pivot kP", IntakeSettings.pivotkP);
+        IntakeSettings.pivotkI = SmartDashboard.getNumber("Pivot kI", IntakeSettings.pivotkI); 
+        IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
+        IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
 
         checkForTuning();
 

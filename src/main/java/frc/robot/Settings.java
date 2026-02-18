@@ -31,10 +31,10 @@ public class Settings {
                     3.0, 4.0,
                     Units.degreesToRadians(540), Units.degreesToRadians(720));
 
-    public static class RollerSettings {
+    public static class IntakeSettings {
 
-        public static double runningVoltage = 6; 
-        public static double defaultVoltage = 0; 
+        public static double runningPower = 0.75; 
+        public static double defaultPower = 0; 
 
         public static double pivotMotorVelocity = 0.4; 
         public static double pivotMotorAcceleration = 1.2; 
@@ -46,9 +46,10 @@ public class Settings {
         
     }
 
-    public static class StorageSettings {
+    public static class TraverseSettings {
 
-        public static double runningTraverseMotor = 6; 
+        public static double rollerMotorPower = 0.75; 
+        public static double scoopMotorPower = 1;
 
 
     }

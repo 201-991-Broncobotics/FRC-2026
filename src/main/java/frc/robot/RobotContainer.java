@@ -51,7 +51,7 @@ public class RobotContainer {
     //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final TraverseSubsystem traverseSubsystem = new TraverseSubsystem();
-    //private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
+    private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
     //private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 
@@ -106,18 +106,23 @@ public class RobotContainer {
 
 
         //OPERATOR CONTROLS 
-        operator.leftTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::transfer, traverseSubsystem)); 
-        operator.leftTrigger(0.05).toggleOnFalse(new InstantCommand(traverseSubsystem::stop, traverseSubsystem));
-        operator.leftBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-        operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+        operator.a().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)); 
+        operator.a().toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)); 
+        operator.b().toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+        operator.leftBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+        operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
         //operator.povUp().whileTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem)); 
         //operator.povDown().whileTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem)); 
         //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
-        operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed, intakeSubsystem)); 
-        operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
+        operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)); 
+        operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
 
 
-        
+        //temporary
+        operator.y().onTrue(new InstantCommand(outtakeSubsystem::justRunFlywheel)).onFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));
+        operator.povUp().toggleOnTrue(new InstantCommand(outtakeSubsystem::increaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
+        operator.povDown().toggleOnTrue(new InstantCommand(outtakeSubsystem::decreaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
 
 
         // Idle while the robot is disabled. This ensures the configured

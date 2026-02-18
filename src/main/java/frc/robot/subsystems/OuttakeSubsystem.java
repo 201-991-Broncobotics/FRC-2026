@@ -70,6 +70,10 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
 
+    //temporary
+    private double flywheelPower = 0.5;
+    private boolean justChangedPower = false;
+
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
@@ -381,6 +385,32 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (turntableValueHasChanged) turntableMotor.getConfigurator().apply(turntableConfig); 
         if (hoodValueHasChanged) hoodMotor.getConfigurator().apply(hoodConfig); 
 
+    }
+
+    public void justRunFlywheel() {
+        rightFlyMotor.set(flywheelPower);
+        leftFlyMotor.set(-flywheelPower);
+    }
+
+    public void stopFlywheels() {
+        rightFlyMotor.stopMotor();
+        leftFlyMotor.stopMotor();
+    }
+
+    public void increaseFlywheelPower() {
+        if (!justChangedPower) flywheelPower += 0.1;
+        justChangedPower = true;
+        if (flywheelPower > 1) flywheelPower = 1;
+    }
+
+    public void decreaseFlywheelPower() {
+        if (!justChangedPower) flywheelPower -= 0.1;
+        justChangedPower = true;
+        if (flywheelPower < -1) flywheelPower = -1;
+    }
+
+    public void unclickFlywheelPower() {
+        justChangedPower = false;
     }
 
 
