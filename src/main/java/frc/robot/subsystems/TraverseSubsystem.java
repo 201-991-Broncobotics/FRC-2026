@@ -12,14 +12,14 @@ import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.StorageConstants;
 import frc.robot.Settings.StorageSettings;
 
-public class StorageSubsystem extends SubsystemBase {
+public class TraverseSubsystem extends SubsystemBase {
 
     private TalonFX traverseMotor; 
     private TalonFXConfiguration traverseMotorConfig; 
     private StatusCode traverseMotorStatus;
     private CurrentLimitsConfigs currentLimits; 
 
-    public StorageSubsystem(){
+    public TraverseSubsystem(){
 
         traverseMotor = new TalonFX(MotorConstants.traverseRollerID);
 
