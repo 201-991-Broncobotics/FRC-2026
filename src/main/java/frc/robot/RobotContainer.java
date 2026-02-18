@@ -13,7 +13,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DrivingProfiles;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.StorageSubsystem;
+import frc.robot.subsystems.TraverseSubsystem;
 import frc.robot.subsystems.OuttakeSubsystem;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -51,8 +51,8 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-    //private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-    //private final StorageSubsystem storageSubsystem = new StorageSubsystem();
+    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    private final TraverseSubsystem traverseSubsystem = new TraverseSubsystem();
     //private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
     //private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
@@ -107,26 +107,19 @@ public class RobotContainer {
         driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
 
-        /* 
-
-        // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-        new Trigger(m_exampleSubsystem::exampleCondition)
-            .onTrue(new ExampleCommand(m_exampleSubsystem));
-
-
         //OPERATOR CONTROLS 
-        operator.leftTrigger(0.05).toggleOnTrue(new InstantCommand(storageSubsystem::transfer, storageSubsystem)); 
-        operator.leftTrigger(0.05).toggleOnFalse(new InstantCommand(storageSubsystem::stop, storageSubsystem));
+        operator.leftTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::transfer, traverseSubsystem)); 
+        operator.leftTrigger(0.05).toggleOnFalse(new InstantCommand(traverseSubsystem::stop, traverseSubsystem));
         operator.leftBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
         operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
-        operator.povUp().whileTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem)); 
-        operator.povDown().whileTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem)); 
-        operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
+        //operator.povUp().whileTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem)); 
+        //operator.povDown().whileTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem)); 
+        //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
         operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed, intakeSubsystem)); 
         operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
 
 
-        */
+        
 
 
         // Idle while the robot is disabled. This ensures the configured
