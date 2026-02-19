@@ -33,7 +33,7 @@ public class Settings {
 
     public static class IntakeSettings {
 
-        public static double runningPower = 0.75; 
+        public static double runningPower = 0.5; 
         public static double defaultPower = 0; 
 
         public static double pivotMotorVelocity = 0.4; 
@@ -41,15 +41,15 @@ public class Settings {
 
         public static double pivotkP = 1; 
         public static double pivotkI = 0; 
-        public static double pivotkD = 0.2; 
-        public static double pivotkG = 0.35; 
+        public static double pivotkD = 0; 
+        public static double pivotkG = 0.0; // 0.35
         
     }
 
     public static class TraverseSettings {
 
         public static double rollerMotorPower = 0.75; 
-        public static double scoopMotorPower = 1;
+        public static double scoopMotorPower = 0.75;
 
 
     }

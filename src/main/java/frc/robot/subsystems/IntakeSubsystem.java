@@ -178,6 +178,8 @@ public class IntakeSubsystem extends SubsystemBase {
         IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
         IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
 
+        SmartDashboard.putNumber("Intake Pivot Position", rightPivotMotor.getPosition().getValueAsDouble());
+
         checkForTuning();
 
     }

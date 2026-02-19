@@ -418,7 +418,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
     public double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
 
-    private double absoluteTurretAngle() {
+    private double getAbsoluteTurretAngle() {
         double R = throughBore19.getAbsoluteAngle() - throughBore21.getAbsoluteAngle();
         if (R < 0) R += 2* Math.PI;
         return 0.9975 * R; // fixes angle being slightly off, also means the turret can't keep rotating
@@ -447,6 +447,16 @@ public class OuttakeSubsystem extends SubsystemBase {
         TurretSettings.pkI = SmartDashboard.getNumber("Turntable Pivot kP", TurretSettings.pkI);
         TurretSettings.pkI = SmartDashboard.getNumber("Turntable Pivot kP", TurretSettings.pkD);
         TurretSettings.setVelocities = SmartDashboard.getNumber("Flywheel Speeds", TurretSettings.setVelocities);
+
+
+        try {
+            SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
+            SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
+        } catch (NullPointerException e) {
+            // do nothing
+        }
+        
+        
 
         
         checkForTuning();

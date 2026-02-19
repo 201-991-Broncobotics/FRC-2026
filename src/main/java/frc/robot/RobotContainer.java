@@ -52,7 +52,7 @@ public class RobotContainer {
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final TraverseSubsystem traverseSubsystem = new TraverseSubsystem();
     private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
-    //private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
+    private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -106,14 +106,14 @@ public class RobotContainer {
 
 
         //OPERATOR CONTROLS 
-        operator.a().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)); 
-        operator.a().toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)); 
-        operator.b().toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
-        operator.leftBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
-        operator.leftBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
-        //operator.povUp().whileTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem)); 
-        //operator.povDown().whileTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem)); 
+        operator.a().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+        operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+
+        operator.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+        operator.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+        driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
         //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
         operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)); 
         operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));

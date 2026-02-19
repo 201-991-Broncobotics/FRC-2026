@@ -65,10 +65,10 @@ public class TraverseSubsystem extends SubsystemBase {
 
     }
 
-    public void transfer(){ rollerMotor.set(TraverseSettings.rollerMotorPower); }
+    public void transfer(){ rollerMotor.set(-TraverseSettings.rollerMotorPower); }
     public void scoop() { scoopMotor.set(TraverseSettings.scoopMotorPower); }
 
-    public void emergencyReverse(){ rollerMotor.set(-TraverseSettings.rollerMotorPower); }
+    public void emergencyReverse(){ rollerMotor.set(TraverseSettings.rollerMotorPower); }
     public void emergencyReverseScoop(){ scoopMotor.set(-TraverseSettings.scoopMotorPower); }
 
     public void stopRoller(){ rollerMotor.stopMotor(); }

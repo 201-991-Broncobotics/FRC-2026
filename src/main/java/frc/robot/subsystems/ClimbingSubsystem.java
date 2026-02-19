@@ -34,9 +34,9 @@ public class ClimbingSubsystem extends SubsystemBase {
 
         elevatorMotor = new TalonFX(MotorConstants.elevatorID); 
 
-        //climberMotorConfig = new TalonFXConfiguration(); 
+        climberMotorConfig = new TalonFXConfiguration(); 
         elevatorMotorConfig = new TalonFXConfiguration();
-        /* 
+        
         climberMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         climberMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
         climberMotorConfig.Voltage.PeakForwardVoltage = ClimbingConstants.maxForwardVoltage; 
@@ -48,8 +48,8 @@ public class ClimbingSubsystem extends SubsystemBase {
         climberMotorConfig.Slot0.kI = ClimbingSettings.climberkI; 
         climberMotorConfig.Slot0.kD = ClimbingSettings.climberkD; 
         climberMotorConfig.MotionMagic.MotionMagicCruiseVelocity = ClimbingSettings.climberMotorVelocity; 
-        climberMotorConfig.MotionMagic.MotionMagicAcceleration = ClimbingSettings.climberMotorAcceleration; */
-        /* 
+        climberMotorConfig.MotionMagic.MotionMagicAcceleration = ClimbingSettings.climberMotorAcceleration;
+        
         //add current limits
         currentLimits = new CurrentLimitsConfigs();
         currentLimits.SupplyCurrentLimitEnable = ClimbingConstants.currentLimitsEnabled;
@@ -64,7 +64,7 @@ public class ClimbingSubsystem extends SubsystemBase {
         lastCkI = ClimbingSettings.climberkI; 
         lastCkD = ClimbingSettings.climberkD; 
         lastCVelo = ClimbingSettings.climberMotorVelocity; 
-        lastCAcc = ClimbingSettings.climberMotorAcceleration; */
+        lastCAcc = ClimbingSettings.climberMotorAcceleration;
         
         elevatorMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; 
         elevatorMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
@@ -127,6 +127,20 @@ public class ClimbingSubsystem extends SubsystemBase {
         elevatorMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));  
 
     }
+
+    public void justExtend() {
+        elevatorMotor.set(0.2);
+    }
+
+    public void justRetract() {
+        elevatorMotor.set(-0.2);
+    }
+
+    public void stop() {
+        elevatorMotor.stopMotor();
+    }
+
+
 
     
 
