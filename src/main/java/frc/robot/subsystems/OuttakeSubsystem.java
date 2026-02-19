@@ -4,6 +4,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -21,15 +22,16 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
+import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
 import frc.robot.utility.ThroughBoreEncoder;
 import frc.robot.utility.Vector2d;
+import frc.robot.utility.ElapsedTime.Resolution;
 import frc.robot.utility.LimelightHelpers.LimelightResults;
 
 import java.util.Collection;
@@ -61,12 +63,16 @@ public class OuttakeSubsystem extends SubsystemBase {
     private CommandSwerveDrivetrain drivetrain;
     private double FrameTime = 0.1;
     private ElapsedTime FrameTimer;
+    private boolean justToggledTuning = false;
     private double TurretStartingOffset = 0;
+    private double lastSimSolveTime = 0;
+    private double[] lastSimTraj = new double[] {0,0,0,0,0}; // launch angle, launch vel, target dist, target height, flight time
 
     private ThroughBoreEncoder throughBore21, throughBore19, throughBoreCounter;
 
     // Only for testing
     private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
+    private double rpmAdjustment = 50;
 
     private DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
 
@@ -157,9 +163,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         hoodConfig.Voltage.PeakReverseVoltage = TurretConstants.maxReverseVoltage; 
 
         hoodConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor; 
-        hoodConfig.Slot0.kP = TurretSettings.pkP; 
-        hoodConfig.Slot0.kI = TurretSettings.pkI; 
-        hoodConfig.Slot0.kD = TurretSettings.pkD; 
+        hoodConfig.Slot0.kP = TurretSettings.hkP; 
+        hoodConfig.Slot0.kI = TurretSettings.hkI; 
+        hoodConfig.Slot0.kD = TurretSettings.hkD; 
 
         //add current limits
         currentLimits = new CurrentLimitsConfigs();
@@ -192,9 +198,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         lastTkP = TurretSettings.tkP;
         lastTkI = TurretSettings.tkI; 
         lastTkD = TurretSettings.tkD; 
-        lastPkP = TurretSettings.pkP; 
-        lastPkI = TurretSettings.pkI; 
-        lastPkD = TurretSettings.pkD; 
+        lastPkP = TurretSettings.hkP; 
+        lastPkI = TurretSettings.hkI; 
+        lastPkD = TurretSettings.hkD; 
 
         if (!flywheelStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Flywheel motors are broken!");
         if (!turntableStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Turntable motor with ID " + MotorConstants.turntableID + " is broken!"); 
@@ -209,9 +215,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
         SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
         SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
-        SmartDashboard.putNumber("Turntable Pivot kP", TurretSettings.pkP);
-        SmartDashboard.putNumber("Turntable Pivot kI", TurretSettings.pkI);
-        SmartDashboard.putNumber("Turntable Pivot kD", TurretSettings.pkD);
+        SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
+        SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
+        SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
         SmartDashboard.putNumber("Flywheel Speeds", TurretSettings.setVelocities);
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
@@ -239,7 +245,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         double Velocity = 1; // TODO: Can't use the Distance above because that doesn't incude height which messes up the quadratic regression
 
-        double StartingLaunchHeight = 23; // TODO: get more accurate calculation
+        // TODO: Swap with actual calculations
+        double StartingLaunchHeight = 23;
         double a = 1 - ((2 * TurretConstants.gravityInches * (H - StartingLaunchHeight)) / Math.pow(Velocity, 2)) - 
             ((Math.pow(TurretConstants.gravityInches, 2) * Math.pow(Distance, 2)) / Math.pow(Velocity, 4));
         
@@ -248,21 +255,35 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         setHood(TargetHoodAngle);
 
-        // TODO: set flywheel rpm based on ball velocity
+        rightFlyMotor.setControl(new MotionMagicVelocityDutyCycle(getTargetFlywheelRPM(Velocity) / 60.0).withSlot(0)); 
+        leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
 
     }
 
 
     public boolean setHood(double Angle) {
         if (Angle >= TurretConstants.minHoodAngle && Angle <= TurretConstants.maxHoodAngle) {
-            // TODO: set hood motor
             TargetHoodAngle = Angle;
+            hoodMotor.setControl(new MotionMagicVelocityDutyCycle(TargetHoodAngle)); 
             return true;
         } else {
-            // TODO: set hood motor
             TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
+            hoodMotor.setControl(new MotionMagicVelocityDutyCycle(TargetHoodAngle)); 
             return false;
         }
+    }
+
+
+    public double getTargetFlywheelRPM(double launchVelocity) {
+        return 0; // TODO: math
+    }
+
+    public double getTargetLaunchVelocity(double targetFlywheelRPM) {
+        return 0; // TODO: math
+    }
+
+    public double getTargetHoodAngle(double launchAngle) {
+        return 0; // TODO: math
     }
 
     
@@ -290,13 +311,18 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     public void tuneFlywheel(){
         //function.value(getFlywheelTrajectory()); //put this inside motionmagic later 
-
-        rightFlyMotor.setControl(new MotionMagicVelocityDutyCycle(TurretSettings.setVelocities).withSlot(0)); 
-        leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
+        if (!justToggledTuning) {
+            rightFlyMotor.setControl(new MotionMagicVelocityDutyCycle(TurretSettings.setVelocities / 60.0).withSlot(0)); 
+            leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
+            justToggledTuning = true;
+        } else {
+            stopFlywheels();
+            justToggledTuning = false;
+        }
     }
 
     public void tuneTurntable(){
-        turntableMotor.setControl(new MotionMagicVelocityDutyCycle(getTurntableTrajectory())); 
+        turntableMotor.setControl(new MotionMagicDutyCycle(TurretSettings.targetTurntableAngle / 360 * 10)); 
     }
 
 
@@ -359,20 +385,20 @@ public class OuttakeSubsystem extends SubsystemBase {
             turntableValueHasChanged = true;  
         }
 
-        if (TurretSettings.pkP != lastPkP){
-            lastPkP = TurretSettings.pkP;
+        if (TurretSettings.hkP != lastPkP){
+            lastPkP = TurretSettings.hkP;
             hoodConfig.Slot0.kP = lastPkP; 
             hoodValueHasChanged = true;  
         }
 
-        if (TurretSettings.pkI != lastPkI){
-            lastPkI = TurretSettings.pkI;
+        if (TurretSettings.hkI != lastPkI){
+            lastPkI = TurretSettings.hkI;
             hoodConfig.Slot0.kI = lastPkI; 
             hoodValueHasChanged = true;  
         }
 
-        if (TurretSettings.pkD != lastPkD){
-            lastPkD = TurretSettings.pkD;
+        if (TurretSettings.hkD != lastPkD){
+            lastPkD = TurretSettings.hkD;
             hoodConfig.Slot0.kD = lastPkD; 
             hoodValueHasChanged = true;  
         }
@@ -398,19 +424,34 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
     public void increaseFlywheelPower() {
-        if (!justChangedPower) flywheelPower += 0.1;
+        /*if (!justChangedPower) flywheelPower += 0.1;
         justChangedPower = true;
-        if (flywheelPower > 1) flywheelPower = 1;
+        if (flywheelPower > 1) flywheelPower = 1;*/
+
+        if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
+        justChangedPower = true;
     }
 
     public void decreaseFlywheelPower() {
+        /*
         if (!justChangedPower) flywheelPower -= 0.1;
         justChangedPower = true;
-        if (flywheelPower < -1) flywheelPower = -1;
+        if (flywheelPower < -1) flywheelPower = -1;*/
+
+        if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
+        justChangedPower = true;
     }
 
     public void unclickFlywheelPower() {
         justChangedPower = false;
+    }
+
+    public void changeRPMFast() {
+        rpmAdjustment = 500;
+    }
+
+    public void changeRPMSlow() {
+        rpmAdjustment = 50;
     }
 
 
@@ -423,6 +464,108 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (R < 0) R += 2* Math.PI;
         return 0.9975 * R; // fixes angle being slightly off, also means the turret can't keep rotating
     }
+
+
+    /**
+     * Gets the height in meters of the ball when it starts its freefall trajectory or basically when it stops 
+     * touching the flywheel and the hood.
+     * @param launchAngle radians
+     * @return height in meters
+     */
+    public double getLaunchHeight(double launchAngle) {
+        return (4.954998 * Math.cos(launchAngle - Math.toRadians(25.140344)) + 6.649409 + 11.947224) / 39.37;
+    }
+
+    /**
+     * Gets the distance in meters from the center of the turret of the ball when it starts its freefall trajectory 
+     * or basically when it stops touching the flywheel and the hood.
+     * @param launchAngle radians
+     * @return distance from middle of turret in meters (negative for behind center)
+     */
+    public double getLaunchForward(double launchAngle) {
+        return (-4.954998 * Math.sin(launchAngle - Math.toRadians(25.140344)) + 1.71) / 39.37;
+    }
+
+
+
+    // REALLY COMPLICATED MATH STUFF - mostly chatgpt
+
+    double solveForAngle(double targetDistance, double targetHeight, double currentLaunchVel, double currentFlywheelRPM) {
+        ElapsedTime timer = new ElapsedTime(Resolution.MILLISECONDS);
+        timer.reset();
+
+        double low = TurretConstants.minHoodAngle;
+        double high = TurretConstants.maxHoodAngle;
+        double tolerance = OuttakeTrajectorySettings.SolutionTolerance;
+
+        for (int i = 0; i < 25; i++) {
+            double mid = (low + high) / 2.0;
+
+            double yAtX = simulateTrajectory(mid, currentLaunchVel, targetDistance, currentFlywheelRPM * 2*Math.PI/60);
+
+            double error = yAtX - targetHeight;
+
+            if (error > 0) {
+                high = mid;
+            } else {
+                low = mid;
+            }
+
+            if (Math.abs(error) < tolerance) {
+                break;
+            }
+        }
+
+        lastSimSolveTime = timer.time();
+        return (low + high) / 2.0;
+    }
+
+    double solveForAngle(double targetDistance, double targetHeight, double currentFlywheelRPM) {
+        return solveForAngle(targetDistance, targetHeight, getTargetLaunchVelocity(currentFlywheelRPM), currentFlywheelRPM);
+    }
+
+
+    double simulateTrajectory(double launchAngle, double launchVelocity, double targetDistance, double flywheelAngVel) { // meters and radians
+        double flightTime = 0;
+        
+        double x = getLaunchForward(launchAngle);
+        double y = getLaunchHeight(launchAngle);
+
+        double vx = launchVelocity * Math.cos(launchAngle);
+        double vy = launchVelocity * Math.sin(launchAngle);
+
+        double ballSpinOmega = OuttakeTrajectorySettings.SpinTransferEfficiency * (flywheelAngVel * /*roller radius*/(2/39.37) / /*ball radius*/(5.91/39.37/2)); // assumed constant across trajectory
+
+        while (x < targetDistance && y > 0) {
+            double v = Math.sqrt(vx*vx + vy*vy);
+
+            double dragAx = -OuttakeTrajectorySettings.KD * v * vx;
+            double dragAy = -OuttakeTrajectorySettings.KD * v * vy;
+
+            double liftAx = -OuttakeTrajectorySettings.KL * ballSpinOmega * (5.91 / 39.37 / 2) * vy;
+            double liftAy =  OuttakeTrajectorySettings.KL * ballSpinOmega * (5.91 / 39.37 / 2) * vx;
+
+            double ax = dragAx + liftAx;
+            double ay = -(9.81) + dragAy + liftAy;
+
+            vx += ax * OuttakeTrajectorySettings.dt;
+            vy += ay * OuttakeTrajectorySettings.dt;
+            x += vx * OuttakeTrajectorySettings.dt;
+            y += vy * OuttakeTrajectorySettings.dt;
+            flightTime += OuttakeTrajectorySettings.dt;
+        }
+        lastSimTraj[4] = flightTime;
+        return y;
+    }
+
+
+    public void testRunSim() {
+        solveForAngle(OuttakeTrajectorySettings.targetDistance, OuttakeTrajectorySettings.targetHeight, TurretSettings.setVelocities);
+    }
+
+
+    
+
 
 
     @Override
@@ -442,24 +585,33 @@ public class OuttakeSubsystem extends SubsystemBase {
         TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);
         TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
         TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
-        TurretSettings.tkI = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
-        TurretSettings.pkP = SmartDashboard.getNumber("Turntable Pivot kP", TurretSettings.pkP);
-        TurretSettings.pkI = SmartDashboard.getNumber("Turntable Pivot kP", TurretSettings.pkI);
-        TurretSettings.pkI = SmartDashboard.getNumber("Turntable Pivot kP", TurretSettings.pkD);
+        TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
+        TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
+        TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
+        TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
         TurretSettings.setVelocities = SmartDashboard.getNumber("Flywheel Speeds", TurretSettings.setVelocities);
+        checkForTuning();
 
-
-        try {
+        try { // prevents crashing
             SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
             SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
+
+            SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));
+            // launch angle, launch vel, target dist, target height, flight time
+            SmartDashboard.putString("Last Traj Sim", 
+                "angle: " + Functions.round(Math.toDegrees(lastSimTraj[0]), 2) + 
+                " vel: " + Functions.round(lastSimTraj[1], 2) + 
+                " dist: " + Functions.round(lastSimTraj[2] * 39.37, 2) + 
+                " height: " + Functions.round(lastSimTraj[3] * 39.37, 2)
+            );
+            SmartDashboard.putNumber("Last Traj Sim Flight Time (s)", Functions.round(lastSimTraj[4], 3));
+            SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
+
+
         } catch (NullPointerException e) {
             // do nothing
         }
         
-        
-
-        
-        checkForTuning();
     }
     
 }

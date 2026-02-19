@@ -82,19 +82,20 @@ public class Settings {
 
     public static class TurretSettings {
 
-        public static double kP = 1; 
+        public static double kP = 1; // flywheels
         public static double kI = 0; 
-        public static double kD = 0.001; 
+        public static double kD = 0; 
         public static double kS = 0; 
         public static double kV = TurretConstants.maxForwardVoltage/TurretConstants.x44MaxRPM; 
         public static double kA = 0; 
-        public static double tkP = 0.35;
+        public static double tkP = 0; // turntable
         public static double tkI = 0; 
-        public static double tkD = 0.001;  
-        public static double pkP = 1; 
-        public static double pkI = 0; 
-        public static double pkD = 0.001; 
-        public static double setVelocities = 0; 
+        public static double tkD = 0;  
+        public static double hkP = 0; // hood
+        public static double hkI = 0; 
+        public static double hkD = 0; 
+        public static double setVelocities = 1000; // rpm
+        public static double targetTurntableAngle = 0; // degrees
         
     }
 
@@ -102,6 +103,26 @@ public class Settings {
     public static class OuttakeTrajectorySettings {
         public static double HubXOffset = 10.4;
         public static double HubYOffset = 64;
+
+
+        //Im sorry but maybe I'm going to far with this
+        public static double Cd = 0.5; // drag coefficient - I might remove this
+        public static double kL = 1.5; // lift constant
+        public static double airDensity = 1.1; // kg/m^3
+
+        public static double KD = airDensity * (Math.PI * Math.pow(5.91/2.0, 2)) * Cd / (0.203+0.227); // (0.203+0.227) is average mass / 2 * 2
+        public static double KL = airDensity * (Math.PI * Math.pow(5.91/2.0, 2)) * kL / (0.203+0.227);
+        public static double SpinTransferEfficiency = 0.3; // related to how much backspin the ball will get relative to roller speed
+
+
+        // These change how many times the simulated trajectory is simulated
+        public static double dt = 0.002; // time step for trajectory prediction
+        public static double SolutionTolerance = 0.01; // how precise angle result is 
+
+
+
+        public static double targetDistance = 100; // inches
+        public static double targetHeight = 10; // inches
     }
 
 

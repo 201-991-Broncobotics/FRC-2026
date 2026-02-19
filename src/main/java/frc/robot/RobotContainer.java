@@ -115,14 +115,14 @@ public class RobotContainer {
         driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
         driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
         //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
-        operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)); 
-        operator.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+        operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
 
 
         //temporary
-        operator.y().onTrue(new InstantCommand(outtakeSubsystem::justRunFlywheel)).onFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));
+        operator.y().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel)); //.toggleOnFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));
         operator.povUp().toggleOnTrue(new InstantCommand(outtakeSubsystem::increaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
         operator.povDown().toggleOnTrue(new InstantCommand(outtakeSubsystem::decreaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
+        operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
 
         // Idle while the robot is disabled. This ensures the configured
