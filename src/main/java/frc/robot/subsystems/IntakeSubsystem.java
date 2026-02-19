@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -11,6 +13,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.MotorConstants;
@@ -24,11 +27,12 @@ public class IntakeSubsystem extends SubsystemBase {
     private StatusCode intakeMotorStatus, pivotMotorStatus;
     private double highTargetPosition, lastVelo, lastAcc, lastkP, lastkI, lastkD, lastkG; 
     private CurrentLimitsConfigs currentLimits;
+    private DoubleSupplier CurrentPivotPosition;
+    private double pivotOffset = 0;
+    private final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
     //private CurrentLimitsConfigs currentLimits; 
 
     public IntakeSubsystem(){
-
-        highTargetPosition = (IntakeConstants.highLimitAngle/(2.0 * Math.PI))/(IntakeConstants.gearRatio); 
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
         rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
@@ -39,6 +43,7 @@ public class IntakeSubsystem extends SubsystemBase {
  
         intakeMotorConfig.Voltage.PeakForwardVoltage = IntakeConstants.maxForwardVoltage; 
         intakeMotorConfig.Voltage.PeakReverseVoltage = IntakeConstants.maxReverseVoltage; 
+        pivotMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         //Add Time Constant if absolutely needed???? 
         //pivotMotorConfig.Voltage.SupplyVoltageTimeConstant = IntakeConstants.voltageTimeConstant;
         pivotMotorConfig.Voltage.PeakForwardVoltage = IntakeConstants.maxForwardVoltage; 
@@ -58,12 +63,13 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotorConfig.CurrentLimits = currentLimits;
 
         pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+        pivotMotorConfig.Feedback.SensorToMechanismRatio = 1/IntakeConstants.gearRatio;
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = IntakeSettings.pivotMotorVelocity; 
         pivotMotorConfig.MotionMagic.MotionMagicAcceleration = IntakeSettings.pivotMotorAcceleration; 
         pivotMotorConfig.Slot0.kP = IntakeSettings.pivotkP; 
         pivotMotorConfig.Slot0.kI = IntakeSettings.pivotkI; 
         pivotMotorConfig.Slot0.kD = IntakeSettings.pivotkD; 
-        pivotMotorConfig.Slot0.kG = IntakeSettings.pivotkG;
+        //pivotMotorConfig.Slot0.kG = IntakeSettings.pivotkG;
     
 
         intakeMotor.getConfigurator().apply(intakeMotorConfig); 
@@ -79,6 +85,9 @@ public class IntakeSubsystem extends SubsystemBase {
         lastkI = IntakeSettings.pivotkI; 
         lastkP = IntakeSettings.pivotkD; 
         lastkG = IntakeSettings.pivotkG; 
+
+        pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI);
+        CurrentPivotPosition = () -> (rightPivotMotor.getPosition().getValueAsDouble() + pivotOffset) * 2*Math.PI;
 
         if (!intakeMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Roller motor with ID " + MotorConstants.intakeID + " is broken!");
         if (!pivotMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motors are broken!");
@@ -108,14 +117,25 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void lift(){
-        rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition).withSlot(0)); 
+        double feedforward = getGravityFeedForward();
+        rightPivotMotor.setControl(m_request.withPosition(IntakeConstants.highLimitAngle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
 
     }
 
     public void drop(){
-        rightPivotMotor.setControl(new MotionMagicVoltage(IntakeConstants.startingPosition).withSlot(0)); 
+        double feedforward = getGravityFeedForward();
+        rightPivotMotor.setControl(m_request.withPosition(IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
+        //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
+    }
+
+    private double getGravityFeedForward() {
+        // Get current arm position in rotations and convert to radians
+        double angleRotations = CurrentPivotPosition.getAsDouble();
+        
+        // The output is proportional to the cosine of the angle
+        return Math.sin(angleRotations) * -IntakeSettings.pivotkG;
     }
 
     private void checkForTuning(){ //Updates values to allow tuning while robot is enabled
@@ -159,7 +179,7 @@ public class IntakeSubsystem extends SubsystemBase {
         if (IntakeSettings.pivotkG != lastkG){
 
             lastkG = IntakeSettings.pivotkG; 
-            pivotMotorConfig.Slot0.kG = IntakeSettings.pivotkG; 
+            //pivotMotorConfig.Slot0.kG = IntakeSettings.pivotkG; 
             valueHasChanged = true; 
         }
 
@@ -178,7 +198,18 @@ public class IntakeSubsystem extends SubsystemBase {
         IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
         IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
 
-        SmartDashboard.putNumber("Intake Pivot Position", rightPivotMotor.getPosition().getValueAsDouble());
+        try {
+            //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
+            //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
+            SmartDashboard.putNumber("Intake Pivot Position", Math.toDegrees(CurrentPivotPosition.getAsDouble()));
+            SmartDashboard.putNumber("Intake Pivot Actual Position", rightPivotMotor.getPosition().getValueAsDouble());
+            SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.getMotorVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
+
+        } catch (NullPointerException e) {
+            // do nothing
+        }
+        
 
         checkForTuning();
 

@@ -605,12 +605,12 @@ public class OuttakeSubsystem extends SubsystemBase {
                 " height: " + Functions.round(lastSimTraj[3] * 39.37, 2)
             );
             SmartDashboard.putNumber("Last Traj Sim Flight Time (s)", Functions.round(lastSimTraj[4], 3));
-            SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
 
 
         } catch (NullPointerException e) {
             // do nothing
         }
+        SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
         
     }
     

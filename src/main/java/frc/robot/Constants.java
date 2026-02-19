@@ -47,8 +47,9 @@ public final class Constants {
         public static final double statorCurrent = 60; 
 
         public static final double x60ShaftRadius = 4/25.4; //inches
-        public static final double startingPosition = 0; //radians
-        public static final double highLimitAngle = Math.toRadians(106); //radians
+        public static final double lowLimitAngle = Math.toRadians(95.2); //radians
+        public static final double highLimitAngle = 0; //radians
+        public static final double startingPosition = highLimitAngle; //radians
         public static final double gearRatio = (1/25.0); 
 
     }
