@@ -206,6 +206,9 @@ public class IntakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.getMotorVoltage().getValueAsDouble());
             SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
 
+            SmartDashboard.putNumber("Intake Motor Temperature", intakeMotor.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Intake Motor RPM", intakeMotor.getVelocity().getValueAsDouble() * 60);
+
         } catch (NullPointerException e) {
             // do nothing
         }

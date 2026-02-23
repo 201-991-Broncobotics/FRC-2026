@@ -78,6 +78,16 @@ public class TraverseSubsystem extends SubsystemBase {
     public void periodic(){
 
         TraverseSettings.rollerMotorPower =  SmartDashboard.getNumber("Running Traverse Voltage", TraverseSettings.rollerMotorPower);
+
+        try {
+            SmartDashboard.putNumber("Traverse Roller Motor Temperature", rollerMotor.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Traverse Roller Motor RPM", rollerMotor.getVelocity().getValueAsDouble() * 60);
+            SmartDashboard.putNumber("Traverse Scoop Motor Temperature", scoopMotor.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Traverse Scoop Motor RPM", scoopMotor.getVelocity().getValueAsDouble() * 60);
+        } catch (NullPointerException e) {
+            // do nothing
+        }
+        
        
 
     }
