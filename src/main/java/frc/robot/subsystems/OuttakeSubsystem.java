@@ -74,7 +74,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
     private double rpmAdjustment = 50;
 
-    private DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
+    public static DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
 
     //temporary
     private double flywheelPower = 0.5;
@@ -595,7 +595,17 @@ public class OuttakeSubsystem extends SubsystemBase {
         try { // prevents crashing
             SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
             SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
+            SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
+        } catch (NullPointerException e) {
+            // do nothing
+        }
 
+        SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
+
+
+
+
+        try { // prevents crashing
             SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));
             // launch angle, launch vel, target dist, target height, flight time
             SmartDashboard.putString("Last Traj Sim", 
@@ -605,12 +615,9 @@ public class OuttakeSubsystem extends SubsystemBase {
                 " height: " + Functions.round(lastSimTraj[3] * 39.37, 2)
             );
             SmartDashboard.putNumber("Last Traj Sim Flight Time (s)", Functions.round(lastSimTraj[4], 3));
-
-
         } catch (NullPointerException e) {
             // do nothing
         }
-        SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
         
     }
     
