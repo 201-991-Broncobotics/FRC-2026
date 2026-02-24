@@ -203,7 +203,7 @@ public class IntakeSubsystem extends SubsystemBase {
             //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
             SmartDashboard.putNumber("Intake Pivot Position", Math.toDegrees(CurrentPivotPosition.getAsDouble()));
             SmartDashboard.putNumber("Intake Pivot Actual Position", rightPivotMotor.getPosition().getValueAsDouble());
-            SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.getMotorVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.get());
             SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
 
         } catch (NullPointerException e) {

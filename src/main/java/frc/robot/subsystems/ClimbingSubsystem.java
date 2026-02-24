@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -13,6 +15,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbingConstants;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Settings.ClimbingSettings;
 
@@ -25,6 +28,10 @@ public class ClimbingSubsystem extends SubsystemBase {
                     lastEVelo, lastEAcc, lastEkP, lastEkI, lastEkD, lastEkG,
                     climberRotations, elevatorRotations;  
     private CurrentLimitsConfigs currentLimits; 
+    private DoubleSupplier CurrentElevatorPosition;
+    private double elevatorOffset = 0;
+
+
 
     public ClimbingSubsystem(){
 
@@ -95,6 +102,10 @@ public class ClimbingSubsystem extends SubsystemBase {
         //climberMotorStatus = climberMotor.getConfigurator().apply(climberMotorConfig);
         elevatorMotorStatus = elevatorMotor.getConfigurator().apply(elevatorMotorConfig); 
 
+        elevatorOffset = -elevatorMotor.getPosition().getValueAsDouble() + ClimbingConstants.startingPosition / (2*Math.PI);
+        CurrentElevatorPosition = () -> (elevatorMotor.getPosition().getValueAsDouble() + elevatorOffset) * 2*Math.PI;
+
+
         //if (!climberMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Climbing motor with ID " + MotorConstants.climberID + " is broken!");
         if (!elevatorMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Elevator motor with ID " + MotorConstants.elevatorID + " is broken!");
 
@@ -129,15 +140,24 @@ public class ClimbingSubsystem extends SubsystemBase {
     }
 
     public void justExtend() {
+        if (currentLimits.SupplyCurrentLimit > 45) {
+            elevatorMotor.stopMotor();
+        }
         elevatorMotor.set(0.2);
+         
     }
 
     public void justRetract() {
+        if (currentLimits.SupplyCurrentLimit > 45) {
+            elevatorMotor.stopMotor();
+        }
         elevatorMotor.set(-0.2);
+         
     }
 
     public void stop() {
         elevatorMotor.stopMotor();
+        
     }
 
 
@@ -254,6 +274,18 @@ public class ClimbingSubsystem extends SubsystemBase {
         ClimbingSettings.elevatorkI = SmartDashboard.getNumber("Elevator kI", ClimbingSettings.elevatorkI); 
         ClimbingSettings.elevatorkD = SmartDashboard.getNumber("Elevator kD", ClimbingSettings.elevatorkD); 
         ClimbingSettings.elevatorkG = SmartDashboard.getNumber("Elevator kG", ClimbingSettings.elevatorkG); 
+
+        try {
+            //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
+            //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
+            SmartDashboard.putNumber("Elevator Position", Math.toDegrees(CurrentElevatorPosition.getAsDouble()));
+            SmartDashboard.putNumber("Elevator Actual Position", elevatorMotor.getPosition().getValueAsDouble() + ClimbingConstants.elavatorActualPositionOffset);
+            SmartDashboard.putNumber("Elevator Power", elevatorMotor.getMotorVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Elevator low target", ClimbingConstants.startingPosition / (2*Math.PI) + elevatorOffset);
+
+        } catch (NullPointerException e) {
+            // do nothing
+        } 
 
         checkForTuning();
     

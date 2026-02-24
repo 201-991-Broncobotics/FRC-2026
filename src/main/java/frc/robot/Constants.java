@@ -50,7 +50,7 @@ public final class Constants {
         public static final double lowLimitAngle = Math.toRadians(95.2); //radians
         public static final double highLimitAngle = 0; //radians
         public static final double startingPosition = highLimitAngle; //radians
-        public static final double gearRatio = (1/25.0); 
+        public static final double gearRatio = (1.0/25.0); 
 
     }
 
@@ -81,9 +81,13 @@ public final class Constants {
         public static final double statorCurrent = 80; 
 
         public static final double x60ShaftRadius = 4/25.4; //inches
-        public static final double gearRatio = 15; 
+        public static final double gearRatio = (1.0/15.0); 
         public static final double ticksPerRev = 2048; 
 
+        public static final double startingPosition = 26.511230; 
+        public static final double maxLimitPosition = 1; 
+
+        public static final double elavatorActualPositionOffset = 14.726563;
     }
 
     public static class TurretConstants {

@@ -36,8 +36,8 @@ public class Settings {
         public static double runningPower = 0.5; 
         public static double defaultPower = 0; 
 
-        public static double pivotMotorVelocity = 7.0; 
-        public static double pivotMotorAcceleration = 2.0; 
+        public static double pivotMotorVelocity = 10.0; //7
+        public static double pivotMotorAcceleration = 3.5; //2 
 
         public static double pivotkP = 6.0; 
         public static double pivotkI = 0; 
@@ -48,8 +48,8 @@ public class Settings {
 
     public static class TraverseSettings {
 
-        public static double rollerMotorPower = 0.75; 
-        public static double scoopMotorPower = 0.75;
+        public static double rollerMotorPower = 1.0; 
+        public static double scoopMotorPower = 1.0;
 
 
     }

@@ -29,13 +29,13 @@ public class TraverseSubsystem extends SubsystemBase {
 
         rollerMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; 
         rollerMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        rollerMotorConfig.Voltage.PeakForwardVoltage = TraverseConstants.maxForwardVoltage; 
-        rollerMotorConfig.Voltage.PeakReverseVoltage = TraverseConstants.maxReverseVoltage; 
+        //rollerMotorConfig.Voltage.PeakForwardVoltage = TraverseConstants.maxForwardVoltage; 
+        //rollerMotorConfig.Voltage.PeakReverseVoltage = TraverseConstants.maxReverseVoltage; 
 
         scoopMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; 
         scoopMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        scoopMotorConfig.Voltage.PeakForwardVoltage = TraverseConstants.maxForwardVoltage; 
-        scoopMotorConfig.Voltage.PeakReverseVoltage = TraverseConstants.maxReverseVoltage; 
+        //scoopMotorConfig.Voltage.PeakForwardVoltage = TraverseConstants.maxForwardVoltage; 
+        //scoopMotorConfig.Voltage.PeakReverseVoltage = TraverseConstants.maxReverseVoltage; 
 
         //add Current Limits? 
         rollerCurrentLimits = new CurrentLimitsConfigs();
