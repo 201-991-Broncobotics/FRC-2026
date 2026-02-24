@@ -74,7 +74,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
     private double rpmAdjustment = 50;
 
-    private DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
+    public static DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
 
     //temporary
     private double flywheelPower = 0.5;
