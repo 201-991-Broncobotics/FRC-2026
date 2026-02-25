@@ -1,13 +1,19 @@
 package frc.robot;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.Constants.ZoneConstants;
 import frc.robot.Constants.TurretConstants;
+import frc.robot.utility.Zone;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -36,20 +42,22 @@ public class Settings {
         public static double runningPower = 0.5; 
         public static double defaultPower = 0; 
 
-        public static double pivotMotorVelocity = 7.0; 
-        public static double pivotMotorAcceleration = 2.0; 
+        public static double pivotMotorVelocity = 10.0; //7
+        public static double pivotMotorAcceleration = 3.5; //2 
 
         public static double pivotkP = 6.0; 
         public static double pivotkI = 0; 
         public static double pivotkD = 0; 
         public static double pivotkG = 0.0; // 0.35
+
+        public static boolean autoControl = false;
         
     }
 
     public static class TraverseSettings {
 
-        public static double rollerMotorPower = 0.75; 
-        public static double scoopMotorPower = 0.75;
+        public static double rollerMotorPower = 1.0; 
+        public static double scoopMotorPower = 1.0;
 
 
     }
@@ -96,7 +104,10 @@ public class Settings {
         public static double hkD = 0; 
         public static double setVelocities = 1000; // rpm
         public static double targetTurntableAngle = 0; // degrees
-        
+
+        public static boolean autoLowerHood = true;
+
+        public static boolean reverseCounterDirection = false;
     }
 
 

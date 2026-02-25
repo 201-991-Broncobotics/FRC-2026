@@ -13,12 +13,16 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.MotorConstants;
+import frc.robot.Constants.ZoneConstants;
+import frc.robot.Robot;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Settings.IntakeSettings;
+import frc.robot.Settings.TurretSettings;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -32,7 +36,13 @@ public class IntakeSubsystem extends SubsystemBase {
     private final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
     //private CurrentLimitsConfigs currentLimits; 
 
-    public IntakeSubsystem(){
+    //Stuff for auto things
+    private CommandSwerveDrivetrain drivetrain;
+    private Pose2d RobotPose;
+    private boolean autoControlled = false;
+
+    public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
+        this.drivetrain = Drivetrain;
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
         rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
@@ -117,6 +127,8 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void lift(){
+        if(autoControlled){return;}
+
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(IntakeConstants.highLimitAngle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
@@ -124,6 +136,8 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void drop(){
+        if(autoControlled){return;}
+
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
         //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
@@ -189,6 +203,16 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
 
+        Pose2d lastRobotPose = RobotPose;
+        RobotPose = drivetrain.getState().Pose;
+        if((ZoneConstants.ballsZone.ifEnteredZone(lastRobotPose, RobotPose)) && IntakeSettings.autoControl){
+            drop();
+            autoControlled = true;
+        } else if (DrivingProfiles.ifEnteredZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) && IntakeSettings.autoControl){
+            autoControlled = false;
+            lift();
+        }
+
         IntakeSettings.defaultPower = SmartDashboard.getNumber("Roller Intake Default Voltage", IntakeSettings.defaultPower);
         IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Voltage", IntakeSettings.runningPower); 
         IntakeSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
@@ -203,7 +227,7 @@ public class IntakeSubsystem extends SubsystemBase {
             //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
             SmartDashboard.putNumber("Intake Pivot Position", Math.toDegrees(CurrentPivotPosition.getAsDouble()));
             SmartDashboard.putNumber("Intake Pivot Actual Position", rightPivotMotor.getPosition().getValueAsDouble());
-            SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.getMotorVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.get());
             SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
 
             SmartDashboard.putNumber("Intake Motor Temperature", intakeMotor.getDeviceTemp().getValueAsDouble());
@@ -218,6 +242,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
     }
 
+    public void enableAutoLower(){
+        IntakeSettings.autoControl = true;
+    }
 
-    
+    public void disableAutoLower(){
+        IntakeSettings.autoControl = false;
+    }   
 }
