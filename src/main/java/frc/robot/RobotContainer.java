@@ -49,7 +49,7 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem(drivetrain);
     private final TraverseSubsystem traverseSubsystem = new TraverseSubsystem();
     private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
     private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 

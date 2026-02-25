@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.utility.Zone;
 import frc.robot.utility.Shape;
@@ -121,11 +124,33 @@ public final class Constants {
 
     }
 
-    public static class AreaConstants {//Zones on the field
-        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(0,0), 1, 1));
+    public static class ZoneConstants {//Zones on the field
+        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(0,0), new Translation2d(2,2)));
         public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
         public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
         public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
 
+        public static ArrayList<Zone> TrenchZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
+
+
+        public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(0,0), new Translation2d(2,2)));
+        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
+        public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
+        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
+
+        public static ArrayList<Zone> RampZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
+
+
+        public static Zone blueClimb = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
+        public static Zone redClimb = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
+
+        public static ArrayList<Zone> ClimbZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
+
+
+        public static Zone ballsZone = new Zone(new Shape.Rectangle(new Translation2d(0,0), 2,4));
+
+        public static Zone middleZone = new Zone(new Shape.Rectangle(new Translation2d(0,0), 2,4));
+        public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,0), 2,4));
+        public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(0,0), 2,4));
     }
 }

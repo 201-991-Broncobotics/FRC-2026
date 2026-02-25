@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
+import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.Zone;
@@ -592,11 +593,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d lastRobotPose = robotPose;
         robotPose = drivetrain.getState().Pose;
 
-        if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredZones(robotPose, lastRobotPose, TurretSettings.Zones)){
+        if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
             //Lower hood and dont save the angle as the target
             setHood(TurretConstants.minHoodAngle, false);
             autoLowered = true;
-        }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, TurretSettings.Zones)){
+        }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
             autoLowered = false;
             //Lift hood back up to set angle
             setHood(TargetHoodAngle);

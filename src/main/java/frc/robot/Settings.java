@@ -11,7 +11,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.Constants.AreaConstants;
+import frc.robot.Constants.ZoneConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.utility.Zone;
 import edu.wpi.first.math.util.Units;
@@ -49,6 +49,8 @@ public class Settings {
         public static double pivotkI = 0; 
         public static double pivotkD = 0; 
         public static double pivotkG = 0.0; // 0.35
+
+        public static boolean autoControl = false;
         
     }
 
@@ -104,8 +106,6 @@ public class Settings {
         public static double targetTurntableAngle = 0; // degrees
 
         public static boolean autoLowerHood = true;
-
-        public static ArrayList<Zone> Zones = new ArrayList<>(Arrays.asList(AreaConstants.blueLeftTrench, AreaConstants.blueRightTrench, AreaConstants.redLeftTrench, AreaConstants.redRightTrench));
 
         public static boolean reverseCounterDirection = false;
     }
