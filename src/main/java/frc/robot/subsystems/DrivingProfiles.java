@@ -15,12 +15,14 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.Settings;
 import frc.robot.Constants.AutoDrivingConstants;
 import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain.gyroData;
 import frc.robot.utility.LimelightHelpers.PoseEstimate;
+import frc.robot.utility.Zone;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
@@ -278,4 +280,24 @@ public class DrivingProfiles extends SubsystemBase {
         
     }
 
+    //zone Stuff
+    public static boolean ifLeftZones(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> zones){
+        for (Zone zone : zones) {
+            if(!zone.ifLeftZone(lastPose, Pose)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean ifEnteredZones(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> zones){
+        for (Zone zone : zones) {
+            if(zone.ifEnteredZone(lastPose, Pose)){
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
