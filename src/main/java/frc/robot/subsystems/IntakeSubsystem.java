@@ -127,19 +127,27 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void lift(){
-        if(autoControlled){return;}
-
-        double feedforward = getGravityFeedForward();
-        rightPivotMotor.setControl(m_request.withPosition(IntakeConstants.highLimitAngle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
-        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
-
+        setPivotAngle(IntakeConstants.highLimitAngle);
     }
 
     public void drop(){
+        setPivotAngle(IntakeConstants.lowLimitAngle);
+    }
+
+    public void setPivotAngle(double angle){
         if(autoControlled){return;}
 
         double feedforward = getGravityFeedForward();
-        rightPivotMotor.setControl(m_request.withPosition(IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
+        rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
+        //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
+        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
+    }
+
+    public void setPivotAngle(double angle, double baseAngle){
+        if(autoControlled){return;}
+
+        double feedforward = getGravityFeedForward();
+        rightPivotMotor.setControl(m_request.withPosition(baseAngle+angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
         //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
@@ -208,9 +216,16 @@ public class IntakeSubsystem extends SubsystemBase {
         if((ZoneConstants.ballsZone.ifEnteredZone(lastRobotPose, RobotPose)) && IntakeSettings.autoControl){
             drop();
             autoControlled = true;
-        } else if (DrivingProfiles.ifEnteredZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) && IntakeSettings.autoControl){
+        } else if ((ZoneConstants.ballsZone.ifLeftZone(lastRobotPose, RobotPose)) && IntakeSettings.autoControl){
             autoControlled = false;
-            lift();
+        }
+
+         if(DrivingProfiles.ifEnteredZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) && IntakeSettings.autoControl){
+            setPivotAngle(10, IntakeConstants.lowLimitAngle);
+            autoControlled = true;
+        } else if (DrivingProfiles.ifLeftZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) && IntakeSettings.autoControl){
+            autoControlled = false;
+            drop();
         }
 
         IntakeSettings.defaultPower = SmartDashboard.getNumber("Roller Intake Default Voltage", IntakeSettings.defaultPower);

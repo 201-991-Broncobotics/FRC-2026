@@ -11,7 +11,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 public abstract class Shape {
     public enum ShapeType{
         RECTANGLE,
-        CIRCLE
+        CIRCLE,
+        SEMICIRCLE
     };
 
     Shape(){}
@@ -94,6 +95,32 @@ public abstract class Shape {
         @Override
         public boolean inArea(Translation2d pose){
             if (this._center.getDistance(pose) < this._width) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public static class Semicircle extends Shape{
+        private double _startAngle, _endAngle;
+
+        public Semicircle(Translation2d center, double radius, double startAngle, double endAngle){
+            this._center = center;
+            this._height = radius;
+            this._width = radius;
+
+            this._startAngle = startAngle;
+            this._endAngle = endAngle;
+
+            this._shapeType = ShapeType.SEMICIRCLE;
+        }
+
+        @Override
+        public boolean inArea(Translation2d pose){
+            double angleFromCenter = Math.atan2(pose.getY()-this._center.getY(), pose.getX()-this._center.getX());
+
+            if (this._center.getDistance(pose) < this._width && (angleFromCenter > _startAngle && angleFromCenter < _endAngle)) {
                 return true;
             } else {
                 return false;
