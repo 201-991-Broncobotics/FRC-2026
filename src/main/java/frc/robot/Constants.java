@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.utility.Area;
 import frc.robot.utility.Vector2d;
 
 /**
@@ -104,8 +106,9 @@ public final class Constants {
         public static final double gravityInches = 386.0885826; // in inches per second
 
         public static final double maxHoodAngle = Math.toRadians(70.196461);
-        public static final double minHoodAngle = Math.toRadians(70.196461 - 45);
+        public static final double minHoodAngle = Math.toRadians(70.196461 - 45);     
         
+        public static final double counterThreshold = 0;
     }
 
     public static class AutoDrivingConstants {
@@ -114,6 +117,14 @@ public final class Constants {
 
         public static Vector2d RedReefCenter = new Vector2d(4.284788875 + FieldLength/2, -0.000099 + FieldWidth/2);
         public static Vector2d BlueReefCenter = new Vector2d(-4.284788875 + FieldLength/2, -0.000099 + FieldWidth/2);
+
+    }
+
+    public static class AreaConstants {//Areas on the field
+        public static Area blueLeftTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
+        public static Area blueRightTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
+        public static Area redLeftTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
+        public static Area redRightTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
 
     }
 }

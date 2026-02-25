@@ -1,13 +1,19 @@
 package frc.robot;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.Constants.AreaConstants;
 import frc.robot.Constants.TurretConstants;
+import frc.robot.utility.Area;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -96,7 +102,12 @@ public class Settings {
         public static double hkD = 0; 
         public static double setVelocities = 1000; // rpm
         public static double targetTurntableAngle = 0; // degrees
-        
+
+        public static boolean autoLowerHood = true;
+
+        public static ArrayList<Area> Areas = new ArrayList<>(Arrays.asList(AreaConstants.blueLeftTrench, AreaConstants.blueRightTrench, AreaConstants.redLeftTrench, AreaConstants.redRightTrench));
+
+        public static boolean reverseCounterDirection = false;
     }
 
 

@@ -15,12 +15,14 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.Settings;
 import frc.robot.Constants.AutoDrivingConstants;
 import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain.gyroData;
 import frc.robot.utility.LimelightHelpers.PoseEstimate;
+import frc.robot.utility.Area;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
@@ -276,4 +278,40 @@ public class DrivingProfiles extends SubsystemBase {
         
     }
 
+    //Area Stuff
+    public static boolean ifLeftArea(Pose2d lastPose, Pose2d Pose, Area area){
+        if(!area.inArea(Pose) && area.inArea(lastPose)){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean ifEnteredArea(Pose2d lastPose, Pose2d Pose,Area area){
+        if(!area.inArea(Pose) && area.inArea(lastPose)){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean ifLeftAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Area> areas){
+        for (Area area : areas) {
+            if(!ifLeftArea(lastPose, Pose, area)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean ifEnteredAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Area> areas){
+        for (Area area : areas) {
+            if(!ifEnteredArea(lastPose, Pose, area)){
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

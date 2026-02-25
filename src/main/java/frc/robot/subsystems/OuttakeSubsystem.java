@@ -26,6 +26,7 @@ import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.TurretSettings;
+import frc.robot.utility.Area;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
@@ -70,6 +71,9 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private ThroughBoreEncoder throughBore21, throughBore19, throughBoreCounter;
 
+    private double counterAngle = 0;
+    private int ballsCounted = 0;
+
     // Only for testing
     private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
     private double rpmAdjustment = 50;
@@ -80,6 +84,8 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double flywheelPower = 0.5;
     private boolean justChangedPower = false;
 
+    private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
+    private boolean autoLowered = false;
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
@@ -262,15 +268,25 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
     public boolean setHood(double Angle) {
-        if (Angle >= TurretConstants.minHoodAngle && Angle <= TurretConstants.maxHoodAngle) {
-            TargetHoodAngle = Angle;
-            hoodMotor.setControl(new MotionMagicVelocityDutyCycle(TargetHoodAngle)); 
-            return true;
-        } else {
-            TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
-            hoodMotor.setControl(new MotionMagicVelocityDutyCycle(TargetHoodAngle)); 
-            return false;
+        return setHood(Angle, true);
+    }
+
+    public boolean setHood(double Angle, boolean saveAngle) {
+        boolean inRange = (Angle >= TurretConstants.minHoodAngle && Angle <= TurretConstants.maxHoodAngle);
+
+        if (!inRange){//Constraint to hood range
+            Angle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
         }
+
+        if (saveAngle) {//Save the target hood angle to angle if you wanna save
+            TargetHoodAngle = Angle;
+        }
+
+        if (!autoLowered) { //Set hood angle to constrained angle
+            hoodMotor.setControl(new MotionMagicVelocityDutyCycle(Angle)); 
+        }
+
+        return inRange;
     }
 
 
@@ -563,11 +579,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         solveForAngle(OuttakeTrajectorySettings.targetDistance, OuttakeTrajectorySettings.targetHeight, TurretSettings.setVelocities);
     }
 
-
-    
-
-
-
     @Override
     public void periodic(){
         FrameTime = FrameTimer.time();
@@ -575,6 +586,34 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
+        }
+
+        //Auto Lower
+        Pose2d lastRobotPose = robotPose;
+        robotPose = drivetrain.getState().Pose;
+
+        if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredAreas(robotPose, lastRobotPose, TurretSettings.Areas)){
+            //Lower hood and dont save the angle as the target
+            setHood(TurretConstants.minHoodAngle, false);
+            autoLowered = true;
+        }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftAreas(robotPose, lastRobotPose, TurretSettings.Areas)){
+            autoLowered = false;
+            //Lift hood back up to set angle
+            setHood(TargetHoodAngle);
+        }
+        
+
+        //Counter for the balls - IDK if it gives radians or degrees
+        double lastCounterAngle = counterAngle;
+        counterAngle = throughBoreCounter.getRelativeAngle();
+
+        //AIDAN & MAEL TAKE A LOOK PLS
+        if(!TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) > TurretConstants.counterThreshold && Math.abs(lastCounterAngle) < TurretConstants.counterThreshold)){
+
+            ballsCounted++;
+        } else if (TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) < TurretConstants.counterThreshold && Math.abs(lastCounterAngle) > TurretConstants.counterThreshold)){
+
+            ballsCounted++;
         }
 
         TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
@@ -603,8 +642,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
 
 
-
-
         try { // prevents crashing
             SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));
             // launch angle, launch vel, target dist, target height, flight time
@@ -618,7 +655,17 @@ public class OuttakeSubsystem extends SubsystemBase {
         } catch (NullPointerException e) {
             // do nothing
         }
-        
     }
-    
+
+    public void enableAutoLower(){
+        TurretSettings.autoLowerHood = true;
+    }
+
+    public void disableAutoLower(){
+        TurretSettings.autoLowerHood = false;
+    }
+
+    public int getBallsCounted(){
+        return ballsCounted;
+    }
 }
