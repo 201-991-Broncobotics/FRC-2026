@@ -13,7 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants.AreaConstants;
 import frc.robot.Constants.TurretConstants;
-import frc.robot.utility.Area;
+import frc.robot.utility.Zone;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -105,7 +105,7 @@ public class Settings {
 
         public static boolean autoLowerHood = true;
 
-        public static ArrayList<Area> Areas = new ArrayList<>(Arrays.asList(AreaConstants.blueLeftTrench, AreaConstants.blueRightTrench, AreaConstants.redLeftTrench, AreaConstants.redRightTrench));
+        public static ArrayList<Zone> Zones = new ArrayList<>(Arrays.asList(AreaConstants.blueLeftTrench, AreaConstants.blueRightTrench, AreaConstants.redLeftTrench, AreaConstants.redRightTrench));
 
         public static boolean reverseCounterDirection = false;
     }

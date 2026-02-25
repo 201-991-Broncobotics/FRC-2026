@@ -5,7 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.utility.Area;
+import frc.robot.utility.Zone;
+import frc.robot.utility.Shape;
 import frc.robot.utility.Vector2d;
 
 /**
@@ -120,11 +121,11 @@ public final class Constants {
 
     }
 
-    public static class AreaConstants {//Areas on the field
-        public static Area blueLeftTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
-        public static Area blueRightTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
-        public static Area redLeftTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
-        public static Area redRightTrench = new Area(new Translation2d(1,1), new Translation2d(2,2));
+    public static class AreaConstants {//Zones on the field
+        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(0,0), 1, 1));
+        public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
+        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
+        public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(1,1), new Translation2d(2,2)));
 
     }
 }

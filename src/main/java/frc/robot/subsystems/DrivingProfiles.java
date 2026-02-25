@@ -22,7 +22,7 @@ import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain.gyroData;
 import frc.robot.utility.LimelightHelpers.PoseEstimate;
-import frc.robot.utility.Area;
+import frc.robot.utility.Zone;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
@@ -279,7 +279,7 @@ public class DrivingProfiles extends SubsystemBase {
     }
 
     //Area Stuff
-    public static boolean ifLeftArea(Pose2d lastPose, Pose2d Pose, Area area){
+    public static boolean ifLeftArea(Pose2d lastPose, Pose2d Pose, Zone area){
         if(!area.inArea(Pose) && area.inArea(lastPose)){
             return true;
         } else {
@@ -287,7 +287,7 @@ public class DrivingProfiles extends SubsystemBase {
         }
     }
 
-    public static boolean ifEnteredArea(Pose2d lastPose, Pose2d Pose,Area area){
+    public static boolean ifEnteredArea(Pose2d lastPose, Pose2d Pose,Zone area){
         if(!area.inArea(Pose) && area.inArea(lastPose)){
             return true;
         } else {
@@ -295,8 +295,8 @@ public class DrivingProfiles extends SubsystemBase {
         }
     }
 
-    public static boolean ifLeftAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Area> areas){
-        for (Area area : areas) {
+    public static boolean ifLeftAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> areas){
+        for (Zone area : areas) {
             if(!ifLeftArea(lastPose, Pose, area)){
                 return false;
             }
@@ -305,8 +305,8 @@ public class DrivingProfiles extends SubsystemBase {
         return true;
     }
 
-    public static boolean ifEnteredAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Area> areas){
-        for (Area area : areas) {
+    public static boolean ifEnteredAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> areas){
+        for (Zone area : areas) {
             if(!ifEnteredArea(lastPose, Pose, area)){
                 return false;
             }
