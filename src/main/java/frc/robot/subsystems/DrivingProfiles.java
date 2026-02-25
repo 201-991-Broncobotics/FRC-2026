@@ -278,26 +278,10 @@ public class DrivingProfiles extends SubsystemBase {
         
     }
 
-    //Area Stuff
-    public static boolean ifLeftArea(Pose2d lastPose, Pose2d Pose, Zone area){
-        if(!area.inArea(Pose) && area.inArea(lastPose)){
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public static boolean ifEnteredArea(Pose2d lastPose, Pose2d Pose,Zone area){
-        if(!area.inArea(Pose) && area.inArea(lastPose)){
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public static boolean ifLeftAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> areas){
-        for (Zone area : areas) {
-            if(!ifLeftArea(lastPose, Pose, area)){
+    //zone Stuff
+    public static boolean ifLeftZones(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> zones){
+        for (Zone zone : zones) {
+            if(!zone.ifLeftZone(lastPose, Pose)){
                 return false;
             }
         }
@@ -305,9 +289,9 @@ public class DrivingProfiles extends SubsystemBase {
         return true;
     }
 
-    public static boolean ifEnteredAreas(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> areas){
-        for (Zone area : areas) {
-            if(!ifEnteredArea(lastPose, Pose, area)){
+    public static boolean ifEnteredZones(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> zones){
+        for (Zone zone : zones) {
+            if(zone.ifEnteredZone(lastPose, Pose)){
                 return false;
             }
         }

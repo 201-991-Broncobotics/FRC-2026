@@ -592,11 +592,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d lastRobotPose = robotPose;
         robotPose = drivetrain.getState().Pose;
 
-        if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredAreas(robotPose, lastRobotPose, TurretSettings.Zones)){
+        if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredZones(robotPose, lastRobotPose, TurretSettings.Zones)){
             //Lower hood and dont save the angle as the target
             setHood(TurretConstants.minHoodAngle, false);
             autoLowered = true;
-        }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftAreas(robotPose, lastRobotPose, TurretSettings.Zones)){
+        }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, TurretSettings.Zones)){
             autoLowered = false;
             //Lift hood back up to set angle
             setHood(TargetHoodAngle);

@@ -22,7 +22,7 @@ public class Zone {
         _shape = shape;
     }
 
-    public boolean ifLeftArea(Pose2d lastPose, Pose2d Pose, Zone area){
+    public boolean ifLeftZone(Pose2d lastPose, Pose2d Pose){
         if(!_shape.inArea(Pose.getTranslation()) && _shape.inArea(lastPose.getTranslation())){
             return true;
         } else {
@@ -30,7 +30,7 @@ public class Zone {
         }
     }
 
-    public boolean ifEnteredArea(Pose2d lastPose, Pose2d Pose,Zone area){
+    public boolean ifEnteredZone(Pose2d lastPose, Pose2d Pose){
         if(!_shape.inArea(Pose.getTranslation()) && _shape.inArea(lastPose.getTranslation())){
             return true;
         } else {
