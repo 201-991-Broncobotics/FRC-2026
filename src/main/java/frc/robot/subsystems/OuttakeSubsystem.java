@@ -13,6 +13,16 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -45,8 +55,11 @@ import org.apache.commons.math3.analysis.polynomials.*;
 
 public class OuttakeSubsystem extends SubsystemBase {
 
-    private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor, hoodMotor;
-    private TalonFXConfiguration flywheelConfig, turntableConfig, hoodConfig; 
+    private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor;
+    private TalonFXConfiguration flywheelConfig, turntableConfig; 
+    private SparkFlex hoodMotor;
+    private SparkFlexConfig hoodConfig;
+    private SparkClosedLoopController hoodClosedLoopController;
     private StatusCode flywheelStatus, turntableStatus, hoodStatus; 
     private CurrentLimitsConfigs currentLimits; 
     private double lastkP, lastkI, lastkD, lastkS, lastkV, lastkA, 
@@ -127,11 +140,11 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         turntableMotor = new TalonFX(MotorConstants.turntableID); 
 
-        hoodMotor = new TalonFX(MotorConstants.hoodMotorID); 
+        hoodMotor = new SparkFlex(MotorConstants.hoodMotorID, MotorType.kBrushless);
 
         flywheelConfig = new TalonFXConfiguration(); 
         turntableConfig = new TalonFXConfiguration(); 
-        hoodConfig = new TalonFXConfiguration(); 
+        hoodConfig = new SparkFlexConfig();
 
         flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; 
         flywheelConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
@@ -157,15 +170,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         turntableConfig.Slot0.kI = TurretSettings.tkI; 
         turntableConfig.Slot0.kD = TurretSettings.tkD; 
 
-        hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; 
-        hoodConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
-        hoodConfig.Voltage.PeakForwardVoltage = TurretConstants.maxForwardVoltage; 
-        hoodConfig.Voltage.PeakReverseVoltage = TurretConstants.maxReverseVoltage; 
-
-        hoodConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor; 
-        hoodConfig.Slot0.kP = TurretSettings.hkP; 
-        hoodConfig.Slot0.kI = TurretSettings.hkI; 
-        hoodConfig.Slot0.kD = TurretSettings.hkD; 
+        
 
         //add current limits
         currentLimits = new CurrentLimitsConfigs();
@@ -176,18 +181,28 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         flywheelConfig.CurrentLimits = currentLimits; 
         turntableConfig.CurrentLimits = currentLimits; 
-        hoodConfig.CurrentLimits = currentLimits; 
 
         leftFlyMotor.getConfigurator().apply(flywheelConfig); 
         rightFlyMotor.getConfigurator().apply(flywheelConfig); 
 
         turntableMotor.getConfigurator().apply(turntableConfig);
 
-        hoodMotor.getConfigurator().apply(hoodConfig);
+
+        
+        // SparkFlex
+        hoodConfig.idleMode(IdleMode.kBrake);
+        hoodConfig.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder);
+        hoodConfig.closedLoop.p(TurretSettings.hkP); 
+        hoodConfig.closedLoop.i(TurretSettings.hkI); 
+        hoodConfig.closedLoop.d(TurretSettings.hkD); 
+        hoodConfig.closedLoop.outputRange(-1, 1);
+        hoodConfig.smartCurrentLimit(TurretConstants.hoodMotorCurrent);
+
+        hoodClosedLoopController = hoodMotor.getClosedLoopController();
+        hoodMotor.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         flywheelStatus = rightFlyMotor.getConfigurator().apply(flywheelConfig); 
         turntableStatus = turntableMotor.getConfigurator().apply(turntableConfig); 
-        hoodStatus = hoodMotor.getConfigurator().apply(hoodConfig); 
 
         lastkP = TurretSettings.kP;
         lastkI = TurretSettings.kI;
@@ -224,7 +239,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
         CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
-        CurrentHoodAngle = () -> hoodMotor.getPosition().getValueAsDouble();
+        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition();
         CurrentFlywheelRPM = () -> 0;
 
     }
@@ -264,11 +279,11 @@ public class OuttakeSubsystem extends SubsystemBase {
     public boolean setHood(double Angle) {
         if (Angle >= TurretConstants.minHoodAngle && Angle <= TurretConstants.maxHoodAngle) {
             TargetHoodAngle = Angle;
-            hoodMotor.setControl(new MotionMagicVelocityDutyCycle(TargetHoodAngle)); 
+            hoodClosedLoopController.setSetpoint(TargetHoodAngle, ControlType.kPosition);
             return true;
         } else {
             TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
-            hoodMotor.setControl(new MotionMagicVelocityDutyCycle(TargetHoodAngle)); 
+            hoodClosedLoopController.setSetpoint(TargetHoodAngle, ControlType.kPosition);
             return false;
         }
     }
@@ -387,19 +402,19 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         if (TurretSettings.hkP != lastPkP){
             lastPkP = TurretSettings.hkP;
-            hoodConfig.Slot0.kP = lastPkP; 
+            hoodConfig.closedLoop.p(lastPkP); 
             hoodValueHasChanged = true;  
         }
 
         if (TurretSettings.hkI != lastPkI){
             lastPkI = TurretSettings.hkI;
-            hoodConfig.Slot0.kI = lastPkI; 
+            hoodConfig.closedLoop.i(lastPkI); 
             hoodValueHasChanged = true;  
         }
 
         if (TurretSettings.hkD != lastPkD){
             lastPkD = TurretSettings.hkD;
-            hoodConfig.Slot0.kD = lastPkD; 
+            hoodConfig.closedLoop.d(lastPkD); 
             hoodValueHasChanged = true;  
         }
 
@@ -409,7 +424,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         if (turntableValueHasChanged) turntableMotor.getConfigurator().apply(turntableConfig); 
-        if (hoodValueHasChanged) hoodMotor.getConfigurator().apply(hoodConfig); 
+        if (hoodValueHasChanged) hoodMotor.configure(hoodConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
     }
 

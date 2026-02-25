@@ -96,6 +96,7 @@ public final class Constants {
         public static final boolean currentLimitsEnabled = true; 
         public static final double supplyCurrent = 60; 
         public static final double statorCurrent = 80; 
+        public static final int hoodMotorCurrent = 40;
 
         public static final double gravityInches = 386.0885826; // in inches per second
 
