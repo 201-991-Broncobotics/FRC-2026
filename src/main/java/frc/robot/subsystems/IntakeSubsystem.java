@@ -208,7 +208,7 @@ public class IntakeSubsystem extends SubsystemBase {
         if((ZoneConstants.ballsZone.ifEnteredZone(lastRobotPose, RobotPose)) && IntakeSettings.autoControl){
             drop();
             autoControlled = true;
-        } else if ((DrivingProfiles.ifEnteredZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) || ZoneConstants.ballsZone.ifEnteredZone(lastRobotPose, RobotPose)) && IntakeSettings.autoControl){
+        } else if (DrivingProfiles.ifEnteredZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) && IntakeSettings.autoControl){
             autoControlled = false;
             lift();
         }
