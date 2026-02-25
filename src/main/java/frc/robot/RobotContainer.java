@@ -112,6 +112,8 @@ public class RobotContainer {
 
         operator.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
         operator.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+        driver.povLeft().toggleOnTrue(new InstantCommand(climbingSubsystem::extend));
+        driver.povRight().toggleOnTrue(new InstantCommand(climbingSubsystem::retract));
         driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
         driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
         //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 

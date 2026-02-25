@@ -68,14 +68,14 @@ public class Settings {
         public static double climberMotorAcceleration = 1.2; 
         public static double climberkP = 1; 
         public static double climberkI = 0; 
-        public static double climberkD = 0.2; 
+        public static double climberkD = 0.001; 
         public static double climberkG = 0.35; 
 
-        public static double elevatorMotorVelocity = 0.4; 
-        public static double elevatorMotorAcceleration = 1.2; 
-        public static double elevatorkP = 1; 
+        public static double elevatorMotorVelocity = 100; 
+        public static double elevatorMotorAcceleration = 20; 
+        public static double elevatorkP = 4; 
         public static double elevatorkI = 0; 
-        public static double elevatorkD = 0.2; 
+        public static double elevatorkD = 0.001; 
         public static double elevatorkG = 0.35; 
 
     }

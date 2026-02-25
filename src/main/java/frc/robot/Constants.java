@@ -84,10 +84,10 @@ public final class Constants {
         public static final double gearRatio = (1.0/15.0); 
         public static final double ticksPerRev = 2048; 
 
-        public static final double startingPosition = 26.511230; 
-        public static final double maxLimitPosition = 1; 
+        public static final double startingPosition = 0; 
+        public static final double maxLimitPosition = Math.toRadians(10848.515625); 
 
-        public static final double elavatorActualPositionOffset = 14.726563;
+        public static final double elavatorActualPositionOffset = 46.760744;
     }
 
     public static class TurretConstants {
