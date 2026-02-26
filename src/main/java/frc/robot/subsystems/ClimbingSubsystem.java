@@ -18,6 +18,7 @@ import frc.robot.Constants.ClimbingConstants;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Settings.ClimbingSettings;
+import frc.robot.Settings.IntakeSettings;
 
 public class ClimbingSubsystem extends SubsystemBase {
 
@@ -30,6 +31,7 @@ public class ClimbingSubsystem extends SubsystemBase {
     private CurrentLimitsConfigs currentLimits; 
     private DoubleSupplier CurrentElevatorPosition;
     private double elevatorOffset = 0;
+    private final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
 
 
 
@@ -128,19 +130,24 @@ public class ClimbingSubsystem extends SubsystemBase {
     public void extend(){
 
         //climberMotor.setControl(new MotionMagicVoltage(climberRotations).withSlot(0));
-        elevatorMotor.setControl(new MotionMagicVoltage(elevatorRotations).withSlot(0)); 
+        //elevatorMotor.setControl(new MotionMagicVoltage(elevatorRotations).withSlot(0)); 
+        if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) > 26.5) elevatorMotor.stopMotor();
+        else if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) < 26.5) elevatorMotor.setControl(m_request.withPosition(ClimbingConstants.maxLimitPosition / (2*Math.PI) + elevatorOffset).withFeedForward(ClimbingSettings.elevatorkG)); 
+        
 
     }
 
     public void retract(){
 
         //climberMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));
-        elevatorMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));  
+        //elevatorMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));  
+        if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) > 26.5) elevatorMotor.stopMotor();
+        else if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) < 26.5) elevatorMotor.setControl(m_request.withPosition(ClimbingConstants.startingPosition / (2 * Math.PI) + elevatorOffset).withFeedForward(-ClimbingSettings.elevatorkG));
 
     }
 
     public void justExtend() {
-        if (currentLimits.SupplyCurrentLimit > 45) {
+        if (elevatorMotor.getStatorCurrent().getValueAsDouble() > 25) {
             elevatorMotor.stopMotor();
         }
         elevatorMotor.set(0.2);
@@ -148,7 +155,7 @@ public class ClimbingSubsystem extends SubsystemBase {
     }
 
     public void justRetract() {
-        if (currentLimits.SupplyCurrentLimit > 45) {
+        if (elevatorMotor.getStatorCurrent().getValueAsDouble() > 25) {
             elevatorMotor.stopMotor();
         }
         elevatorMotor.set(-0.2);
@@ -279,9 +286,10 @@ public class ClimbingSubsystem extends SubsystemBase {
             //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
             //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
             SmartDashboard.putNumber("Elevator Position", Math.toDegrees(CurrentElevatorPosition.getAsDouble()));
-            SmartDashboard.putNumber("Elevator Actual Position", elevatorMotor.getPosition().getValueAsDouble() + ClimbingConstants.elavatorActualPositionOffset);
+            SmartDashboard.putNumber("Elevator Actual Position", elevatorMotor.getPosition().getValueAsDouble());
             SmartDashboard.putNumber("Elevator Power", elevatorMotor.getMotorVoltage().getValueAsDouble());
             SmartDashboard.putNumber("Elevator low target", ClimbingConstants.startingPosition / (2*Math.PI) + elevatorOffset);
+            SmartDashboard.putNumber("Elevator Stator Current", elevatorMotor.getStatorCurrent().getValueAsDouble());
 
         } catch (NullPointerException e) {
             // do nothing

@@ -208,17 +208,19 @@ public class DrivingProfiles extends SubsystemBase {
         if (drivetrain != null && OuttakeSubsystem.CurrentTurretAngle != null) {
             PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
+            if (LimelightPoseEstimate != null) {
+                double TurretAngle = OuttakeSubsystem.CurrentTurretAngle.getAsDouble();
+                Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));
+                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degree pitch up
+                    LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
+                    LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
+                    CorrectFacingDirection
+                );
 
-            double TurretAngle = OuttakeSubsystem.CurrentTurretAngle.getAsDouble();
-            Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));
-            Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degree pitch up
-                LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
-                LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
-                CorrectFacingDirection
-            );
 
-
-            if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.25, 0.25, 5.0)); // standard deviation of vision measurements in meters and degrees
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.25, 0.25, 5.0)); // standard deviation of vision measurements in meters and degrees
+            }
+            
 
             RobotPose = drivetrain.getState().Pose;
             SmartDashboard.putString("ROBOT POSE:", "X:" + RobotPose.getX() + " Y:" + RobotPose.getY() + " R:" + RobotPose.getRotation().getDegrees());
