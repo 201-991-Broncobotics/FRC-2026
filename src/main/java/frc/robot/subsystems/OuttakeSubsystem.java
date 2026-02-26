@@ -620,9 +620,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
         
 
-        //Counter for the balls - IDK if it gives radians or degrees
+        //Counter for the balls
         double lastCounterAngle = counterAngle;
-        counterAngle = throughBoreCounter.getRelativeAngle();
+        counterAngle = Math.toDegrees(throughBoreCounter.getRelativeAngle());
 
         //AIDAN & MAEL TAKE A LOOK PLS
         if(!TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) > TurretConstants.counterThreshold && Math.abs(lastCounterAngle) < TurretConstants.counterThreshold)){
