@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -82,6 +83,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double TurretStartingOffset = 0;
     private double lastSimSolveTime = 0;
     private double[] lastSimTraj = new double[] {0,0,0,0,0}; // launch angle, launch vel, target dist, target height, flight time
+    private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0);
 
     private ThroughBoreEncoder throughBore21, throughBore19, throughBoreCounter;
 
@@ -226,7 +228,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         if (!flywheelStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Flywheel motors are broken!");
         if (!turntableStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Turntable motor with ID " + MotorConstants.turntableID + " is broken!"); 
-        if (!hoodStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.hoodMotorID + " is broken!"); 
+        //if (!hoodStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.hoodMotorID + " is broken!"); 
 
         SmartDashboard.putNumber("Flywheel kP", TurretSettings.kP);
         SmartDashboard.putNumber("Flywheel kI", TurretSettings.kI);
@@ -282,6 +284,9 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
+    public void incrementHood(double angle){
+        setHood(TargetHoodAngle + angle);
+    }
 
     public boolean setHood(double Angle) {
         return setHood(Angle, true);
@@ -345,7 +350,8 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void tuneFlywheel(){
         //function.value(getFlywheelTrajectory()); //put this inside motionmagic later 
         if (!justToggledTuning) {
-            rightFlyMotor.setControl(new MotionMagicVelocityDutyCycle(TurretSettings.setVelocities / 60.0).withSlot(0)); 
+            // rightFlyMotor.setControl
+            rightFlyMotor.setControl(flywheelVelocityRequest.withVelocity(TurretSettings.setVelocities / 60.0)); 
             leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
             justToggledTuning = true;
         } else {
@@ -620,19 +626,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
         
 
-        //Counter for the balls - IDK if it gives radians or degrees
-        double lastCounterAngle = counterAngle;
-        counterAngle = throughBoreCounter.getRelativeAngle();
-
-        //AIDAN & MAEL TAKE A LOOK PLS
-        if(!TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) > TurretConstants.counterThreshold && Math.abs(lastCounterAngle) < TurretConstants.counterThreshold)){
-
-            ballsCounted++;
-        } else if (TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) < TurretConstants.counterThreshold && Math.abs(lastCounterAngle) > TurretConstants.counterThreshold)){
-
-            ballsCounted++;
-        }
-
         TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
         TurretSettings.kI = SmartDashboard.getNumber("Flywheel kI", TurretSettings.kI);
         TurretSettings.kD = SmartDashboard.getNumber("Flywheel kD", TurretSettings.kD);
@@ -649,15 +642,31 @@ public class OuttakeSubsystem extends SubsystemBase {
         checkForTuning();
 
         try { // prevents crashing
+            SmartDashboard.putNumber("Flywheel Error", (TurretSettings.setVelocities - Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60)));
+            SmartDashboard.putNumber("Hood Error", ((TargetHoodAngle/(2*Math.PI))*360) - hoodMotor.getEncoder().getPosition()/360);
             SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
             SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
             SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
+
+            //Counter for the balls - IDK if it gives radians or degrees
+            double lastCounterAngle = counterAngle;
+            counterAngle = throughBoreCounter.getRelativeAngle();
+            //AIDAN & MAEL TAKE A LOOK PLS
+            if(!TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) > TurretConstants.counterThreshold && Math.abs(lastCounterAngle) < TurretConstants.counterThreshold)){
+
+                ballsCounted++;
+            } else if (TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) < TurretConstants.counterThreshold && Math.abs(lastCounterAngle) > TurretConstants.counterThreshold)){
+
+                ballsCounted++;
+            }
+
         } catch (NullPointerException e) {
             // do nothing
         }
 
         SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
 
+        SmartDashboard.putBoolean("Auto Lowered?", autoLowered);
 
         try { // prevents crashing
             SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));

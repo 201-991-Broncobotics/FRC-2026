@@ -23,6 +23,8 @@ public class Zone {
     }
 
     public boolean ifLeftZone(Pose2d lastPose, Pose2d Pose){
+        if (lastPose == null) return false;
+        
         if(!_shape.inArea(Pose.getTranslation()) && _shape.inArea(lastPose.getTranslation())){
             return true;
         } else {
@@ -31,10 +33,13 @@ public class Zone {
     }
 
     public boolean ifEnteredZone(Pose2d lastPose, Pose2d Pose){
+        if (lastPose == null) return false;
+        
         if(!_shape.inArea(Pose.getTranslation()) && _shape.inArea(lastPose.getTranslation())){
             return true;
         } else {
             return false;
         }
+        
     }
 }
