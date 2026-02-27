@@ -91,7 +91,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private int ballsCounted = 0;
 
     // Only for testing
-    private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;
+    private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;//Degrees
     private double rpmAdjustment = 50;
 
     public static DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
@@ -280,14 +280,14 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
     public void incrementHood(double input){
-        setHood(TargetHoodAngle + (input*TurretConstants.incrementAngle));
+        setHood(TargetHoodAngle + (input*Math.toRadians(TurretConstants.incrementAngle)));
     }
 
     public boolean setHood(double Angle) {
         return setHood(Angle, true);
     }
 
-    public boolean setHood(double Angle, boolean saveAngle) {
+    public boolean setHood(double Angle, boolean saveAngle) {//Radians
         boolean inRange = (Angle >= TurretConstants.minHoodAngle && Angle <= TurretConstants.maxHoodAngle);
 
         if (!inRange){//Constraint to hood range
@@ -299,8 +299,12 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         if (!autoLowered) { //Set hood angle to constrained angle
-            TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
-            hoodClosedLoopController.setSetpoint(TargetHoodAngle, ControlType.kPosition);
+            Angle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
+
+            //Convert Angle to motor rotationss
+            double motorRot = Functions.map(Angle, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TurretConstants.minHoodMotorRot, TurretConstants.maxHoodMotorRot);
+
+            hoodClosedLoopController.setSetpoint(motorRot, ControlType.kPosition);
         }
 
         return inRange;
@@ -490,7 +494,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
     public double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
-    public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
+    public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); } //Degrees
     public double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
 
     private double getAbsoluteTurretAngle() {
@@ -603,7 +607,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTimer.reset();
 
         CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
-        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition();
+        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition()*360;
         CurrentFlywheelRPM = () -> 0;
 
         if (drivetrain != null) {
@@ -642,8 +646,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         try { // prevents crashing
             SmartDashboard.putNumber("Flywheel Error", (TurretSettings.setVelocities - Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60)));
-            SmartDashboard.putNumber("Hood Error", ((TargetHoodAngle/(2*Math.PI))*360) - CurrentHoodAngle.getAsDouble()/360);
-            SmartDashboard.putNumber("Hood Angle", ((TargetHoodAngle/(2*Math.PI))*360) - CurrentHoodAngle.getAsDouble()/360);
+            SmartDashboard.putNumber("Hood Error", (Math.toDegrees(TargetHoodAngle) - CurrentHoodAngle.getAsDouble()));
+            SmartDashboard.putNumber("Hood Angle", (CurrentHoodAngle.getAsDouble()));
             SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
             SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
             SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);

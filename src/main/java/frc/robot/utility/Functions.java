@@ -1,5 +1,7 @@
 package frc.robot.utility;
 
+import java.util.Map;
+
 public class Functions {
 
     /** Finds the smallest difference between two angles or gets the equivalent angle between -180 and
@@ -92,6 +94,10 @@ public class Functions {
     public static double deadbandValue(double value, double deadband) {
         if (Math.abs(value) < deadband) return 0.0;
         else return (1 - deadband) * value + deadband * Math.signum(value);
+    }
+
+    public static double map(double x, double in_min, double in_max, double out_min, double out_max) {
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
 
 }
