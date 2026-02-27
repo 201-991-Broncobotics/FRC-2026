@@ -103,7 +103,7 @@ public class IntakeSubsystem extends SubsystemBase {
         if (!pivotMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motors are broken!");
    
 
-        SmartDashboard.putNumber("Roller Intake Default Power", IntakeSettings.defaultPower);
+        SmartDashboard.putNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
         SmartDashboard.putNumber("Roller Intake Running Power", IntakeSettings.runningPower);
         SmartDashboard.putNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
         SmartDashboard.putNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
@@ -118,12 +118,12 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotor.set(IntakeSettings.runningPower); 
     }
 
-    public void stall(){
-        intakeMotor.set(IntakeSettings.defaultPower);
-    }
-
     public void stopRollers(){
         intakeMotor.stopMotor();
+    }
+
+    public void reverseFeed(){
+        intakeMotor.set(IntakeSettings.reversePower);
     }
 
     public void lift(){
@@ -228,8 +228,8 @@ public class IntakeSubsystem extends SubsystemBase {
             drop();
         }
 
-        IntakeSettings.defaultPower = SmartDashboard.getNumber("Roller Intake Default Voltage", IntakeSettings.defaultPower);
-        IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Voltage", IntakeSettings.runningPower); 
+        IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
+        IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Power", IntakeSettings.runningPower); 
         IntakeSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
         IntakeSettings.pivotMotorAcceleration = SmartDashboard.getNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
         IntakeSettings.pivotkP = SmartDashboard.getNumber("Pivot kP", IntakeSettings.pivotkP);
