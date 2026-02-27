@@ -246,11 +246,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
 
-
-        CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
-        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition();
-        CurrentFlywheelRPM = () -> 0;
-
     }
 
     public void target(double X, double Y, double H) { // h is height
@@ -284,8 +279,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
-    public void incrementHood(double angle){
-        setHood(TargetHoodAngle + angle);
+    public void incrementHood(double input){
+        setHood(TargetHoodAngle + (input*TurretConstants.incrementAngle));
     }
 
     public boolean setHood(double Angle) {
@@ -607,6 +602,10 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTime = FrameTimer.time();
         FrameTimer.reset();
 
+        CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
+        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition();
+        CurrentFlywheelRPM = () -> 0;
+
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
         }
@@ -643,7 +642,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         try { // prevents crashing
             SmartDashboard.putNumber("Flywheel Error", (TurretSettings.setVelocities - Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60)));
-            SmartDashboard.putNumber("Hood Error", ((TargetHoodAngle/(2*Math.PI))*360) - hoodMotor.getEncoder().getPosition()/360);
+            SmartDashboard.putNumber("Hood Error", ((TargetHoodAngle/(2*Math.PI))*360) - CurrentHoodAngle.getAsDouble()/360);
+            SmartDashboard.putNumber("Hood Angle", ((TargetHoodAngle/(2*Math.PI))*360) - CurrentHoodAngle.getAsDouble()/360);
             SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
             SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
             SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);

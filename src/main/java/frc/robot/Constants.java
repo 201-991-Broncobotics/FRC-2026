@@ -114,6 +114,8 @@ public final class Constants {
         public static final double minHoodAngle = Math.toRadians(70.196461 - 45);     
         
         public static final double counterThreshold = 0; //Degrees
+
+        public static final double incrementAngle = 2.5; //Degrees
     }
 
     public static class AutoDrivingConstants {
