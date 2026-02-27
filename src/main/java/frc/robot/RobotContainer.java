@@ -45,21 +45,22 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric povControl = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+    // Replace with CommandPS4Controller or CommandJoystick if needed
+    private final CommandXboxController driver =
+        new CommandXboxController(OperatorConstants.driverControllerPort);
+    private final CommandXboxController operator = 
+        new CommandXboxController(OperatorConstants.operatorControllerPort); 
 
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem(drivetrain);
     private final TraverseSubsystem traverseSubsystem = new TraverseSubsystem();
-    private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain); 
+    private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain, operator); 
     private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 
-    // Replace with CommandPS4Controller or CommandJoystick if needed
-    private final CommandXboxController driver =
-        new CommandXboxController(OperatorConstants.driverControllerPort);
-    private final CommandXboxController operator = 
-        new CommandXboxController(OperatorConstants.operatorControllerPort); 
+    
 
     Trigger reverseFeed; 
 
@@ -128,11 +129,9 @@ public class RobotContainer {
 
         //temporary
         operator.y().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel)); //.toggleOnFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));
-        operator.povUp().toggleOnTrue(new InstantCommand(outtakeSubsystem::increaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
-        operator.povDown().toggleOnTrue(new InstantCommand(outtakeSubsystem::decreaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
-        outtakeSubsystem.setDefaultCommand(new RunCommand(() -> outtakeSubsystem.incrementHood(-operator.getRightY()),outtakeSubsystem));
+        outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.

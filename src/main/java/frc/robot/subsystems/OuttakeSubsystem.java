@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
@@ -85,6 +86,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double lastSimSolveTime = 0;
     private double[] lastSimTraj = new double[] {0,0,0,0,0}; // launch angle, launch vel, target dist, target height, flight time
     private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0);
+    private CommandXboxController controller;
 
     private ThroughBoreEncoder throughBore21, throughBore19, throughBoreCounter;
 
@@ -104,10 +106,12 @@ public class OuttakeSubsystem extends SubsystemBase {
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private boolean autoLowered = false;
 
-    public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain){
+    public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
         Optional<Alliance> alliance = DriverStation.getAlliance();
         distanceVector = new Vector2d();
+
+        controller = operator;
 
         if (drivetrain != null) RobotState = drivetrain.getState();
         FrameTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
@@ -243,10 +247,26 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
         SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
         SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
-        SmartDashboard.putNumber("Flywheel Speeds", TurretSettings.setVelocities);
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
 
+    }
+
+    public void update(){
+
+        if (controller.povUp().getAsBoolean()) {
+            if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
+            justChangedPower = true;
+        } else if (controller.povDown().getAsBoolean()) {
+            if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
+            justChangedPower = true;
+        } else justChangedPower = false;
+        
+
+        double input = controller.getRightX();
+        input = MathUtil.applyDeadband(input, 0.05);
+
+        setHood(TargetHoodAngle + (input*Math.toRadians(TurretConstants.incrementAngle)));
     }
 
     public void target(double X, double Y, double H) { // h is height
@@ -278,12 +298,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         rightFlyMotor.setControl(new MotionMagicVelocityDutyCycle(getTargetFlywheelRPM(Velocity) / 60.0).withSlot(0)); 
         leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
 
-    }
-
-    public void incrementHood(double input){
-        input = MathUtil.applyDeadband(input, 0.05);
-
-        setHood(TargetHoodAngle + (input*Math.toRadians(TurretConstants.incrementAngle)));
     }
 
     public boolean setHood(double Angle) {
@@ -464,29 +478,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         leftFlyMotor.stopMotor();
     }
 
-    public void increaseFlywheelPower() {
-        /*if (!justChangedPower) flywheelPower += 0.1;
-        justChangedPower = true;
-        if (flywheelPower > 1) flywheelPower = 1;*/
-
-        if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
-        justChangedPower = true;
-    }
-
-    public void decreaseFlywheelPower() {
-        /*
-        if (!justChangedPower) flywheelPower -= 0.1;
-        justChangedPower = true;
-        if (flywheelPower < -1) flywheelPower = -1;*/
-
-        if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
-        justChangedPower = true;
-    }
-
-    public void unclickFlywheelPower() {
-        justChangedPower = false;
-    }
-
     public void changeRPMFast() {
         rpmAdjustment = 500;
     }
@@ -649,7 +640,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
         TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
         TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
-        TurretSettings.setVelocities = SmartDashboard.getNumber("Flywheel Speeds", TurretSettings.setVelocities);
+        // TurretSettings.setVelocities = SmartDashboard.getNumber("Flywheel Speeds", TurretSettings.setVelocities);
         checkForTuning();
 
         try { // prevents crashing
@@ -681,6 +672,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
 
         SmartDashboard.putBoolean("Auto Lowered?", autoLowered);
+
+        SmartDashboard.putNumber("Flywheel Target RPM", TurretSettings.setVelocities);
 
         try { // prevents crashing
             SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));
