@@ -223,7 +223,7 @@ public class DrivingProfiles extends SubsystemBase {
             
 
             RobotPose = drivetrain.getState().Pose;
-            SmartDashboard.putString("ROBOT POSE:", "X:" + RobotPose.getX() + " Y:" + RobotPose.getY() + " R:" + RobotPose.getRotation().getDegrees());
+            SmartDashboard.putString("ROBOT POSE:", "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3));
 
             double cameraTX = LimelightHelpers.getTX("limelight");
 

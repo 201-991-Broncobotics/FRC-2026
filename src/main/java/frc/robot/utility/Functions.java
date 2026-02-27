@@ -2,6 +2,8 @@ package frc.robot.utility;
 
 import java.util.Map;
 
+import edu.wpi.first.math.geometry.Pose2d;
+
 public class Functions {
 
     /** Finds the smallest difference between two angles or gets the equivalent angle between -180 and
@@ -98,6 +100,10 @@ public class Functions {
 
     public static double map(double x, double in_min, double in_max, double out_min, double out_max) {
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    }
+
+    public static String stringifyPose(Pose2d RobotPose){
+        return "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3);
     }
 
 }

@@ -90,11 +90,11 @@ public class Settings {
 
     public static class TurretSettings {
 
-        public static double kP = 1; // flywheels
+        public static double kP = 0.3; // flywheels
         public static double kI = 0; 
         public static double kD = 0; 
         public static double kS = 0; 
-        public static double kV = TurretConstants.maxForwardVoltage/TurretConstants.x44MaxRPM; 
+        public static double kV = 0.12; 
         public static double kA = 0; 
         public static double tkP = 0; // turntable
         public static double tkI = 0; 

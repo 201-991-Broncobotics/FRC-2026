@@ -131,7 +131,8 @@ public class RobotContainer {
         operator.povUp().toggleOnTrue(new InstantCommand(outtakeSubsystem::increaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
         operator.povDown().toggleOnTrue(new InstantCommand(outtakeSubsystem::decreaseFlywheelPower)).toggleOnFalse(new InstantCommand(outtakeSubsystem::unclickFlywheelPower));
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
-        outtakeSubsystem.incrementHood(-operator.getRightY());
+
+        outtakeSubsystem.setDefaultCommand(new RunCommand(() -> outtakeSubsystem.incrementHood(-operator.getRightY()),outtakeSubsystem));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.

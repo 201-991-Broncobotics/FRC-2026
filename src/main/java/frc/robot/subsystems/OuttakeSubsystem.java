@@ -26,6 +26,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -280,6 +281,8 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
     public void incrementHood(double input){
+        input = MathUtil.applyDeadband(input, 0.05);
+
         setHood(TargetHoodAngle + (input*Math.toRadians(TurretConstants.incrementAngle)));
     }
 
@@ -607,7 +610,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTimer.reset();
 
         CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
-        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition()*360;
+        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition();
         CurrentFlywheelRPM = () -> 0;
 
         if (drivetrain != null) {
@@ -617,15 +620,20 @@ public class OuttakeSubsystem extends SubsystemBase {
         //Auto Lower
         Pose2d lastRobotPose = robotPose;
         robotPose = drivetrain.getState().Pose;
+        
+        SmartDashboard.putString("Zone Pose", Functions.stringifyPose(robotPose));
+        SmartDashboard.putString("Last Zone Pose", Functions.stringifyPose(lastRobotPose));
 
-        if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
-            //Lower hood and dont save the angle as the target
-            setHood(TurretConstants.minHoodAngle, false);
-            autoLowered = true;
-        }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
-            autoLowered = false;
-            //Lift hood back up to set angle
-            setHood(TargetHoodAngle);
+        if(lastRobotPose != null){
+            if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
+                //Lower hood and dont save the angle as the target
+                setHood(TurretConstants.minHoodAngle, false);
+                autoLowered = true;
+            }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
+                autoLowered = false;
+                //Lift hood back up to set angle
+                setHood(TargetHoodAngle);
+            }
         }
         
 
@@ -646,8 +654,10 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         try { // prevents crashing
             SmartDashboard.putNumber("Flywheel Error", (TurretSettings.setVelocities - Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60)));
-            SmartDashboard.putNumber("Hood Error", (Math.toDegrees(TargetHoodAngle) - CurrentHoodAngle.getAsDouble()));
-            SmartDashboard.putNumber("Hood Angle", (CurrentHoodAngle.getAsDouble()));
+            SmartDashboard.putNumber("Hood Error (Deg)", (Math.toDegrees(TargetHoodAngle - (Functions.map(CurrentHoodAngle.getAsDouble(), TurretConstants.minHoodMotorRot, TurretConstants.maxHoodMotorRot, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle)))));
+            SmartDashboard.putNumber("Hood Target Angle (Deg)", (Math.toDegrees(TargetHoodAngle)));
+            SmartDashboard.putNumber("Hood Angle (Deg)",  (Math.toDegrees(Functions.map(CurrentHoodAngle.getAsDouble(), TurretConstants.minHoodMotorRot, TurretConstants.maxHoodMotorRot, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle))));
+            SmartDashboard.putNumber("Hood Motor Angle (Rev)", (CurrentHoodAngle.getAsDouble()));
             SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
             SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
             SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
