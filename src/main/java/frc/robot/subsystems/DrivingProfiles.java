@@ -286,23 +286,23 @@ public class DrivingProfiles extends SubsystemBase {
     }
 
     //zone Stuff
-    public static boolean ifLeftZones(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> zones){
+    public static boolean ifLeftZones(Pose2d Pose, Pose2d lastPose, ArrayList<Zone> zones){
         for (Zone zone : zones) {
-            if(!zone.ifLeftZone(lastPose, Pose)){
-                return false;
+            if(zone.ifLeftZone(lastPose, Pose)){
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
-    public static boolean ifEnteredZones(Pose2d lastPose, Pose2d Pose, ArrayList<Zone> zones){
+    public static boolean ifEnteredZones(Pose2d Pose, Pose2d lastPose, ArrayList<Zone> zones){
         for (Zone zone : zones) {
             if(zone.ifEnteredZone(lastPose, Pose)){
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 }
