@@ -254,6 +254,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     public void update(){
 
+        autoLowered = false; // TODO: undo
+
         if (controller.povUp().getAsBoolean()) {
             if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
             justChangedPower = true;
