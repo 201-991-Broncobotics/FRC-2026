@@ -42,4 +42,14 @@ public class Zone {
         }
         
     }
+
+    public boolean inZone(Pose2d Pose){
+        
+        if(_shape.inArea(Pose.getTranslation())){
+            return true;
+        } else {
+            return false;
+        }
+        
+    }
 }

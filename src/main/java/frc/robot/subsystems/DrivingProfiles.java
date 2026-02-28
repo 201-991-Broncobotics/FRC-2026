@@ -305,4 +305,14 @@ public class DrivingProfiles extends SubsystemBase {
 
         return false;
     }
+
+    public static boolean inZones(Pose2d Pose, ArrayList<Zone> zones){
+        for (Zone zone : zones) {
+            if(zone.inZone(Pose)){
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

@@ -615,12 +615,12 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putString("Zone Pose", Functions.stringifyPose(robotPose));
         SmartDashboard.putString("Last Zone Pose", Functions.stringifyPose(lastRobotPose));
 
-        if(lastRobotPose != null){
+        if(lastRobotPose != null && robotPose.getTranslation().getDistance(lastRobotPose.getTranslation()) < 5){//prevents entering when speed is too high
             if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
                 //Lower hood and dont save the angle as the target
                 setHood(TurretConstants.minHoodAngle, false);
                 autoLowered = true;
-            }else if (TurretSettings.autoLowerHood &&DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
+            }else if (TurretSettings.autoLowerHood && (DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones) || (!DrivingProfiles.inZones(robotPose, ZoneConstants.TrenchZones) && autoLowered))){//If the hood is lowered yet its not in the zone, turn off auto lowering
                 autoLowered = false;
                 //Lift hood back up to set angle
                 setHood(TargetHoodAngle);
