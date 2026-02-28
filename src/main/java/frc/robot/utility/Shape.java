@@ -66,7 +66,10 @@ public abstract class Shape {
         }
 
         public Rectangle(Translation2d topLeftPoint, Translation2d bottomRightPoint){
-            this._center = new Translation2d(bottomRightPoint.getX()-topLeftPoint.getX(), topLeftPoint.getY() - bottomRightPoint.getY());
+            this._center = new Translation2d(
+        (topLeftPoint.getX() + bottomRightPoint.getX()) / 2.0, 
+        (topLeftPoint.getY() + bottomRightPoint.getY()) / 2.0
+    );
             this._height = topLeftPoint.getY() - bottomRightPoint.getY();
             this._width = bottomRightPoint.getX()-topLeftPoint.getX();
 
@@ -75,7 +78,7 @@ public abstract class Shape {
 
         @Override
         public boolean inArea(Translation2d pose){
-            if (Math.abs(this._center.getX() -  pose.getX()) < this._width && Math.abs(this._center.getY() -  pose.getY()) < this._height) {
+            if (Math.abs(this._center.getX() -  pose.getX()) < this._width/2 && Math.abs(this._center.getY() -  pose.getY()) < this._height/2) {
                 return true;
             } else {
                 return false;
