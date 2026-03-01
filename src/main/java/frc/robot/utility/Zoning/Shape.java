@@ -1,4 +1,4 @@
-package frc.robot.utility;
+package frc.robot.utility.Zoning;
 
 import edu.wpi.first.math.geometry.Translation2d;
 
@@ -48,7 +48,7 @@ public abstract class Shape {
 
         @Override
         public boolean inArea(Translation2d pose){
-            if (Math.abs(this._center.getX() -  pose.getX()) < this._width && Math.abs(this._center.getY() -  pose.getY()) < this._height) {
+            if (Math.abs(this._center.getX() - pose.getX()) < this._width/2 && Math.abs(this._center.getY() - pose.getY()) < this._height/2) {
                 return true;
             } else {
                 return false;

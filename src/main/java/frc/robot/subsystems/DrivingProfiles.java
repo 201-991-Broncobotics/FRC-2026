@@ -22,7 +22,7 @@ import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain.gyroData;
 import frc.robot.utility.LimelightHelpers.PoseEstimate;
-import frc.robot.utility.Zone;
+import frc.robot.utility.Zoning.Zone;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
@@ -213,7 +213,7 @@ public class DrivingProfiles extends SubsystemBase {
             if (LimelightPoseEstimate != null) {
                 double TurretAngle = OuttakeSubsystem.CurrentTurretAngle.getAsDouble();
                 Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));
-                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degree pitch up
+                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
                     LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
                     LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
                     CorrectFacingDirection
@@ -283,36 +283,5 @@ public class DrivingProfiles extends SubsystemBase {
         
         
         
-    }
-
-    //zone Stuff
-    public static boolean ifLeftZones(Pose2d Pose, Pose2d lastPose, ArrayList<Zone> zones){
-        for (Zone zone : zones) {
-            if(zone.ifLeftZone(lastPose, Pose)){
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean ifEnteredZones(Pose2d Pose, Pose2d lastPose, ArrayList<Zone> zones){
-        for (Zone zone : zones) {
-            if(zone.ifEnteredZone(lastPose, Pose)){
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean inZones(Pose2d Pose, ArrayList<Zone> zones){
-        for (Zone zone : zones) {
-            if(zone.inZone(Pose)){
-                return true;
-            }
-        }
-
-        return false;
     }
 }

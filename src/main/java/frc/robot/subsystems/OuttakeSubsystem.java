@@ -40,7 +40,6 @@ import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.TurretSettings;
-import frc.robot.utility.Zone;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
@@ -48,7 +47,9 @@ import frc.robot.utility.ThroughBoreEncoder;
 import frc.robot.utility.Vector2d;
 import frc.robot.utility.ElapsedTime.Resolution;
 import frc.robot.utility.LimelightHelpers.LimelightResults;
+import frc.robot.utility.Zoning.Zoning;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Vector;
@@ -104,7 +105,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private boolean justChangedPower = false;
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
-    private boolean autoLowered = false;
+    private Zoning hoodZoning = new Zoning(ZoneConstants.TrenchZones);
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
@@ -125,7 +126,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         throughBore19 = new ThroughBoreEncoder(1);
         throughBoreCounter = new ThroughBoreEncoder(2, 3);
 
-
+        if (throughBore19 == null) SmartDashboard.putString("ThroughBore 19 Literally exists:", "NO");
+        else SmartDashboard.putString("ThroughBore 19 Literally exists:", "Exists");
+        SmartDashboard.putBoolean("ThroughBore 19 Exists:", throughBore19.encoderAbsoluteExists());
+        SmartDashboard.putBoolean("ThroughBore 19 Connected:", throughBore19.encoderConnected());
+        SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteTicks());
 
 
 
@@ -263,7 +268,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         } else justChangedPower = false;
         
 
-        double input = controller.getRightX();
+        double input = -controller.getRightY();
         input = MathUtil.applyDeadband(input, 0.05);
 
         setHood(TargetHoodAngle + (input*Math.toRadians(TurretConstants.incrementAngle)));
@@ -315,7 +320,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             TargetHoodAngle = Angle;
         }
 
-        if (!autoLowered) { //Set hood angle to constrained angle
+        if (!hoodZoning.getZoningState()) { //Set hood angle to constrained angle
             Angle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
 
             //Convert Angle to motor rotationss
@@ -518,8 +523,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         return (-4.954998 * Math.sin(launchAngle - Math.toRadians(25.140344)) + 1.71) / 39.37;
     }
 
-
-
     // REALLY COMPLICATED MATH STUFF - mostly chatgpt
 
     double solveForAngle(double targetDistance, double targetHeight, double currentLaunchVel, double currentFlywheelRPM) {
@@ -609,22 +612,21 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         //Auto Lower
-        Pose2d lastRobotPose = robotPose;
         robotPose = drivetrain.getState().Pose;
-        
-        SmartDashboard.putString("Zone Pose", Functions.stringifyPose(robotPose));
-        SmartDashboard.putString("Last Zone Pose", Functions.stringifyPose(lastRobotPose));
 
-        if(lastRobotPose != null && robotPose.getTranslation().getDistance(lastRobotPose.getTranslation()) < 5){//prevents entering when speed is too high
-            if(TurretSettings.autoLowerHood && DrivingProfiles.ifEnteredZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones)){
-                //Lower hood and dont save the angle as the target
-                setHood(TurretConstants.minHoodAngle, false);
-                autoLowered = true;
-            }else if (TurretSettings.autoLowerHood && (DrivingProfiles.ifLeftZones(robotPose, lastRobotPose, ZoneConstants.TrenchZones) || (!DrivingProfiles.inZones(robotPose, ZoneConstants.TrenchZones) && autoLowered))){//If the hood is lowered yet its not in the zone, turn off auto lowering
-                autoLowered = false;
-                //Lift hood back up to set angle
-                setHood(TargetHoodAngle);
-            }
+        SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(robotPose));
+        SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(robotPose));
+        SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(robotPose));
+        SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(robotPose));
+
+        if(TurretSettings.autoLowerHood && hoodZoning.ifEnteredZones(robotPose)){
+            //Lower hood and dont save the angle as the target
+            setHood(TurretConstants.minHoodAngle, false);
+            hoodZoning.updateZones(robotPose);
+        }else if (TurretSettings.autoLowerHood && hoodZoning.ifLeftZones(robotPose)){//If the hood is lowered yet its not in the zone, turn off auto lowering
+            //Lift hood back up to set angle
+            hoodZoning.updateZones(robotPose);
+            setHood(TargetHoodAngle);
         }
         
 
@@ -649,6 +651,9 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Hood Target Angle (Deg)", (Math.toDegrees(TargetHoodAngle)));
             SmartDashboard.putNumber("Hood Angle (Deg)",  (Math.toDegrees(Functions.map(CurrentHoodAngle.getAsDouble(), TurretConstants.minHoodMotorRot, TurretConstants.maxHoodMotorRot, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle))));
             SmartDashboard.putNumber("Hood Motor Angle (Rev)", (CurrentHoodAngle.getAsDouble()));
+            
+            SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteTicks());
+            SmartDashboard.putNumber("TEST DISPLAY2:", 2);
             SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
             SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
             SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
@@ -671,7 +676,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
 
-        SmartDashboard.putBoolean("Auto Lowered?", autoLowered);
+        SmartDashboard.putBoolean("Auto Lowered?", hoodZoning.getZoningState());
 
         SmartDashboard.putNumber("Flywheel Target RPM", TurretSettings.setVelocities);
 

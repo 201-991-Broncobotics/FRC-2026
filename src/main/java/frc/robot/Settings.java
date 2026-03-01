@@ -12,8 +12,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants.ZoneConstants;
+import frc.robot.utility.Zoning.Zone;
 import frc.robot.Constants.TurretConstants;
-import frc.robot.utility.Zone;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -99,7 +99,7 @@ public class Settings {
         public static double tkP = 0; // turntable
         public static double tkI = 0; 
         public static double tkD = 0;  
-        public static double hkP = 0; // hood
+        public static double hkP = 1; // hood
         public static double hkI = 0; 
         public static double hkD = 0; 
         public static double setVelocities = 1000; // rpm

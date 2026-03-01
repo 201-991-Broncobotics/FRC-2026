@@ -90,7 +90,7 @@ public class RobotContainer {
             () -> driver.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
             () -> -driver.getRightX(), 
             () -> 0.4 + 0.6 * driver.getRightTriggerAxis(), 
-            2, 3
+            4, 4
         );
 
         drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
@@ -115,7 +115,6 @@ public class RobotContainer {
 
 
         //OPERATOR CONTROLS 
-        operator.a().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
         operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
         operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
 
@@ -125,7 +124,8 @@ public class RobotContainer {
         reverseFeed = new Trigger(operator.rightBumper()).and(operator.rightTrigger(0.05))
             .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed, intakeSubsystem)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
         operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
-
+        operator.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        
 
         //temporary
         operator.y().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel)); //.toggleOnFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));

@@ -1,4 +1,4 @@
-package frc.robot.utility;
+package frc.robot.utility.Zoning;
 
 import java.io.ObjectOutputStream.PutField;
 import java.util.ArrayList;
@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-
-import frc.robot.utility.Shape;
 
 
 /**
@@ -45,11 +43,6 @@ public class Zone {
 
     public boolean inZone(Pose2d Pose){
         
-        if(_shape.inArea(Pose.getTranslation())){
-            return true;
-        } else {
-            return false;
-        }
-        
+        return _shape.inArea(Pose.getTranslation());
     }
 }

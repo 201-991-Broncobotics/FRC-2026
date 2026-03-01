@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.utility.Zone;
-import frc.robot.utility.Shape;
 import frc.robot.utility.Vector2d;
+import frc.robot.utility.Zoning.Shape;
+import frc.robot.utility.Zoning.Zone;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -28,12 +28,12 @@ public final class Constants {
         public static final int rightIntakePivotID = 16; 
         public static final int leftIntakePivotID = 17; 
         public static final int traverseRollerID = 18; 
-        public static final int traverseScoopID = 9; 
+        public static final int traverseScoopID = 15; 
         public static final int leftFlyID = 11; 
         public static final int rightFlyID = 12;
         public static final int turntableID = 13;  
         public static final int hoodMotorID = 10; 
-        public static final int elevatorID = 15; 
+        public static final int elevatorID = 9; 
       
     }
     public static class OperatorConstants {
@@ -113,8 +113,8 @@ public final class Constants {
         public static final double maxHoodAngle = Math.toRadians(70.196461);
         public static final double minHoodAngle = Math.toRadians(70.196461 - 45);     
 
-        public static final double maxHoodMotorRot = -1.44;
-        public static final double minHoodMotorRot = 0.014;  
+        public static final double maxHoodMotorRot = 2.31;
+        public static final double minHoodMotorRot = 0;
         
         public static final double counterThreshold = 0; //Degrees
 
@@ -133,16 +133,16 @@ public final class Constants {
     public static class ZoneConstants {//Zones on the field from the POV of blue Human player
         public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,7.375), 2, 1.25));
         public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,0.625), 2, 1.25));
-        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(11.9,7.375), 2, 1.25));
-        public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(11.9,0.625), 2, 1.25));
+        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(11.4,7.375), 2, 1.25));
+        public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(11.4,0.625), 2, 1.25));
 
         public static ArrayList<Zone> TrenchZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
 
-        public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,5.5), 1.25, 2));
-        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,2.5), 1.25, 2));
-        public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(11.9,5.5), 1.25, 2));
-        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(11.9,2.5), 1.25, 2));
+        public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,5.5), 2.5,2));
+        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,2.5), 2.5, 2));
+        public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(11.4,5.5), 2.5, 2));
+        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(11.4,2.5), 2.5, 2));
 
         public static ArrayList<Zone> RampZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
