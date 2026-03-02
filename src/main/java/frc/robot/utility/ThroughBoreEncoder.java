@@ -70,6 +70,14 @@ public class ThroughBoreEncoder {
     public void setRelativeZero(double radians) { relativeEncoderZero = radians; }
     public void setAbsoluteZero(double radians) { absoluteEncoderZero = radians; }
 
+    public boolean encoderAbsoluteExists() { 
+        return this.absoluteEncoder != null; 
+    }
+
+    public boolean encoderRelativeExists() { 
+        return this.relativeEncoder != null; 
+    }
+
     public boolean encoderExists() { 
         return this.relativeEncoder != null || this.absoluteEncoder != null; 
     }
