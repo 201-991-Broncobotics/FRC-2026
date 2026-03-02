@@ -11,6 +11,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -22,7 +23,7 @@ import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain.gyroData;
 import frc.robot.utility.LimelightHelpers.PoseEstimate;
-import frc.robot.utility.Zone;
+import frc.robot.utility.Zoning.Zone;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
@@ -61,6 +62,10 @@ public class DrivingProfiles extends SubsystemBase {
 
     public boolean allowedToUseLimelight = true;
 
+    private double BatteryVoltage = 14;
+    private int currentDriveSupplyCurrentLimit = 120;
+    private ElapsedTime CurrentLimitTimer;
+
 
     public DrivingProfiles(CommandSwerveDrivetrain drivetrain) {
         DrivingProfiles.drivetrain = drivetrain;
@@ -70,6 +75,7 @@ public class DrivingProfiles extends SubsystemBase {
         RobotPose = drivetrain.getState().Pose;
 
         FPSTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+        CurrentLimitTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         if (Settings.tuningTelemetryEnabled) {
 
@@ -207,13 +213,13 @@ public class DrivingProfiles extends SubsystemBase {
             FPSTimer.reset();
         }
         
-        if (drivetrain != null && OuttakeSubsystem.CurrentTurretAngle != null) {
+        try {
             PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
             if (LimelightPoseEstimate != null) {
                 double TurretAngle = OuttakeSubsystem.CurrentTurretAngle.getAsDouble();
                 Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));
-                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degree pitch up
+                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
                     LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
                     LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
                     CorrectFacingDirection
@@ -227,28 +233,33 @@ public class DrivingProfiles extends SubsystemBase {
             RobotPose = drivetrain.getState().Pose;
             SmartDashboard.putString("ROBOT POSE:", "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3));
 
-            double cameraTX = LimelightHelpers.getTX("limelight");
+            //double cameraTX = LimelightHelpers.getTX("limelight");
 
 
-            SmartDashboard.putNumber("Vision TX", cameraTX);
-            SmartDashboard.putNumber("Vision TA", LimelightHelpers.getTA("limelight"));
-            SmartDashboard.putBoolean("Vision valid Target", LimelightHelpers.getTargetCount("limelight") > 0);
-            SmartDashboard.putBoolean("IS AUTO DRIVING?", autoDriving);
-            SmartDashboard.putNumber("AUTO Driving forward", autoForwardOutput);
-            SmartDashboard.putNumber("AUTO Driving strafe", autoStrafeOutput);
-            SmartDashboard.putNumber("AUTO Driving rotation", autoRotationOutput);
+            //SmartDashboard.putNumber("Vision TX", cameraTX);
+            //SmartDashboard.putNumber("Vision TA", LimelightHelpers.getTA("limelight"));
+            //SmartDashboard.putBoolean("Vision valid Target", LimelightHelpers.getTargetCount("limelight") > 0);
+            //SmartDashboard.putBoolean("IS AUTO DRIVING?", autoDriving);
+            //SmartDashboard.putNumber("AUTO Driving forward", autoForwardOutput);
+            //SmartDashboard.putNumber("AUTO Driving strafe", autoStrafeOutput);
+            //SmartDashboard.putNumber("AUTO Driving rotation", autoRotationOutput);
             SmartDashboard.putNumber("forward", forwardOutput);
             SmartDashboard.putNumber("strafe", strafeOutput);
             SmartDashboard.putNumber("rotation", rotationOutput);
-            if (fowardControllerInput != null) {
-                SmartDashboard.putNumber("joystick forward", fowardControllerInput.getAsDouble());
-                SmartDashboard.putNumber("joystick strafe", strafeControllerInput.getAsDouble());
-                SmartDashboard.putNumber("joystick rotation", rotationControllerInput.getAsDouble());
-                SmartDashboard.putNumber("joystick magnitude", Math.hypot(fowardControllerInput.getAsDouble(), strafeControllerInput.getAsDouble()));
-
-            }
             
 
+            BatteryVoltage = RobotController.getBatteryVoltage();
+            SmartDashboard.putNumber("BATTERY VOLTAGE:", BatteryVoltage);
+
+            if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 60 && CurrentLimitTimer.time() > 1) {
+                CurrentLimitTimer.reset();
+                currentDriveSupplyCurrentLimit -= 20;
+                drivetrain.setDriveMotorCurrentLimit(currentDriveSupplyCurrentLimit);
+            }
+            SmartDashboard.putNumber("Drive Motors Supply Current Limit:", currentDriveSupplyCurrentLimit);
+
+        } catch (NullPointerException e) {
+            // do nothing
         }
         
 
@@ -283,36 +294,5 @@ public class DrivingProfiles extends SubsystemBase {
         
         
         
-    }
-
-    //zone Stuff
-    public static boolean ifLeftZones(Pose2d Pose, Pose2d lastPose, ArrayList<Zone> zones){
-        for (Zone zone : zones) {
-            if(zone.ifLeftZone(lastPose, Pose)){
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean ifEnteredZones(Pose2d Pose, Pose2d lastPose, ArrayList<Zone> zones){
-        for (Zone zone : zones) {
-            if(zone.ifEnteredZone(lastPose, Pose)){
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean inZones(Pose2d Pose, ArrayList<Zone> zones){
-        for (Zone zone : zones) {
-            if(zone.inZone(Pose)){
-                return true;
-            }
-        }
-
-        return false;
     }
 }

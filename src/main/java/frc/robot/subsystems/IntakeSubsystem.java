@@ -23,6 +23,7 @@ import frc.robot.Robot;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Settings.IntakeSettings;
 import frc.robot.Settings.TurretSettings;
+import frc.robot.utility.Zoning.Zoning;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -40,6 +41,9 @@ public class IntakeSubsystem extends SubsystemBase {
     private CommandSwerveDrivetrain drivetrain;
     private Pose2d RobotPose;
     private boolean autoControlled = false;
+
+    private Zoning rampZoneing = new Zoning(ZoneConstants.RampZones);
+    private Zoning ballZoning = new Zoning(ZoneConstants.ballsZone);
 
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
@@ -135,7 +139,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setPivotAngle(double angle){
-        if(autoControlled){return;}
+        if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
 
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
@@ -144,12 +148,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setPivotAngle(double angle, double baseAngle){
-        if(autoControlled){return;}
-
-        double feedforward = getGravityFeedForward();
-        rightPivotMotor.setControl(m_request.withPosition(baseAngle+angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
-        //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
-        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
+        setPivotAngle(baseAngle+angle);
     }
 
     private double getGravityFeedForward() {
@@ -211,20 +210,19 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
 
-        Pose2d lastRobotPose = RobotPose;
         RobotPose = drivetrain.getState().Pose;
-        if((ZoneConstants.ballsZone.ifEnteredZone(lastRobotPose, RobotPose)) && IntakeSettings.autoControl){
+        if((ballZoning.ifEnteredZones(RobotPose)) && IntakeSettings.autoControl){
             drop();
-            autoControlled = true;
-        } else if ((ZoneConstants.ballsZone.ifLeftZone(lastRobotPose, RobotPose)) && IntakeSettings.autoControl){
-            autoControlled = false;
+            ballZoning.updateZones(RobotPose);
+        } else if ((ballZoning.ifLeftZones(RobotPose)) && IntakeSettings.autoControl){
+            ballZoning.updateZones(RobotPose);
         }
 
-         if(DrivingProfiles.ifEnteredZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) && IntakeSettings.autoControl){
+        if(rampZoneing.ifEnteredZones(RobotPose) && IntakeSettings.autoControl){
             setPivotAngle(10, IntakeConstants.lowLimitAngle);
-            autoControlled = true;
-        } else if (DrivingProfiles.ifLeftZones(lastRobotPose, lastRobotPose, ZoneConstants.RampZones) && IntakeSettings.autoControl){
-            autoControlled = false;
+            rampZoneing.updateZones(RobotPose);
+        } else if (rampZoneing.ifLeftZones(RobotPose) && IntakeSettings.autoControl){
+            rampZoneing.updateZones(RobotPose);
             drop();
         }
 
@@ -241,9 +239,9 @@ public class IntakeSubsystem extends SubsystemBase {
             //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
             //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
             SmartDashboard.putNumber("Intake Pivot Position", Math.toDegrees(CurrentPivotPosition.getAsDouble()));
-            SmartDashboard.putNumber("Intake Pivot Actual Position", rightPivotMotor.getPosition().getValueAsDouble());
-            SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.get());
-            SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
+            //SmartDashboard.putNumber("Intake Pivot Actual Position", rightPivotMotor.getPosition().getValueAsDouble());
+            //SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.get());
+            //SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
 
             SmartDashboard.putNumber("Intake Motor Temperature", intakeMotor.getDeviceTemp().getValueAsDouble());
             SmartDashboard.putNumber("Intake Motor RPM", intakeMotor.getVelocity().getValueAsDouble() * 60);
