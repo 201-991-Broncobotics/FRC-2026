@@ -10,6 +10,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -294,5 +296,21 @@ public class DrivingProfiles extends SubsystemBase {
         
         
         
+    }
+
+    public static Pose2d getTurretPose(Pose2d robotPose2d) {
+        // 1. Translation: X is backward (negative), Y is distance from the center.
+        // Note: Assuming positive Y is to the "left" of the robot. 
+        // If the turret is to the right, make 0.237765 negative.
+        Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
+        
+        // 2. Rotation: The turret's mounting angle relative to the robot's front
+        Rotation2d turretRotation = Rotation2d.fromDegrees(55.885527);
+        
+        // 3. Create the transform from the center of the robot to the turret
+        Transform2d robotToTurret = new Transform2d(turretTranslation, turretRotation);
+        
+        // 4. Apply the transform to get the turret's absolute pose on the field
+        return robotPose2d.transformBy(robotToTurret);
     }
 }

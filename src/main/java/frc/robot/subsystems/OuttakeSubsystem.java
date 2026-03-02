@@ -648,7 +648,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTimer.reset();
 
         robotPose = drivetrain.getState().Pose;
-        hoodZoning.updateZones(robotPose);
+        hoodZoning.updateZones(DrivingProfiles.getTurretPose(robotPose));
         autoLowered = hoodZoning.getZoningState();
 
         if (drivetrain != null) {
