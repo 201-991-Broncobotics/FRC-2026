@@ -113,6 +113,12 @@ public class Settings {
         public static double hoodCalibrationDownTime = 0.1; // time spent going to down position (which should be short since it already is in the down position)
         public static double hoodCalibrationUpTime = 0.5; // time spent going up after it has reached its underestimate for max height
         public static double hoodCalibrationPower = 0.25;
+
+        public static double defaultTurretPosition = Math.toRadians(170); // position at slight angle to allow intake to go up
+        public static double minTurretAngle = Math.toRadians(-45);
+        public static double maxTurretAngle = Math.toRadians(225);
+
+        public static double TurretAbsoluteOffset = Math.toRadians(0);
     }
 
 

@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -63,6 +64,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor;
     private TalonFXConfiguration flywheelConfig, turntableConfig; 
+    private final PositionVoltage turretPositionRequest = new PositionVoltage(0);
     private SparkFlex hoodMotor;
     private SparkFlexConfig hoodConfig;
     private SparkClosedLoopController hoodClosedLoopController;
@@ -262,13 +264,13 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
 
-        CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
+        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0; // TODO: needs starting offset
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
-        CurrentFlywheelRPM = () -> 0;
+        CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
 
     }
 
-    
+
     public void update(){
 
         // Temporary
@@ -288,8 +290,9 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         if (IsShooting) {
             // TURNTABLE
-
-
+            //temporarily here
+            TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
+            // setTurntable(TargetTurretAngle); // TODO: still needs starting offset
 
             // FLYWHEELS
             setFlywheels(TargetFlywheelRPM);
@@ -366,7 +369,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
     public void setTurntable(double Angle) {
-        
+        TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
+        turntableMotor.setControl(turretPositionRequest.withPosition(TargetTurretAngle / (2*Math.PI) * 10));
     }
 
     public void setHood(double Angle) {//Radians
@@ -543,7 +547,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double getAbsoluteTurretAngle() {
         double R = throughBore19.getAbsoluteAngle() - throughBore21.getAbsoluteAngle();
         if (R < 0) R += 2* Math.PI;
-        return 0.9975 * R; // fixes angle being slightly off, also means the turret can't keep rotating
+        return 0.9975 * R + TurretSettings.TurretAbsoluteOffset; // fixes angle being slightly off, also means the turret can't keep rotating
     }
 
 
@@ -685,7 +689,10 @@ public class OuttakeSubsystem extends SubsystemBase {
             if (hoodMotor.getEncoder().getPosition() < lowestHoodMotorRev) lowestHoodMotorRev = hoodMotor.getEncoder().getPosition();
             if (hoodMotor.getEncoder().getPosition() > highestHoodMotorRev) highestHoodMotorRev = hoodMotor.getEncoder().getPosition();
 
-            SmartDashboard.putNumber("Flywheel Error", TargetFlywheelRPM - Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
+            SmartDashboard.putNumber("Flywheel Current RPM", Functions.round(CurrentFlywheelRPM.getAsDouble(), 1));
+            SmartDashboard.putNumber("Flywheel Error", Functions.round(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble(), 1));
+            SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
+            
             SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
             SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
             SmartDashboard.putNumber("Hood Angle (Deg)",  Math.toDegrees(CurrentHoodAngle.getAsDouble()));
@@ -693,9 +700,9 @@ public class OuttakeSubsystem extends SubsystemBase {
             
             SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteTicks());
             SmartDashboard.putNumber("TEST DISPLAY2:", 2);
-            SmartDashboard.putNumber("Turret Absolute Position", Math.toDegrees(getAbsoluteTurretAngle()));
-            SmartDashboard.putNumber("Turret Relative Position", Math.toDegrees(getTurretAngle()));
-            SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
+            SmartDashboard.putNumber("Turret Relative Position", Functions.round(Math.toDegrees(getTurretAngle()), 2));
+            SmartDashboard.putNumber("Turret Absolute Position", Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
+            
 
             //Counter for the balls - IDK if it gives radians or degrees
             double lastCounterAngle = counterAngle;
