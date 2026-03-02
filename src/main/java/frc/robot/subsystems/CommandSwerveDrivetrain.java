@@ -6,7 +6,11 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -35,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Settings;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -393,6 +398,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Matrix<N3, N1> visionMeasurementStdDevs
     ) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
+    }
+
+
+    public void setDriveMotorCurrentLimit(double amps) {
+        CurrentLimitsConfigs currentLimits = new CurrentLimitsConfigs();
+        currentLimits.SupplyCurrentLimitEnable = true;
+        currentLimits.SupplyCurrentLimit = amps;
+        currentLimits.StatorCurrentLimitEnable = true; // default
+        currentLimits.StatorCurrentLimit = 120; // default
+        for (SwerveModule<TalonFX, TalonFX, CANcoder> module : getModules()) {
+            module.getDriveMotor().getConfigurator().apply(currentLimits);
+        }
     }
 
 

@@ -113,8 +113,7 @@ public final class Constants {
         public static final double maxHoodAngle = Math.toRadians(70.196461);
         public static final double minHoodAngle = Math.toRadians(70.196461 - 45);     
 
-        public static final double maxHoodMotorRot = 2.31;
-        public static final double minHoodMotorRot = 0;
+        // maxHoodMotorRot and minHoodMotorRot are now updated actively in the outtakeSubsystem
         
         public static final double counterThreshold = 0; //Degrees
 

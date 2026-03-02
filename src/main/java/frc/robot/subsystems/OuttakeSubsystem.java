@@ -89,16 +89,25 @@ public class OuttakeSubsystem extends SubsystemBase {
     private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0);
     private CommandXboxController controller;
 
-    private ThroughBoreEncoder throughBore21, throughBore19, throughBoreCounter;
+    // I swear to GOD this better make these encoder actually exist
+    private static final ThroughBoreEncoder throughBore21 = new ThroughBoreEncoder(0);
+    private static final ThroughBoreEncoder throughBore19 = new ThroughBoreEncoder(1);
+    private static final ThroughBoreEncoder throughBoreCounter = new ThroughBoreEncoder(2, 3);;
 
     private double counterAngle = 0;
     private int ballsCounted = 0;
 
     // Only for testing
-    private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelVel = 0;//Degrees
+    private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelRPM = 0;//Degrees
     private double rpmAdjustment = 50;
 
     public static DoubleSupplier CurrentTurretAngle, CurrentHoodAngle, CurrentFlywheelRPM;
+    private boolean hoodNeedsToBeCalibrated = true, autoLowered = false;
+    private int hoodCalibrationPhase = 0;
+    private ElapsedTime hoodCalibrationTimer;
+    
+    private double lowestHoodMotorRev = 0, highestHoodMotorRev = 2.31; // should be just a rough underestimate because it will get retuned when the robot tries to the shoot for the first time
+    private boolean IsShooting = false;
 
     //temporary
     private double flywheelPower = 0.5;
@@ -111,20 +120,18 @@ public class OuttakeSubsystem extends SubsystemBase {
         this.drivetrain = Drivetrain;
         Optional<Alliance> alliance = DriverStation.getAlliance();
         distanceVector = new Vector2d();
+        IsShooting = false;
 
         controller = operator;
 
         if (drivetrain != null) RobotState = drivetrain.getState();
         FrameTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-        
+        hoodCalibrationTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
         if (alliance.get() == Alliance.Red) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 1);
-            
-        throughBore21 = new ThroughBoreEncoder(0);
-        throughBore19 = new ThroughBoreEncoder(1);
-        throughBoreCounter = new ThroughBoreEncoder(2, 3);
+        
 
         if (throughBore19 == null) SmartDashboard.putString("ThroughBore 19 Literally exists:", "NO");
         else SmartDashboard.putString("ThroughBore 19 Literally exists:", "Exists");
@@ -255,10 +262,16 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
 
+        CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
+        CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
+        CurrentFlywheelRPM = () -> 0;
+
     }
 
+    
     public void update(){
 
+        // Temporary
         if (controller.povUp().getAsBoolean()) {
             if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
             justChangedPower = true;
@@ -266,25 +279,74 @@ public class OuttakeSubsystem extends SubsystemBase {
             if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
             justChangedPower = true;
         } else justChangedPower = false;
-        
 
-        double input = -controller.getRightY();
-        input = MathUtil.applyDeadband(input, 0.05);
+        TargetFlywheelRPM = TurretSettings.setVelocities;
 
-        setHood(TargetHoodAngle + (input*Math.toRadians(TurretConstants.incrementAngle)));
+        TargetHoodAngle += MathUtil.applyDeadband(-controller.getRightY(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
+        TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TargetHoodAngle);
+
+
+        if (IsShooting) {
+            // TURNTABLE
+
+
+
+            // FLYWHEELS
+            setFlywheels(TargetFlywheelRPM);
+
+
+            // HOOD
+            if (autoLowered && TurretSettings.autoLowerHood) {
+                setHood(TurretConstants.minHoodAngle);
+
+            } else if (hoodNeedsToBeCalibrated) {
+                switch (hoodCalibrationPhase) {
+                    case 0: // reset timer
+                        hoodCalibrationTimer.reset();
+                        hoodCalibrationPhase++;
+                    case 1: // make sure its hitting bottom mechanical stop
+                        hoodMotor.set(-TurretSettings.hoodCalibrationPower);
+                        if (hoodCalibrationTimer.time() > TurretSettings.hoodCalibrationDownTime) hoodCalibrationPhase++;
+                        break;
+                    case 2: // go up to roughly where the top is at pid speed
+                        setHood(TurretConstants.maxHoodAngle); // should be underestimate at the moment
+                        if (CurrentHoodAngle.getAsDouble() + Math.toRadians(5) > TurretConstants.maxHoodAngle) hoodCalibrationPhase++;
+                        hoodCalibrationTimer.reset();
+                        break;
+                    case 3: // keep going up until it hits the top mechanical stop
+                        hoodMotor.set(TurretSettings.hoodCalibrationPower);
+                        if (hoodCalibrationTimer.time() > TurretSettings.hoodCalibrationUpTime) hoodCalibrationPhase++;
+                        break;
+                    case 4: // finialize as the min and max pos get constantly updated in periodic
+                        setHood(TargetHoodAngle);
+                        hoodNeedsToBeCalibrated = false;
+                        hoodCalibrationPhase = 0;
+                        break;
+                }
+            } else {
+                // Normal Hood operation
+                setHood(TargetHoodAngle);
+            }
+        } else { // Not shooting
+            
+            stopFlywheels();
+            setHood(TurretConstants.minHoodAngle);
+        }
+
     }
 
     public void target(double X, double Y, double H) { // h is height
 
         double Speed = Math.hypot(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
         double VelocityAngle = RobotState.Pose.getRotation().getRadians() + Math.atan2(RobotState.Speeds.vyMetersPerSecond, RobotState.Speeds.vxMetersPerSecond);
-
+        // TODO: Velocity is multiplied by the air time of the ball
         Pose2d predictedRobotPose = new Pose2d(
-            RobotState.Pose.getX() + FrameTime * Speed * Math.cos(VelocityAngle), 
-            RobotState.Pose.getY() + FrameTime * Speed * Math.sin(VelocityAngle), 
-            RobotState.Pose.getRotation().plus(new Rotation2d(FrameTime * RobotState.Speeds.omegaRadiansPerSecond))
-            );
-
+            RobotState.Pose.getX(),// + Speed * Math.cos(VelocityAngle), 
+            RobotState.Pose.getY(),// + Speed * Math.sin(VelocityAngle), 
+            RobotState.Pose.getRotation()//.plus(new Rotation2d(FrameTime * RobotState.Speeds.omegaRadiansPerSecond))
+        );
+    
+        TargetTurretAngle = Math.atan2(predictedRobotPose.getY() - Y, predictedRobotPose.getX() - X) - predictedRobotPose.getRotation().getRadians();
         
         double Distance = Math.hypot(predictedRobotPose.getX() - X, predictedRobotPose.getY() - Y); // TODO: needs to be from center of turret
 
@@ -298,38 +360,30 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (a >= 0) TargetHoodAngle = Math.atan((Math.pow(Velocity, 2) / (TurretConstants.gravityInches * Distance)) * (1 + Math.sqrt(a)));
         else TargetHoodAngle = 0;
 
-        setHood(TargetHoodAngle);
+        TargetFlywheelRPM = getTargetFlywheelRPM(Velocity);
 
-        rightFlyMotor.setControl(new MotionMagicVelocityDutyCycle(getTargetFlywheelRPM(Velocity) / 60.0).withSlot(0)); 
+    }
+
+
+    public void setTurntable(double Angle) {
+        
+    }
+
+    public void setHood(double Angle) {//Radians
+        Angle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
+
+        double motorRot = Functions.map(Angle, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, lowestHoodMotorRev, highestHoodMotorRev);
+        hoodClosedLoopController.setSetpoint(motorRot, ControlType.kPosition);
+    }
+
+    public void setFlywheels(double rpm) {
+        rightFlyMotor.setControl(flywheelVelocityRequest.withVelocity(rpm / 60.0)); 
         leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
-
     }
 
-    public boolean setHood(double Angle) {
-        return setHood(Angle, true);
-    }
-
-    public boolean setHood(double Angle, boolean saveAngle) {//Radians
-        boolean inRange = (Angle >= TurretConstants.minHoodAngle && Angle <= TurretConstants.maxHoodAngle);
-
-        if (!inRange){//Constraint to hood range
-            Angle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
-        }
-
-        if (saveAngle) {//Save the target hood angle to angle if you wanna save
-            TargetHoodAngle = Angle;
-        }
-
-        if (!hoodZoning.getZoningState()) { //Set hood angle to constrained angle
-            Angle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
-
-            //Convert Angle to motor rotationss
-            double motorRot = Functions.map(Angle, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TurretConstants.minHoodMotorRot, TurretConstants.maxHoodMotorRot);
-
-            hoodClosedLoopController.setSetpoint(motorRot, ControlType.kPosition);
-        }
-
-        return inRange;
+    public void stopFlywheels() {
+        rightFlyMotor.stopMotor();
+        leftFlyMotor.stopMotor();
     }
 
 
@@ -369,10 +423,9 @@ public class OuttakeSubsystem extends SubsystemBase {
     }    
 
     public void tuneFlywheel(){
-        //function.value(getFlywheelTrajectory()); //put this inside motionmagic later 
         if (!justToggledTuning) {
             // rightFlyMotor.setControl
-            rightFlyMotor.setControl(flywheelVelocityRequest.withVelocity(TurretSettings.setVelocities / 60.0)); 
+            rightFlyMotor.setControl(flywheelVelocityRequest.withVelocity(TargetFlywheelRPM / 60.0)); 
             leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
             justToggledTuning = true;
         } else {
@@ -473,15 +526,6 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
-    public void justRunFlywheel() {
-        rightFlyMotor.set(flywheelPower);
-        leftFlyMotor.set(-flywheelPower);
-    }
-
-    public void stopFlywheels() {
-        rightFlyMotor.stopMotor();
-        leftFlyMotor.stopMotor();
-    }
 
     public void changeRPMFast() {
         rpmAdjustment = 500;
@@ -493,7 +537,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
     public double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
-    public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); } //Degrees
+    public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
     public double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
 
     private double getAbsoluteTurretAngle() {
@@ -595,7 +639,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
     public void testRunSim() {
-        solveForAngle(OuttakeTrajectorySettings.targetDistance, OuttakeTrajectorySettings.targetHeight, TurretSettings.setVelocities);
+        solveForAngle(OuttakeTrajectorySettings.targetDistance, OuttakeTrajectorySettings.targetHeight, TargetFlywheelRPM);
     }
 
     @Override
@@ -603,32 +647,19 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTime = FrameTimer.time();
         FrameTimer.reset();
 
-        CurrentTurretAngle = () -> 2 * Math.PI * turntableMotor.getPosition().getValueAsDouble() / 20.0;
-        CurrentHoodAngle = () -> hoodMotor.getEncoder().getPosition();
-        CurrentFlywheelRPM = () -> 0;
+        robotPose = drivetrain.getState().Pose;
+        hoodZoning.updateZones(robotPose);
+        autoLowered = hoodZoning.getZoningState();
 
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
         }
 
         //Auto Lower
-        robotPose = drivetrain.getState().Pose;
-
         SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(robotPose));
         SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(robotPose));
         SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(robotPose));
         SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(robotPose));
-
-        if(TurretSettings.autoLowerHood && hoodZoning.ifEnteredZones(robotPose)){
-            //Lower hood and dont save the angle as the target
-            setHood(TurretConstants.minHoodAngle, false);
-            hoodZoning.updateZones(robotPose);
-        }else if (TurretSettings.autoLowerHood && hoodZoning.ifLeftZones(robotPose)){//If the hood is lowered yet its not in the zone, turn off auto lowering
-            //Lift hood back up to set angle
-            hoodZoning.updateZones(robotPose);
-            setHood(TargetHoodAngle);
-        }
-        
 
         TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
         TurretSettings.kI = SmartDashboard.getNumber("Flywheel kI", TurretSettings.kI);
@@ -642,15 +673,23 @@ public class OuttakeSubsystem extends SubsystemBase {
         TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
         TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
         TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
-        // TurretSettings.setVelocities = SmartDashboard.getNumber("Flywheel Speeds", TurretSettings.setVelocities);
         checkForTuning();
 
+        SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
+        SmartDashboard.putBoolean("Auto Lowered?", autoLowered);
+        SmartDashboard.putNumber("Flywheel Target RPM", TargetFlywheelRPM);
+
         try { // prevents crashing
-            SmartDashboard.putNumber("Flywheel Error", (TurretSettings.setVelocities - Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60)));
-            SmartDashboard.putNumber("Hood Error (Deg)", (Math.toDegrees(TargetHoodAngle - (Functions.map(CurrentHoodAngle.getAsDouble(), TurretConstants.minHoodMotorRot, TurretConstants.maxHoodMotorRot, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle)))));
-            SmartDashboard.putNumber("Hood Target Angle (Deg)", (Math.toDegrees(TargetHoodAngle)));
-            SmartDashboard.putNumber("Hood Angle (Deg)",  (Math.toDegrees(Functions.map(CurrentHoodAngle.getAsDouble(), TurretConstants.minHoodMotorRot, TurretConstants.maxHoodMotorRot, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle))));
-            SmartDashboard.putNumber("Hood Motor Angle (Rev)", (CurrentHoodAngle.getAsDouble()));
+
+            // Constantly keeps the range up to date since the hood motor cannot physically move outside mechanical stop 
+            if (hoodMotor.getEncoder().getPosition() < lowestHoodMotorRev) lowestHoodMotorRev = hoodMotor.getEncoder().getPosition();
+            if (hoodMotor.getEncoder().getPosition() > highestHoodMotorRev) highestHoodMotorRev = hoodMotor.getEncoder().getPosition();
+
+            SmartDashboard.putNumber("Flywheel Error", TargetFlywheelRPM - Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
+            SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
+            SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
+            SmartDashboard.putNumber("Hood Angle (Deg)",  Math.toDegrees(CurrentHoodAngle.getAsDouble()));
+            SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
             
             SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteTicks());
             SmartDashboard.putNumber("TEST DISPLAY2:", 2);
@@ -670,17 +709,6 @@ public class OuttakeSubsystem extends SubsystemBase {
                 ballsCounted++;
             }
 
-        } catch (NullPointerException e) {
-            // do nothing
-        }
-
-        SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
-
-        SmartDashboard.putBoolean("Auto Lowered?", hoodZoning.getZoningState());
-
-        SmartDashboard.putNumber("Flywheel Target RPM", TurretSettings.setVelocities);
-
-        try { // prevents crashing
             SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));
             // launch angle, launch vel, target dist, target height, flight time
             SmartDashboard.putString("Last Traj Sim", 
@@ -690,9 +718,11 @@ public class OuttakeSubsystem extends SubsystemBase {
                 " height: " + Functions.round(lastSimTraj[3] * 39.37, 2)
             );
             SmartDashboard.putNumber("Last Traj Sim Flight Time (s)", Functions.round(lastSimTraj[4], 3));
+
         } catch (NullPointerException e) {
             // do nothing
         }
+
     }
 
     public void enableAutoLower(){

@@ -108,6 +108,11 @@ public class Settings {
         public static boolean autoLowerHood = true;
 
         public static boolean reverseCounterDirection = false;
+
+
+        public static double hoodCalibrationDownTime = 0.1; // time spent going to down position (which should be short since it already is in the down position)
+        public static double hoodCalibrationUpTime = 0.5; // time spent going up after it has reached its underestimate for max height
+        public static double hoodCalibrationPower = 0.25;
     }
 
 

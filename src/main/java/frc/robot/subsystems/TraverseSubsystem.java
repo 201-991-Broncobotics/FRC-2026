@@ -61,8 +61,6 @@ public class TraverseSubsystem extends SubsystemBase {
         if (!rollerMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Traverse roller motor with ID " + MotorConstants.traverseRollerID + " is broken!");
         if (!scoopMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Traverse scoop motor with ID " + MotorConstants.traverseScoopID + " is broken!");
 
-        SmartDashboard.putNumber("Running Traverse Voltage", TraverseSettings.rollerMotorPower);
-
     }
 
     public void transfer(){ rollerMotor.set(-TraverseSettings.rollerMotorPower); }
@@ -76,8 +74,6 @@ public class TraverseSubsystem extends SubsystemBase {
 
     @Override
     public void periodic(){
-
-        TraverseSettings.rollerMotorPower =  SmartDashboard.getNumber("Running Traverse Voltage", TraverseSettings.rollerMotorPower);
 
         try {
             SmartDashboard.putNumber("Traverse Roller Motor Temperature", rollerMotor.getDeviceTemp().getValueAsDouble());

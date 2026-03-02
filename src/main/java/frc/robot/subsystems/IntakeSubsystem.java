@@ -239,9 +239,9 @@ public class IntakeSubsystem extends SubsystemBase {
             //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
             //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
             SmartDashboard.putNumber("Intake Pivot Position", Math.toDegrees(CurrentPivotPosition.getAsDouble()));
-            SmartDashboard.putNumber("Intake Pivot Actual Position", rightPivotMotor.getPosition().getValueAsDouble());
-            SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.get());
-            SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
+            //SmartDashboard.putNumber("Intake Pivot Actual Position", rightPivotMotor.getPosition().getValueAsDouble());
+            //SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.get());
+            //SmartDashboard.putNumber("Intake Pivot low target", IntakeConstants.lowLimitAngle / (2*Math.PI) + pivotOffset);
 
             SmartDashboard.putNumber("Intake Motor Temperature", intakeMotor.getDeviceTemp().getValueAsDouble());
             SmartDashboard.putNumber("Intake Motor RPM", intakeMotor.getVelocity().getValueAsDouble() * 60);
