@@ -29,7 +29,7 @@ public class ThroughBoreEncoder {
      * @param channelA
      */
     public ThroughBoreEncoder(int channelA) {
-        new ThroughBoreEncoder(channelA, -1, -1);
+        this(channelA, -1, -1);
     }
 
     /**
@@ -38,14 +38,14 @@ public class ThroughBoreEncoder {
      * @param channelC
      */
     public ThroughBoreEncoder(int channelB, int channelC) {
-        new ThroughBoreEncoder(-1, channelB, channelC);
+        this(-1, channelB, channelC);
     }
 
-    public double getRelativeRaw() { return relativeEncoder.getRaw(); }
-    public double getAbsoluteRaw() { return absoluteEncoder.get(); }
+    public double getRelativeRaw() { return (relativeEncoder != null) ? relativeEncoder.getRaw() : 0.0; }
+    public double getAbsoluteRaw() { return (absoluteEncoder != null) ? absoluteEncoder.get() : 0.0; }
 
-    public double getRelativeTicks() { return relativeEncoder.getRaw(); }
-    public double getAbsoluteTicks() { return absoluteEncoder.get() * absoluteResolution; }
+    public double getRelativeTicks() { return (relativeEncoder != null) ? relativeEncoder.getRaw() : 0.0; }
+    public double getAbsoluteTicks() { return (absoluteEncoder != null) ? absoluteEncoder.get() * absoluteResolution : 0.0; }
 
     /**
      * Gets the relative angle in radians
@@ -70,8 +70,18 @@ public class ThroughBoreEncoder {
     public void setRelativeZero(double radians) { relativeEncoderZero = radians; }
     public void setAbsoluteZero(double radians) { absoluteEncoderZero = radians; }
 
-    public boolean encoderExists() { return this.relativeEncoder != null; }
-    public boolean encoderConnected() { return absoluteEncoder.isConnected(); }
+    public boolean encoderExists() { 
+        return this.relativeEncoder != null || this.absoluteEncoder != null; 
+    }
+
+    public boolean encoderConnected() { 
+        if (absoluteEncoder != null) {
+            return absoluteEncoder.isConnected();
+        }
+        // Relative WPILib Encoders don't have a built-in connection check, 
+        // so we can only verify if the object was instantiated.
+        return relativeEncoder != null; 
+    }
 
 
 }
