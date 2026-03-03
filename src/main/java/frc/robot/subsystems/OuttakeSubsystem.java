@@ -43,6 +43,7 @@ import frc.robot.Constants.AutoDrivingConstants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
+import frc.robot.Settings;
 import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.TurretSettings;
@@ -76,7 +77,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private StatusCode flywheelStatus, turntableStatus, hoodStatus; 
     private CurrentLimitsConfigs currentLimits; 
     private double lastkP, lastkI, lastkD, lastkS, lastkV, lastkA, 
-                   lastTkP, lastTkI, lastTkD, lastPkP, lastPkI, lastPkD;
+                   lastTkP, lastTkI, lastTkD, lastTkS, lastTkV, lastPkP, lastPkI, lastPkD;
     private Vector2d distanceVector;  
     private PolynomialCurveFitter regression; 
     private PolynomialFunction function;
@@ -90,7 +91,6 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double FrameTime = 0.1;
     private ElapsedTime FrameTimer;
     private boolean justToggledTuning = false;
-    private double TurretStartingOffset = 0;
     private double lastSimSolveTime = 0;
     private double[] lastSimTraj = new double[] {0,0,0,0,0}; // launch angle, launch vel, target dist, target height, flight time
     private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0);
@@ -115,10 +115,8 @@ public class OuttakeSubsystem extends SubsystemBase {
     
     private double lowestHoodMotorRev = 0, highestHoodMotorRev = 2.31; // should be just a rough underestimate because it will get retuned when the robot tries to the shoot for the first time
     private boolean IsShooting = false;
-    private double turretOffset = 0;
+    private double turretStartingOffset = 0;
 
-    //temporary
-    private double flywheelPower = 0.5;
     private boolean justChangedPower = false;
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
@@ -194,6 +192,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         turntableConfig.Slot0.kP = TurretSettings.tkP; 
         turntableConfig.Slot0.kI = TurretSettings.tkI; 
         turntableConfig.Slot0.kD = TurretSettings.tkD; 
+        turntableConfig.Slot0.kS = TurretSettings.tkS; 
+        turntableConfig.Slot0.kV = TurretSettings.tkV; 
 
         
 
@@ -238,6 +238,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         lastTkP = TurretSettings.tkP;
         lastTkI = TurretSettings.tkI; 
         lastTkD = TurretSettings.tkD; 
+        lastTkS = TurretSettings.tkS; 
+        lastTkV = TurretSettings.tkV; 
         lastPkP = TurretSettings.hkP; 
         lastPkI = TurretSettings.hkI; 
         lastPkD = TurretSettings.hkD; 
@@ -246,23 +248,28 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (!turntableStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Turntable motor with ID " + MotorConstants.turntableID + " is broken!"); 
         //if (!hoodStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.hoodMotorID + " is broken!"); 
 
-        SmartDashboard.putNumber("Flywheel kP", TurretSettings.kP);
-        SmartDashboard.putNumber("Flywheel kI", TurretSettings.kI);
-        SmartDashboard.putNumber("Flywheel kD", TurretSettings.kD);
-        SmartDashboard.putNumber("Flywheel kS", TurretSettings.kS);
-        SmartDashboard.putNumber("Flywheel kV", TurretSettings.kV);
-        SmartDashboard.putNumber("Flywheel kA", TurretSettings.kA);
-        SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
-        SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
-        SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
-        SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
-        SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
-        SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
-        SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
-        SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
+        if (Settings.tuningTelemetryEnabled) {
+            SmartDashboard.putNumber("Flywheel kP", TurretSettings.kP);
+            SmartDashboard.putNumber("Flywheel kI", TurretSettings.kI);
+            SmartDashboard.putNumber("Flywheel kD", TurretSettings.kD);
+            SmartDashboard.putNumber("Flywheel kS", TurretSettings.kS);
+            SmartDashboard.putNumber("Flywheel kV", TurretSettings.kV);
+            SmartDashboard.putNumber("Flywheel kA", TurretSettings.kA);
+            SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
+            SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
+            SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
+            SmartDashboard.putNumber("Turntable kS", TurretSettings.tkS); 
+            SmartDashboard.putNumber("Turntable kV", TurretSettings.tkV); 
+            SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
+            SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
+            SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
+            SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
+            SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
+        }
+        
 
-        turretOffset = getAbsoluteTurretAngle() - turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0;
-        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0 + turretOffset; // TODO: needs starting offset
+        turretStartingOffset = getAbsoluteTurretAngle() - turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0;
+        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0 + turretStartingOffset; // TODO: needs starting offset
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
         CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
 
@@ -395,7 +402,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     public void setTurntable(double Angle) {
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-        turntableMotor.setControl(turretPositionRequest.withPosition(TargetTurretAngle / (2*Math.PI) * 10));
+        turntableMotor.setControl(turretPositionRequest.withPosition((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10));
     }
 
     public void setHood(double Angle) {//Radians
@@ -526,6 +533,18 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (TurretSettings.tkD != lastTkD){
             lastTkD = TurretSettings.tkD;
             turntableConfig.Slot0.kD = lastTkD; 
+            turntableValueHasChanged = true;  
+        }
+
+        if (TurretSettings.tkS != lastTkS){
+            lastTkS = TurretSettings.tkS;
+            turntableConfig.Slot0.kS = lastTkS; 
+            turntableValueHasChanged = true;  
+        }
+
+        if (TurretSettings.tkV != lastTkV){
+            lastTkV = TurretSettings.tkV;
+            turntableConfig.Slot0.kV = lastTkV; 
             turntableValueHasChanged = true;  
         }
 
@@ -689,51 +708,68 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
         }
-        //Auto Lower
-        SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(robotPose));
-        SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(robotPose));
-        SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(robotPose));
-        SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(robotPose));
-        SmartDashboard.putBoolean("Trench Zone",  FlyZoning.inZones(robotPose));
+
         SmartDashboard.putBoolean("Is Shooting", IsShooting);
+        SmartDashboard.putBoolean("Trench Zone",  FlyZoning.inZones(robotPose));
         SmartDashboard.putBoolean("Alliance Zone", ZoneConstants.allianceZone.getZoningState());
 
-        TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
-        TurretSettings.kI = SmartDashboard.getNumber("Flywheel kI", TurretSettings.kI);
-        TurretSettings.kD = SmartDashboard.getNumber("Flywheel kD", TurretSettings.kD);
-        TurretSettings.kS = SmartDashboard.getNumber("Flywheel kS", TurretSettings.kS);
-        TurretSettings.kV = SmartDashboard.getNumber("Flywheel kV", TurretSettings.kV);
-        TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);
-        TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
-        TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
-        TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
-        TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
-        TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
-        TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
-        checkForTuning();
-
-        SmartDashboard.putNumber("Outtake RPM", Math.round(rightFlyMotor.getVelocity().getValueAsDouble() * 60));
         SmartDashboard.putBoolean("Auto Lowered?", autoLowered);
-        SmartDashboard.putNumber("Flywheel Target RPM", TargetFlywheelRPM);
+        
 
+        if (Settings.tuningTelemetryEnabled) {
+
+            //Auto Lower
+            SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(robotPose));
+            SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(robotPose));
+            SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(robotPose));
+            SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(robotPose));
+            
+
+            TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
+            TurretSettings.kI = SmartDashboard.getNumber("Flywheel kI", TurretSettings.kI);
+            TurretSettings.kD = SmartDashboard.getNumber("Flywheel kD", TurretSettings.kD);
+            TurretSettings.kS = SmartDashboard.getNumber("Flywheel kS", TurretSettings.kS);
+            TurretSettings.kV = SmartDashboard.getNumber("Flywheel kV", TurretSettings.kV);
+            TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);
+            TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
+            TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
+            TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
+            TurretSettings.tkS = SmartDashboard.getNumber("Turntable kS", TurretSettings.tkS);
+            TurretSettings.tkV = SmartDashboard.getNumber("Turntable kV", TurretSettings.tkV);
+            TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
+            TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
+            TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
+            checkForTuning();
+
+            try { // prevents crashing
+                SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
+                SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
+                SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
+                
+                SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
+                SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
+
+            } catch (NullPointerException e) {
+                // do nothing
+            }
+
+
+        }
+
+    
         try { // prevents crashing
 
             // Constantly keeps the range up to date since the hood motor cannot physically move outside mechanical stop 
             if (hoodMotor.getEncoder().getPosition() < lowestHoodMotorRev) lowestHoodMotorRev = hoodMotor.getEncoder().getPosition();
             if (hoodMotor.getEncoder().getPosition() > highestHoodMotorRev) highestHoodMotorRev = hoodMotor.getEncoder().getPosition();
 
+            SmartDashboard.putNumber("Current Hood Angle (Deg)",  Math.toDegrees(CurrentHoodAngle.getAsDouble()));
+
             SmartDashboard.putNumber("Flywheel Current RPM", Functions.round(CurrentFlywheelRPM.getAsDouble(), 1));
+            SmartDashboard.putNumber("Flywheel Target RPM", TargetFlywheelRPM);
             SmartDashboard.putNumber("Flywheel Error", Functions.round(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble(), 1));
             SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
-            
-            SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
-            SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
-            SmartDashboard.putNumber("Hood Angle (Deg)",  Math.toDegrees(CurrentHoodAngle.getAsDouble()));
-            SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
-            
-            SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
-            SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
-            SmartDashboard.putNumber("TEST DISPLAY2:", 2);
+
             SmartDashboard.putNumber("Turret Relative Position", Functions.round(Math.toDegrees(getTurretAngle()), 2));
             SmartDashboard.putNumber("Turret Absolute Position", Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
             
