@@ -10,22 +10,27 @@ import frc.robot.Constants.ZoneConstants;
 
 public class Zoning {
     private boolean inZone = false; //In zone or out of zone
+    private boolean prevInZone = false; //In zone or out of zone
 
     private ArrayList<Zone> Zones = new ArrayList<Zone>();
 
 
     public Zoning(Zone zone){
 
-        Zones.add(zone);
+        this.Zones.add(zone);
     }
 
     public Zoning(ArrayList<Zone> zones){
-        Zones = zones;
+        this.Zones = zones;
     }
 
     public boolean inZones(Pose2d pose){
+        prevInZone = inZone;
+        //inZone = false;
+
         for (Zone zone : Zones) {
             if(zone.inZone(pose))
+                //inZone = true;
                 return true;
         }
 
@@ -49,7 +54,7 @@ public class Zoning {
     }
 
     public boolean ifLeftZones(Pose2d Pose){
-        if (!inZones(Pose) && inZone) {
+        if (!inZones(Pose) && prevInZone) {
             return true;
         } else {
             return false;
@@ -67,7 +72,7 @@ public class Zoning {
     }
 
     public boolean ifEnteredZones(Pose2d Pose){
-        if (inZones(Pose) && !inZone) {
+        if (inZones(Pose) && !prevInZone) {
             return true;
         } else {
             return false;
@@ -76,6 +81,20 @@ public class Zoning {
 
     public boolean getZoningState(){
         return inZone;
+    }
+
+    public void setZone(Zone zone){
+        this.Zones.clear();
+        this.Zones.add(zone);
+    }
+
+    public void setZones(ArrayList<Zone> zones){
+        this.Zones.clear();
+        this.Zones = zones;
+    }
+
+    public void addZone(Zone zone){
+        this.Zones.add(zone);
     }
 
 

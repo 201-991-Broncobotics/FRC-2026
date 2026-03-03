@@ -219,7 +219,8 @@ public class DrivingProfiles extends SubsystemBase {
             PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
             if (LimelightPoseEstimate != null) {
-                double TurretAngle = OuttakeSubsystem.CurrentTurretAngle.getAsDouble();
+                double TurretAngle = OuttakeSubsystem.getAbsoluteTurretAngle();
+                SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
                 Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));
                 Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
                     LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
@@ -227,6 +228,7 @@ public class DrivingProfiles extends SubsystemBase {
                     CorrectFacingDirection
                 );
 
+                SmartDashboard.putString("REAL TURRET POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.25, 0.25, 5.0)); // standard deviation of vision measurements in meters and degrees
             }
@@ -234,6 +236,9 @@ public class DrivingProfiles extends SubsystemBase {
 
             RobotPose = drivetrain.getState().Pose;
             SmartDashboard.putString("ROBOT POSE:", "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3));
+            SmartDashboard.putString("TURRET POSE:", Functions.stringifyPose(getTurretPose(RobotPose)));
+            
+
 
             //double cameraTX = LimelightHelpers.getTX("limelight");
 

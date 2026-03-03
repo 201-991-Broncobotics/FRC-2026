@@ -6,6 +6,7 @@ package frc.robot;
 
 import frc.robot.auton.Autos;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.ZoneConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ClimbingSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -18,6 +19,8 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -26,6 +29,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static edu.wpi.first.units.Units.*;
+
+import java.util.Optional;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -70,6 +75,9 @@ public class RobotContainer {
 
         // CameraServer.startAutomaticCapture("Limelight", "http://limelight.local:5800/stream.mjpg");
 
+        Optional<Alliance> ally = DriverStation.getAlliance();
+        ZoneConstants.allianceZone.setZone((ally.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+
         configureBindings();
     }
 
@@ -89,8 +97,8 @@ public class RobotContainer {
             () -> -driver.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
             () -> driver.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
             () -> -driver.getRightX(), 
-            () -> 0.4 + 0.6 * driver.getRightTriggerAxis(), 
-            4, 4
+            () -> 0.3 + 0.7 * driver.getRightTriggerAxis(), 
+            2, 2
         );
 
         drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
@@ -126,6 +134,7 @@ public class RobotContainer {
         operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
         operator.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
         
+        // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting));
 
         //temporary
         operator.y().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel)); //.toggleOnFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));
