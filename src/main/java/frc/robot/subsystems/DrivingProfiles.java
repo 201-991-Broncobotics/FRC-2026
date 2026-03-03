@@ -10,6 +10,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -217,7 +219,8 @@ public class DrivingProfiles extends SubsystemBase {
             PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
             if (LimelightPoseEstimate != null) {
-                double TurretAngle = OuttakeSubsystem.CurrentTurretAngle.getAsDouble();
+                double TurretAngle = OuttakeSubsystem.getTurretAngle();
+                // SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
                 Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));
                 Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
                     LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
@@ -225,6 +228,7 @@ public class DrivingProfiles extends SubsystemBase {
                     CorrectFacingDirection
                 );
 
+                SmartDashboard.putString("REAL TURRET POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.25, 0.25, 5.0)); // standard deviation of vision measurements in meters and degrees
             }
@@ -232,6 +236,9 @@ public class DrivingProfiles extends SubsystemBase {
 
             RobotPose = drivetrain.getState().Pose;
             SmartDashboard.putString("ROBOT POSE:", "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3));
+            SmartDashboard.putString("TURRET POSE:", Functions.stringifyPose(getTurretPose(RobotPose)));
+            
+
 
             //double cameraTX = LimelightHelpers.getTX("limelight");
 
@@ -294,5 +301,21 @@ public class DrivingProfiles extends SubsystemBase {
         
         
         
+    }
+
+    public static Pose2d getTurretPose(Pose2d robotPose2d) {
+        // 1. Translation: X is backward (negative), Y is distance from the center.
+        // Note: Assuming positive Y is to the "left" of the robot. 
+        // If the turret is to the right, make 0.237765 negative.
+        Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
+        
+        // 2. Rotation: The turret's mounting angle relative to the robot's front
+        Rotation2d turretRotation = Rotation2d.fromDegrees(55.885527);
+        
+        // 3. Create the transform from the center of the robot to the turret
+        Transform2d robotToTurret = new Transform2d(turretTranslation, turretRotation);
+        
+        // 4. Apply the transform to get the turret's absolute pose on the field
+        return robotPose2d.transformBy(robotToTurret);
     }
 }

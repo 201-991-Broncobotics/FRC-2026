@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.utility.Vector2d;
 import frc.robot.utility.Zoning.Shape;
 import frc.robot.utility.Zoning.Zone;
+import frc.robot.utility.Zoning.Zoning;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -139,9 +140,9 @@ public final class Constants {
 
 
         public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,5.5), 2.5,2));
-        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,2.5), 2.5, 2));
+        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,1.0), 2.5, 2));
         public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(11.4,5.5), 2.5, 2));
-        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(11.4,2.5), 2.5, 2));
+        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(11.4,1.0), 2.5, 2));
 
         public static ArrayList<Zone> RampZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
@@ -157,5 +158,7 @@ public final class Constants {
         public static Zone middleZone = new Zone(new Shape.Rectangle(new Translation2d(4.75,8), new Translation2d(12,0)));
         public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,8), new Translation2d(4.5,0)));
         public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,8), new Translation2d(16.5,0)));
+
+        public static Zoning allianceZone = new Zoning(blueZone);
     }
 }

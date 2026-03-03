@@ -110,13 +110,14 @@ public class OuttakeSubsystem extends SubsystemBase {
     
     private double lowestHoodMotorRev = 0, highestHoodMotorRev = 2.31; // should be just a rough underestimate because it will get retuned when the robot tries to the shoot for the first time
     private boolean IsShooting = false;
+    private double turretOffset = 0;
 
     //temporary
     private double flywheelPower = 0.5;
     private boolean justChangedPower = false;
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
-    private Zoning hoodZoning = new Zoning(ZoneConstants.TrenchZones);
+    private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
@@ -132,14 +133,10 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
         if (alliance.get() == Alliance.Red) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
-        else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 1);
+        else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         
 
-        if (throughBore19 == null) SmartDashboard.putString("ThroughBore 19 Literally exists:", "NO");
-        else SmartDashboard.putString("ThroughBore 19 Literally exists:", "Exists");
-        SmartDashboard.putBoolean("ThroughBore 19 Exists:", throughBore19.encoderAbsoluteExists());
-        SmartDashboard.putBoolean("ThroughBore 19 Connected:", throughBore19.encoderConnected());
-        SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteTicks());
+        
 
 
 
@@ -270,7 +267,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
 
-        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0; // TODO: needs starting offset
+        turretOffset = getAbsoluteTurretAngle() - turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0;
+        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0 + turretOffset; // TODO: needs starting offset
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
         CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
 
@@ -292,7 +290,6 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         TargetHoodAngle += MathUtil.applyDeadband(-controller.getRightY(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TargetHoodAngle);
-
 
         if (IsShooting) {
             // TURNTABLE
@@ -434,12 +431,14 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     public void tuneFlywheel(){
         if (!justToggledTuning) {
+            IsShooting = true;
             // rightFlyMotor.setControl
-            rightFlyMotor.setControl(flywheelVelocityRequest.withVelocity(TargetFlywheelRPM / 60.0)); 
-            leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
+            //rightFlyMotor.setControl(flywheelVelocityRequest.withVelocity(TargetFlywheelRPM / 60.0)); 
+            //leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
             justToggledTuning = true;
         } else {
-            stopFlywheels();
+            //stopFlywheels();
+            IsShooting = false;
             justToggledTuning = false;
         }
     }
@@ -549,23 +548,21 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
 
-    public void changeRPMFast() {
-        rpmAdjustment = 500;
-    }
+    public void changeRPMFast() { rpmAdjustment = 500; }
+    public void changeRPMSlow() { rpmAdjustment = 50; }
 
-    public void changeRPMSlow() {
-        rpmAdjustment = 50;
-    }
+    public void startShooting() { IsShooting = true; }
+    public void stopShooting() { IsShooting = true; }
 
 
-    public double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
-    public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
-    public double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
+    public static double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
+    public static double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
+    public static double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
 
-    private double getAbsoluteTurretAngle() {
-        double R = throughBore19.getAbsoluteAngle() - throughBore21.getAbsoluteAngle();
+    public static double getAbsoluteTurretAngle() {
+        double R = (throughBore19.getAbsoluteRaw() - throughBore21.getAbsoluteRaw()) * 2*Math.PI;
         if (R < 0) R += 2* Math.PI;
-        return 0.9975 * R + TurretSettings.TurretAbsoluteOffset; // fixes angle being slightly off, also means the turret can't keep rotating
+        return -0.9975 * R - TurretSettings.TurretAbsoluteOffset; // fixes angle being slightly off, also means the turret can't keep rotating
     }
 
 
@@ -670,8 +667,14 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTimer.reset();
 
         robotPose = drivetrain.getState().Pose;
-        hoodZoning.updateZones(robotPose);
-        autoLowered = hoodZoning.getZoningState();
+
+        ZoneConstants.allianceZone.updateZones(robotPose);
+        //if(FlyZoning.ifLeftZones(robotPose) && !IsShooting && ZoneConstants.allianceZone.getZoningState()) IsShooting = true; //If entered the alliance zone and left trench zone, turn on the flywheel and hood
+
+        FlyZoning.updateZones(DrivingProfiles.getTurretPose(robotPose));
+        autoLowered = FlyZoning.getZoningState();
+
+        if(FlyZoning.getZoningState() && IsShooting) IsShooting = false; //If entered the trench, stop flywheels + hood
 
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
@@ -682,6 +685,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(robotPose));
         SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(robotPose));
         SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(robotPose));
+        SmartDashboard.putBoolean("Trench Zone",  FlyZoning.inZones(robotPose));
+        SmartDashboard.putBoolean("Is Shooting", IsShooting);
+        SmartDashboard.putBoolean("Alliance Zone", ZoneConstants.allianceZone.getZoningState());
 
         TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
         TurretSettings.kI = SmartDashboard.getNumber("Flywheel kI", TurretSettings.kI);
@@ -718,7 +724,8 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Hood Angle (Deg)",  Math.toDegrees(CurrentHoodAngle.getAsDouble()));
             SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
             
-            SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteTicks());
+            SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
+            SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
             SmartDashboard.putNumber("TEST DISPLAY2:", 2);
             SmartDashboard.putNumber("Turret Relative Position", Functions.round(Math.toDegrees(getTurretAngle()), 2));
             SmartDashboard.putNumber("Turret Absolute Position", Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
