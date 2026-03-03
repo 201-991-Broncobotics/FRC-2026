@@ -110,6 +110,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     
     private double lowestHoodMotorRev = 0, highestHoodMotorRev = 2.31; // should be just a rough underestimate because it will get retuned when the robot tries to the shoot for the first time
     private boolean IsShooting = false;
+    private double turretOffset = 0;
 
     //temporary
     private double flywheelPower = 0.5;
@@ -260,7 +261,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
         SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
 
-        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0; // TODO: needs starting offset
+        turretOffset = getAbsoluteTurretAngle() - turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0;
+        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0 + turretOffset; // TODO: needs starting offset
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
         CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
 
@@ -535,9 +537,9 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void stopShooting() { IsShooting = true; }
 
 
-    public double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
-    public double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
-    public double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
+    public static double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
+    public static double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
+    public static double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
 
     public static double getAbsoluteTurretAngle() {
         double R = (throughBore19.getAbsoluteRaw() - throughBore21.getAbsoluteRaw()) * 2*Math.PI;

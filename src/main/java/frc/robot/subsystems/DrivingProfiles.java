@@ -219,8 +219,8 @@ public class DrivingProfiles extends SubsystemBase {
             PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
             if (LimelightPoseEstimate != null) {
-                double TurretAngle = OuttakeSubsystem.getAbsoluteTurretAngle();
-                SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
+                double TurretAngle = OuttakeSubsystem.getTurretAngle();
+                // SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
                 Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));
                 Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
                     LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
