@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Robot;
+import frc.robot.Settings;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Settings.IntakeSettings;
 import frc.robot.Settings.TurretSettings;
@@ -106,15 +107,18 @@ public class IntakeSubsystem extends SubsystemBase {
         if (!intakeMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Roller motor with ID " + MotorConstants.intakeID + " is broken!");
         if (!pivotMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motors are broken!");
    
+        if (Settings.tuningTelemetryEnabled) {
+            SmartDashboard.putNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
+            SmartDashboard.putNumber("Roller Intake Running Power", IntakeSettings.runningPower);
+            SmartDashboard.putNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
+            SmartDashboard.putNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
+            SmartDashboard.putNumber("Pivot kP", IntakeSettings.pivotkP);
+            SmartDashboard.putNumber("Pivot kI", IntakeSettings.pivotkI); 
+            SmartDashboard.putNumber("Pivot kD", IntakeSettings.pivotkD);  
+            SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); 
+        }
 
-        SmartDashboard.putNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
-        SmartDashboard.putNumber("Roller Intake Running Power", IntakeSettings.runningPower);
-        SmartDashboard.putNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
-        SmartDashboard.putNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
-        SmartDashboard.putNumber("Pivot kP", IntakeSettings.pivotkP);
-        SmartDashboard.putNumber("Pivot kI", IntakeSettings.pivotkI); 
-        SmartDashboard.putNumber("Pivot kD", IntakeSettings.pivotkD);  
-        SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); 
+        
       
     }
 
@@ -226,14 +230,17 @@ public class IntakeSubsystem extends SubsystemBase {
             drop();
         }
 
-        IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
-        IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Power", IntakeSettings.runningPower); 
-        IntakeSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
-        IntakeSettings.pivotMotorAcceleration = SmartDashboard.getNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
-        IntakeSettings.pivotkP = SmartDashboard.getNumber("Pivot kP", IntakeSettings.pivotkP);
-        IntakeSettings.pivotkI = SmartDashboard.getNumber("Pivot kI", IntakeSettings.pivotkI); 
-        IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
-        IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
+        if (Settings.tuningTelemetryEnabled) {
+            IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
+            IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Power", IntakeSettings.runningPower); 
+            IntakeSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
+            IntakeSettings.pivotMotorAcceleration = SmartDashboard.getNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
+            IntakeSettings.pivotkP = SmartDashboard.getNumber("Pivot kP", IntakeSettings.pivotkP);
+            IntakeSettings.pivotkI = SmartDashboard.getNumber("Pivot kI", IntakeSettings.pivotkI); 
+            IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
+            IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
+        }
+        
 
         try {
             //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();

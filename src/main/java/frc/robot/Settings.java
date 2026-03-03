@@ -23,9 +23,7 @@ import edu.wpi.first.math.util.Units;
 
 public class Settings {
 
-    public static boolean useNormalControls = false; // false is for single player/Aidan controls
-
-    public static boolean tuningTelemetryEnabled = false;
+    public static boolean tuningTelemetryEnabled = true;
 
     public static PPHolonomicDriveController PathFollowerController = new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
         new PIDConstants(10.0, 0.0, 0.0), // Translation PID constants
@@ -58,7 +56,6 @@ public class Settings {
 
         public static double rollerMotorPower = 1.0; 
         public static double scoopMotorPower = 1.0;
-
 
     }
 
