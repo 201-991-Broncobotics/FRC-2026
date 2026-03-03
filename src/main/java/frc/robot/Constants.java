@@ -159,6 +159,9 @@ public final class Constants {
         public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,8), new Translation2d(4.5,0)));
         public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,8), new Translation2d(16.5,0)));
 
+        public static Translation2d blueHub = new Translation2d(4.5,4);
+        public static Translation2d redHub = new Translation2d(11.9,4);
+
         public static Zoning allianceZone = new Zoning(blueZone);
     }
 }

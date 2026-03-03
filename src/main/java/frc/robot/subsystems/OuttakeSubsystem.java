@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.pathplanner.lib.path.RotationTarget;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -31,14 +32,18 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.AutoDrivingConstants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
+import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.ElapsedTime;
@@ -135,11 +140,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (alliance.get() == Alliance.Red) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         
-
-        
-
-
-
 
         p1 = new WeightedObservedPoint(1, distanceVector.mag(), 3);
         
@@ -333,6 +333,14 @@ public class OuttakeSubsystem extends SubsystemBase {
             setHood(TurretConstants.minHoodAngle);
         }
 
+
+        //Auto Aiming
+        if(AutoTargetingSettings.AutoAimingEnabled && ZoneConstants.allianceZone.inZones(drivetrain.getState().Pose)){
+            setTurntable(getTurretAutoRotation().getRadians());
+        } else {
+            //Manual Turret Aiming
+        }
+
     }
 
     public void target(double X, double Y, double H) { // h is height
@@ -362,6 +370,26 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         TargetFlywheelRPM = getTargetFlywheelRPM(Velocity);
 
+    }
+
+    private Rotation2d getTurretAutoRotation(){ //Turns Turret to always get the balls in even while moving
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+        Translation2d goalPose;
+        if(alliance.get() == Alliance.Red) {
+            goalPose = ZoneConstants.redHub;
+        } else {
+            goalPose = ZoneConstants.blueHub;
+        }
+
+        Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
+        goalPose = goalPose.minus(velocity);
+
+        Translation2d relativeGoalPose = goalPose.minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+
+        Rotation2d targetRotation = new Rotation2d(relativeGoalPose.getX(), relativeGoalPose.getY());
+
+        return targetRotation.minus(drivetrain.getState().Pose.getRotation());
     }
 
 
@@ -661,7 +689,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
         }
-
         //Auto Lower
         SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(robotPose));
         SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(robotPose));
