@@ -99,6 +99,8 @@ public class Settings {
         public static double tkP = 0; // turntable
         public static double tkI = 0; 
         public static double tkD = 0;  
+        public static double tkS = 0;
+        public static double tkV = 0;
         public static double hkP = 1; // hood
         public static double hkI = 0; 
         public static double hkD = 0; 

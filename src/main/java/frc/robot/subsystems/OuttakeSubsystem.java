@@ -71,7 +71,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private StatusCode flywheelStatus, turntableStatus, hoodStatus; 
     private CurrentLimitsConfigs currentLimits; 
     private double lastkP, lastkI, lastkD, lastkS, lastkV, lastkA, 
-                   lastTkP, lastTkI, lastTkD, lastPkP, lastPkI, lastPkD;
+                   lastTkP, lastTkI, lastTkD, lastTkS, lastTkV, lastPkP, lastPkI, lastPkD;
     private Vector2d distanceVector;  
     private PolynomialCurveFitter regression; 
     private PolynomialFunction function;
@@ -197,6 +197,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         turntableConfig.Slot0.kP = TurretSettings.tkP; 
         turntableConfig.Slot0.kI = TurretSettings.tkI; 
         turntableConfig.Slot0.kD = TurretSettings.tkD; 
+        turntableConfig.Slot0.kS = TurretSettings.tkS; 
+        turntableConfig.Slot0.kV = TurretSettings.tkV; 
 
         
 
@@ -241,6 +243,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         lastTkP = TurretSettings.tkP;
         lastTkI = TurretSettings.tkI; 
         lastTkD = TurretSettings.tkD; 
+        lastTkS = TurretSettings.tkS; 
+        lastTkV = TurretSettings.tkV; 
         lastPkP = TurretSettings.hkP; 
         lastPkI = TurretSettings.hkI; 
         lastPkD = TurretSettings.hkD; 
@@ -258,6 +262,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
         SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
         SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
+        SmartDashboard.putNumber("Turntable kS", TurretSettings.tkS); 
+        SmartDashboard.putNumber("Turntable kV", TurretSettings.tkV); 
         SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
         SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
         SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
@@ -502,6 +508,18 @@ public class OuttakeSubsystem extends SubsystemBase {
             turntableValueHasChanged = true;  
         }
 
+        if (TurretSettings.tkS != lastTkS){
+            lastTkS = TurretSettings.tkS;
+            turntableConfig.Slot0.kS = lastTkS; 
+            turntableValueHasChanged = true;  
+        }
+
+        if (TurretSettings.tkV != lastTkV){
+            lastTkV = TurretSettings.tkV;
+            turntableConfig.Slot0.kV = lastTkV; 
+            turntableValueHasChanged = true;  
+        }
+
         if (TurretSettings.hkP != lastPkP){
             lastPkP = TurretSettings.hkP;
             hoodConfig.closedLoop.p(lastPkP); 
@@ -674,6 +692,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
         TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
         TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
+        TurretSettings.tkS = SmartDashboard.getNumber("Turntable kS", TurretSettings.tkS);
+        TurretSettings.tkV = SmartDashboard.getNumber("Turntable kV", TurretSettings.tk);
         TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
         TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
         TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
@@ -692,7 +712,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Flywheel Current RPM", Functions.round(CurrentFlywheelRPM.getAsDouble(), 1));
             SmartDashboard.putNumber("Flywheel Error", Functions.round(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble(), 1));
             SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
-            
+
             SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
             SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
             SmartDashboard.putNumber("Hood Angle (Deg)",  Math.toDegrees(CurrentHoodAngle.getAsDouble()));
