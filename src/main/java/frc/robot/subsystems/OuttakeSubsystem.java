@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -70,7 +71,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor;
     private TalonFXConfiguration flywheelConfig, turntableConfig; 
-    private final PositionVoltage turretPositionRequest = new PositionVoltage(0);
+    // private final PositionVoltage turretPositionRequest = new PositionVoltage(0);
+    private final MotionMagicVoltage turretPositionRequest = new MotionMagicVoltage(0);
     private SparkFlex hoodMotor;
     private SparkFlexConfig hoodConfig;
     private SparkClosedLoopController hoodClosedLoopController;
@@ -194,6 +196,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         turntableConfig.Slot0.kD = TurretSettings.tkD; 
         turntableConfig.Slot0.kS = TurretSettings.tkS; 
         turntableConfig.Slot0.kV = TurretSettings.tkV; 
+        turntableConfig.MotionMagic.MotionMagicCruiseVelocity = 50;
+        turntableConfig.MotionMagic.MotionMagicAcceleration = 50;
 
         
 
@@ -268,10 +272,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
         
 
-        turretStartingOffset = getAbsoluteTurretAngle() - turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0;
-        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0 + turretStartingOffset; // TODO: needs starting offset
+        turretStartingOffset = getAbsoluteTurretAngle() - (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0;
+        CurrentTurretAngle = () -> (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0 + turretStartingOffset; // TODO: needs starting offset
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
         CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
+        TargetTurretAngle = CurrentTurretAngle.getAsDouble();
 
     }
 
@@ -292,11 +297,13 @@ public class OuttakeSubsystem extends SubsystemBase {
         TargetHoodAngle += MathUtil.applyDeadband(-controller.getRightY(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TargetHoodAngle);
 
+        TargetTurretAngle += MathUtil.applyDeadband(controller.getLeftX(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
+        TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
+        
+
         if (IsShooting) {
             // TURNTABLE
-            //temporarily here
-            TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-            // setTurntable(TargetTurretAngle); // TODO: still needs starting offset
+            //TargetTurretAngle = getTurretAutoRotation();
 
             // FLYWHEELS
             setFlywheels(TargetFlywheelRPM);
@@ -340,14 +347,16 @@ public class OuttakeSubsystem extends SubsystemBase {
             setHood(TurretConstants.minHoodAngle);
         }
 
+        setTurntable(TargetTurretAngle);
 
+        /*
         //Auto Aiming
         if(AutoTargetingSettings.AutoAimingEnabled && ZoneConstants.allianceZone.inZones(drivetrain.getState().Pose)){
             setTurntable(getTurretAutoRotation().getRadians());
         } else {
             //Manual Turret Aiming
         }
-
+        */
     }
 
     public void target(double X, double Y, double H) { // h is height
@@ -379,7 +388,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
-    private Rotation2d getTurretAutoRotation(){ //Turns Turret to always get the balls in even while moving
+    private double getTurretAutoRotation(){ //Turns Turret to always get the balls in even while moving
         Optional<Alliance> alliance = DriverStation.getAlliance();
 
         Translation2d goalPose;
@@ -389,20 +398,32 @@ public class OuttakeSubsystem extends SubsystemBase {
             goalPose = ZoneConstants.blueHub;
         }
 
-        Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
-        goalPose = goalPose.minus(velocity);
+        //Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
+        //goalPose = goalPose.minus(velocity);
 
         Translation2d relativeGoalPose = goalPose.minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
 
         Rotation2d targetRotation = new Rotation2d(relativeGoalPose.getX(), relativeGoalPose.getY());
+        targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
 
-        return targetRotation.minus(drivetrain.getState().Pose.getRotation());
+        //Dead Zone
+        if(Math.abs(getTurretAngle() - targetRotation.getRadians()) < TurretConstants.AutoTurretDeadband){
+            targetRotation = new Rotation2d(getTurretAngle());//Set to get turret angle
+        }
+
+        double correctAngle = targetRotation.getRadians();
+        /*if (correctAngle > TurretSettings.maxTurretAngle) correctAngle -= 2*Math.PI;
+        if (correctAngle < TurretSettings.minTurretAngle) correctAngle += 2*Math.PI;*/
+        correctAngle = ((correctAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
+
+        return correctAngle;
     }
 
 
     public void setTurntable(double Angle) {
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-        turntableMotor.setControl(turretPositionRequest.withPosition((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10));
+        // turntableMotor.setControl(turretPositionRequest.withPosition(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
+        turntableMotor.setControl(new MotionMagicVoltage(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
     }
 
     public void setHood(double Angle) {//Radians
@@ -698,7 +719,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         robotPose = drivetrain.getState().Pose;
 
         ZoneConstants.allianceZone.updateZones(robotPose);
-        //if(FlyZoning.ifLeftZones(robotPose) && !IsShooting && ZoneConstants.allianceZone.getZoningState()) IsShooting = true; //If entered the alliance zone and left trench zone, turn on the flywheel and hood
+        SmartDashboard.putBoolean("Left Zone",  FlyZoning.ifLeftZones(DrivingProfiles.getTurretPose(robotPose)));
+
+        if(FlyZoning.ifLeftZones(DrivingProfiles.getTurretPose(robotPose)) && !IsShooting && ZoneConstants.allianceZone.getZoningState()) IsShooting = true; //If entered the alliance zone and left trench zone, turn on the flywheel and hood
 
         FlyZoning.updateZones(DrivingProfiles.getTurretPose(robotPose));
         autoLowered = FlyZoning.getZoningState();
@@ -745,10 +768,15 @@ public class OuttakeSubsystem extends SubsystemBase {
                 SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
                 SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
                 SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
+
+                SmartDashboard.putNumber("Turntable Error (Deg)", Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
+                SmartDashboard.putString("Goal Pose", Functions.stringifyPose(new Pose2d(ZoneConstants.redHub, new Rotation2d(0))));
+
+
                 
                 SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
                 SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
-
+ 
             } catch (NullPointerException e) {
                 // do nothing
             }
@@ -772,6 +800,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
             SmartDashboard.putNumber("Turret Relative Position", Functions.round(Math.toDegrees(getTurretAngle()), 2));
             SmartDashboard.putNumber("Turret Absolute Position", Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
+            SmartDashboard.putNumber("Turret Target Position", Math.toDegrees(TargetTurretAngle));
             
 
             //Counter for the balls - IDK if it gives radians or degrees

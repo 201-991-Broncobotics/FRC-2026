@@ -54,7 +54,7 @@ public class Zoning {
     }
 
     public boolean ifLeftZones(Pose2d Pose){
-        if (!inZones(Pose) && prevInZone) {
+        if (!inZones(Pose) && inZone) {
             return true;
         } else {
             return false;
@@ -72,7 +72,7 @@ public class Zoning {
     }
 
     public boolean ifEnteredZones(Pose2d Pose){
-        if (inZones(Pose) && !prevInZone) {
+        if (inZones(Pose) && inZone) {
             return true;
         } else {
             return false;

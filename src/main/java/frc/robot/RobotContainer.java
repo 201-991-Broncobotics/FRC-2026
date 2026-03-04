@@ -37,7 +37,7 @@ import java.util.Optional;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+ * "declarative" paradigm, very little robot logic should actualliance be handled in the {@link Robot}
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
@@ -78,8 +78,13 @@ public class RobotContainer {
 
         // CameraServer.startAutomaticCapture("Limelight", "http://limelight.local:5800/stream.mjpg");
 
-        Optional<Alliance> ally = DriverStation.getAlliance();
-        ZoneConstants.allianceZone.setZone((ally.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+        
+
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        ZoneConstants.allianceZone.setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+
+        if (alliance.get() == Alliance.Red) drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180))); 
+        else drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0))); 
 
         drivetrain.configureAutoBuilder();
         autoChooser = AutoBuilder.buildAutoChooser("Example Path");
@@ -110,7 +115,7 @@ public class RobotContainer {
 
         drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
+            // Drivetrain will execute this command periodicalliance
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
@@ -123,10 +128,10 @@ public class RobotContainer {
         driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
         //Driver should probably do climbing
-        driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
-        driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
-        //driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
-        //driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        //driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
+        //driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
+        driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
 
 
         //OPERATOR CONTROLS 
