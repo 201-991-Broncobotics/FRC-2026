@@ -75,8 +75,6 @@ public final class Constants {
 
         
         public static final int vortexCurrentLimit = 80; //in amps 
-
-        
     }
 
     public static class ClimbingConstants {
@@ -168,4 +166,6 @@ public final class Constants {
         public static Translation3d allianceHub = blueHub;
         public static Zoning allianceZone = new Zoning(blueZone);
     }
+
+    
 }

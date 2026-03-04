@@ -101,7 +101,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0);
     private CommandXboxController controller;
     private Optional<Alliance> alliance;
-    private Translation3d TARGET = new Translation3d();
+    private Translation3d TARGET = ZoneConstants.allianceHub;
     private double[] lastTargettingData = new double[]{0, 0, 0, 0};
 
     // I swear to GOD this better make these encoder actually exist
@@ -129,8 +129,6 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
-
-    private Translation3d flyTargetPose = new Translation3d(ZoneConstants.allianceHub.getX(), ZoneConstants.allianceHub.getY(), ZoneConstants.allianceHub.getZ());
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
@@ -387,41 +385,21 @@ public class OuttakeSubsystem extends SubsystemBase {
         */
     }
 
-
-    
-    public double[] getTargettingData(Translation3d Target, double TargetForwardOffset, double TargetVerticleOffset, boolean aimHigh) { // TargetForwardOffset is so we can make it always aim for the back half of the goal
-        Optional<Alliance> alliance = DriverStation.getAlliance();
-
-        Translation3d goalPose;
-        if(alliance.get() == Alliance.Red) {
-            goalPose = ZoneConstants.redHub;
-        } else {
-            goalPose = ZoneConstants.blueHub;
-        }
-
-
-        // TURRET ANGLE
-        //Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
-        //goalPose = goalPose.minus(velocity);
-        Translation2d relativeGoalPose = goalPose.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
-        Rotation2d targetRotation = new Rotation2d(relativeGoalPose.getX(), relativeGoalPose.getY());
+    public double[] regressTargettingData(Translation3d RelativeTarget, boolean aimHigh) {
+        Rotation2d targetRotation = new Rotation2d(RelativeTarget.getX(), RelativeTarget.getY());
         targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
-        //Dead Zone
-        if(Math.abs(getTurretAngle() - targetRotation.getRadians()) < TurretConstants.AutoTurretDeadband){
-            targetRotation = new Rotation2d(getTurretAngle());//Set to get turret angle
-        }
         double finalTurretAngle = targetRotation.getRadians();
         finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
 
 
         // TRAJECTORY MATH (Sorry my math was based on old stuff and the tests which are all in inches)
-        double Distance = Math.hypot(relativeGoalPose.getX(), relativeGoalPose.getY());
+        double Distance = Math.hypot(RelativeTarget.getX(), RelativeTarget.getY());
         double LaunchHeight = 22.3; // INCHES sorry, can also be made to change based on hood angle  
-        double finalTargetRPM = (Traj.k1 * (39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * Target.getZ()) + LaunchHeight));
+        double finalTargetRPM = (Traj.k1 * (39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * RelativeTarget.getZ()) + LaunchHeight));
 
         // assume minimum necessary flywheel rpm when no where close to the speed needed and end early
         SmartDashboard.putNumber("Traj1 Dist", 39.3701 * Distance);
-        SmartDashboard.putNumber("Traj2 Height", 39.3701 * Target.getZ());
+        SmartDashboard.putNumber("Traj2 Height", 39.3701 * RelativeTarget.getZ());
         SmartDashboard.putNumber("Traj3 RPM", finalTargetRPM);
         if (CurrentFlywheelRPM.getAsDouble() < 500) {
             SmartDashboard.putNumber("Traj4 Hood Angle", 0); // clear data so I can tell when it endds early
@@ -435,8 +413,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         double CurrentLaunchVelocity = Traj.a1 * CurrentFlywheelRPM.getAsDouble() + Traj.a2 * Math.pow(CurrentFlywheelRPM.getAsDouble(), 2);
         double EffectiveGravity = 386.088 - Traj.g1 * Math.pow(CurrentLaunchVelocity, 2);
         double CurrentLaunchAngle = 0;
-        if (aimHigh) CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) + Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * Target.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
-        else CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) - Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * Target.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
+        if (aimHigh) CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) + Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * RelativeTarget.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
+        else CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) - Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * RelativeTarget.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
 
         double finalHoodAngle = Math.toRadians(90 - ((-Traj.b2 + Math.sqrt(Math.pow(Traj.b2, 2) - 4*Traj.b3*(Traj.b1-Math.toDegrees(CurrentLaunchAngle)))) / (2*Traj.b3)));
 
@@ -448,8 +426,40 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Traj6 Launch Angle", Math.toDegrees(CurrentLaunchAngle));
         SmartDashboard.putNumber("Traj7 Air Time", finalAirTime);
 
+        return new double[]{finalTurretAngle, finalTargetRPM, finalHoodAngle, finalAirTime};
+
+    }
+    
+    public double[] getTargettingData(Translation3d Target, double TargetForwardOffset, double TargetVerticleOffset, boolean aimHigh) { // TargetForwardOffset is so we can make it always aim for the back half of the goal
+
+        //Get Starting Airtime
+        Translation2d offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+        Translation3d relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
         
-        return new double[]{finalTurretAngle, finalTargetRPM, finalHoodAngle, finalAirTime}; // Target Turret Angle, Target Flywheel rpm (rough estimate), Target hood angle (based on current flywheel rpm), Estimated Air time
+        double[] finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
+        double airTime = finalRegression[3];
+        for (int i = 1; i <= 5; i++) {
+            // code that moves relativeGoalPose based on airtime
+            Translation2d acceleration = new Translation2d(CommandSwerveDrivetrain.gyroData.accelX, CommandSwerveDrivetrain.gyroData.accelY);
+            Translation2d velocityAdded = acceleration.times(airTime);
+            Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
+            Translation2d distanceTraveled = velocity.times(airTime);
+
+            Target = Target.minus(new Translation3d(distanceTraveled));
+
+            offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+            relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
+
+            finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
+            airTime = finalRegression[3];
+        }
+
+        //Dead Zone
+        if(Math.abs(getTurretAngle() - finalRegression[0]) < TurretConstants.AutoTurretDeadband){
+            finalRegression[0] = getTurretAngle();
+        }
+        
+        return finalRegression; // Target Turret Angle, Target Flywheel rpm (rough estimate), Target hood angle (based on current flywheel rpm), Estimated Air time
     }
 
 
@@ -780,11 +790,11 @@ public class OuttakeSubsystem extends SubsystemBase {
             IsShooting = false; 
         }
 
-        if(!ZoneConstants.allianceZone.getZoningState() && IsShooting && (flyTargetPose.getX() == ZoneConstants.allianceHub.getX() && flyTargetPose.getY() == ZoneConstants.allianceHub.getY())){
-            flyTargetPose = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), robotPose.getY(), ZoneConstants.allianceHub.getZ());
+        if(!ZoneConstants.allianceZone.getZoningState() && IsShooting && TARGET.equals(ZoneConstants.allianceHub)){
+            TARGET = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), robotPose.getY(), ZoneConstants.allianceHub.getZ());
 
-        } else if (ZoneConstants.allianceZone.getZoningState() && (flyTargetPose.getX() != ZoneConstants.allianceHub.getX() && flyTargetPose.getY() != ZoneConstants.allianceHub.getY() )){
-            flyTargetPose = new Translation3d(ZoneConstants.allianceHub.getX(), ZoneConstants.allianceHub.getY(), ZoneConstants.allianceHub.getZ());
+        } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
+            TARGET = ZoneConstants.allianceHub;
 
         }
 
