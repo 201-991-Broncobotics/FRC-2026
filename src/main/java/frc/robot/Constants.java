@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.utility.Vector2d;
 import frc.robot.utility.Zoning.Shape;
 import frc.robot.utility.Zoning.Zone;
@@ -161,8 +162,8 @@ public final class Constants {
         public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,8), new Translation2d(4.5,0)));
         public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,8), new Translation2d(16.5,0)));
 
-        public static Translation2d blueHub = new Translation2d(4.5,4);
-        public static Translation2d redHub = new Translation2d(11.9,4);
+        public static Translation3d blueHub = new Translation3d(4.5,4, 1.83);
+        public static Translation3d redHub = new Translation3d(11.9,4, 1.83);
 
         public static Zoning allianceZone = new Zoning(blueZone);
     }

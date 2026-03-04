@@ -3,6 +3,7 @@ package frc.robot.utility;
 import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation3d;
 
 public class Functions {
 
@@ -104,6 +105,10 @@ public class Functions {
 
     public static String stringifyPose(Pose2d RobotPose){
         return "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3);
+    }
+
+    public static String stringifyTrans(Translation3d translation){
+        return "X:" + Functions.round(translation.getX(), 3) + " Y:" + Functions.round(translation.getY(), 3) + " Z:" + Functions.round(translation.getZ(), 3);
     }
 
 }

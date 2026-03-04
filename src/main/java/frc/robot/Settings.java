@@ -146,6 +146,20 @@ public class Settings {
         public static double targetHeight = 10; // inches
     }
 
+    public static class Traj { // prob don't need another class for outtake but like, it has a shorter name
+        public static final double a1 = 0.0943943432755;
+        public static final double a2 = 0.00000113951263818;
+
+        public static final double b1 = 2.25026043353;
+        public static final double b2 = -28.695386025;
+        public static final double b3 = -0.0117303333665;
+
+        public static final double k1 = 0.000529982565868; // K1
+        public static final double k2 = 10.4671074829; // K2
+
+        public static final double g1 = 0.000312494918492; // actual k1
+    }
+
 
 
     public static class AutoTargetingSettings {

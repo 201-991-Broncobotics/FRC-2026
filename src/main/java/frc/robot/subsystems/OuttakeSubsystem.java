@@ -34,6 +34,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
@@ -47,6 +48,7 @@ import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings;
 import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.Settings.OuttakeTrajectorySettings;
+import frc.robot.Settings.Traj;
 import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
@@ -97,6 +99,9 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double[] lastSimTraj = new double[] {0,0,0,0,0}; // launch angle, launch vel, target dist, target height, flight time
     private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0);
     private CommandXboxController controller;
+    private Optional<Alliance> alliance;
+    private Translation3d TARGET = new Translation3d();
+    private double[] lastTargettingData = new double[]{0, 0, 0, 0};
 
     // I swear to GOD this better make these encoder actually exist
     private static final ThroughBoreEncoder throughBore21 = new ThroughBoreEncoder(0);
@@ -193,8 +198,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         turntableConfig.Slot0.kD = TurretSettings.tkD; 
         turntableConfig.Slot0.kS = TurretSettings.tkS; 
         turntableConfig.Slot0.kV = TurretSettings.tkV; 
-        turntableConfig.MotionMagic.MotionMagicCruiseVelocity = 50;
-        turntableConfig.MotionMagic.MotionMagicAcceleration = 50;
+        turntableConfig.MotionMagic.MotionMagicCruiseVelocity = 50; // I know its crazy but these actually can be this fast
+        turntableConfig.MotionMagic.MotionMagicAcceleration = 75;
 
         
 
@@ -278,12 +283,14 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
     public void start(){
-        Optional<Alliance> alliance = DriverStation.getAlliance();
+        alliance = DriverStation.getAlliance();
 
-        results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
-        if (alliance.get() == Alliance.Red) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
-        else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
-        
+        results = LimelightHelpers.getLatestResults("limelight"); // the limelight name is always limelight unless other cameras which there aren't any
+        if (alliance.get() == Alliance.Red) {
+            LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
+        } else if (alliance.get() == Alliance.Blue) {
+            LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
+        }
     }
 
     public void update(){
@@ -306,7 +313,20 @@ public class OuttakeSubsystem extends SubsystemBase {
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
         
 
+        if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.redHub;
+        } else TARGET = ZoneConstants.blueHub;
+
+        lastTargettingData = getTargettingData(TARGET, 0, 0); // turret, flywheel, hood, air time
+
+
         if (IsShooting) {
+            
+            // Waiting just a sec
+            //TargetTurretAngle = lastTargettingData[0];
+            //TargetFlywheelRPM = lastTargettingData[1];
+            //TargetHoodAngle = lastTargettingData[2];
+
+
             // TURNTABLE
             //TargetTurretAngle = getTurretAutoRotation();
 
@@ -364,62 +384,74 @@ public class OuttakeSubsystem extends SubsystemBase {
         */
     }
 
-    public void target(double X, double Y, double H) { // h is height
 
-        double Speed = Math.hypot(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
-        double VelocityAngle = RobotState.Pose.getRotation().getRadians() + Math.atan2(RobotState.Speeds.vyMetersPerSecond, RobotState.Speeds.vxMetersPerSecond);
-        // TODO: Velocity is multiplied by the air time of the ball
-        Pose2d predictedRobotPose = new Pose2d(
-            RobotState.Pose.getX(),// + Speed * Math.cos(VelocityAngle), 
-            RobotState.Pose.getY(),// + Speed * Math.sin(VelocityAngle), 
-            RobotState.Pose.getRotation()//.plus(new Rotation2d(FrameTime * RobotState.Speeds.omegaRadiansPerSecond))
-        );
     
-        TargetTurretAngle = Math.atan2(predictedRobotPose.getY() - Y, predictedRobotPose.getX() - X) - predictedRobotPose.getRotation().getRadians();
-        
-        double Distance = Math.hypot(predictedRobotPose.getX() - X, predictedRobotPose.getY() - Y); // TODO: needs to be from center of turret
-
-        double Velocity = 1; // TODO: Can't use the Distance above because that doesn't incude height which messes up the quadratic regression
-
-        // TODO: Swap with actual calculations
-        double StartingLaunchHeight = 23;
-        double a = 1 - ((2 * TurretConstants.gravityInches * (H - StartingLaunchHeight)) / Math.pow(Velocity, 2)) - 
-            ((Math.pow(TurretConstants.gravityInches, 2) * Math.pow(Distance, 2)) / Math.pow(Velocity, 4));
-        
-        if (a >= 0) TargetHoodAngle = Math.atan((Math.pow(Velocity, 2) / (TurretConstants.gravityInches * Distance)) * (1 + Math.sqrt(a)));
-        else TargetHoodAngle = 0;
-
-        TargetFlywheelRPM = getTargetFlywheelRPM(Velocity);
-
-    }
-
-    private double getTurretAutoRotation(){ //Turns Turret to always get the balls in even while moving
+    public double[] getTargettingData(Translation3d Target, double TargetForwardOffset, double TargetVerticleOffset, boolean aimHigh) { // TargetForwardOffset is so we can make it always aim for the back half of the goal
         Optional<Alliance> alliance = DriverStation.getAlliance();
 
-        Translation2d goalPose;
+        Translation3d goalPose;
         if(alliance.get() == Alliance.Red) {
             goalPose = ZoneConstants.redHub;
         } else {
             goalPose = ZoneConstants.blueHub;
         }
 
+
+        // TURRET ANGLE
         //Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
         //goalPose = goalPose.minus(velocity);
-
-        Translation2d relativeGoalPose = goalPose.minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
-
+        Translation2d relativeGoalPose = goalPose.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
         Rotation2d targetRotation = new Rotation2d(relativeGoalPose.getX(), relativeGoalPose.getY());
         targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
-
         //Dead Zone
         if(Math.abs(getTurretAngle() - targetRotation.getRadians()) < TurretConstants.AutoTurretDeadband){
             targetRotation = new Rotation2d(getTurretAngle());//Set to get turret angle
         }
+        double finalTurretAngle = targetRotation.getRadians();
+        finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
 
-        double correctAngle = targetRotation.getRadians();
-        correctAngle = ((correctAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
 
-        return correctAngle;
+        // TRAJECTORY MATH (Sorry my math was based on old stuff and the tests which are all in inches)
+        double Distance = Math.hypot(relativeGoalPose.getX(), relativeGoalPose.getY());
+        double LaunchHeight = 22.3; // INCHES sorry, can also be made to change based on hood angle  
+        double finalTargetRPM = (Traj.k1 * (39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * Target.getZ()) + LaunchHeight));
+
+        // assume minimum necessary flywheel rpm when no where close to the speed needed and end early
+        SmartDashboard.putNumber("Traj1 Dist", 39.3701 * Distance);
+        SmartDashboard.putNumber("Traj2 Height", 39.3701 * Target.getZ());
+        SmartDashboard.putNumber("Traj3 RPM", finalTargetRPM);
+        if (CurrentFlywheelRPM.getAsDouble() < 500) {
+            SmartDashboard.putNumber("Traj4 Hood Angle", 0); // clear data so I can tell when it endds early
+            SmartDashboard.putNumber("Traj5 Launch Vel", 0);
+            SmartDashboard.putNumber("Traj6 Launch Angle", 0);
+            SmartDashboard.putNumber("Traj7 Air Time", 0);
+            return new double[]{finalTurretAngle, finalTargetRPM, 0, 0}; 
+        }
+
+        // in inches per second, also current means the current target, not based on current position
+        double CurrentLaunchVelocity = Traj.a1 * CurrentFlywheelRPM.getAsDouble() + Traj.a2 * Math.pow(CurrentFlywheelRPM.getAsDouble(), 2);
+        double EffectiveGravity = 386.088 - Traj.g1 * Math.pow(CurrentLaunchVelocity, 2);
+        double CurrentLaunchAngle = 0;
+        if (aimHigh) CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) + Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * Target.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
+        else CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) - Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * Target.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
+
+        double finalHoodAngle = Math.toRadians(90 - ((-Traj.b2 + Math.sqrt(Math.pow(Traj.b2, 2) - 4*Traj.b3*(Traj.b1-Math.toDegrees(CurrentLaunchAngle)))) / (2*Traj.b3)));
+
+        double finalAirTime = (39.3701 * Distance) / (CurrentLaunchVelocity * Math.cos(CurrentLaunchAngle));
+
+        
+        SmartDashboard.putNumber("Traj4 Hood Angle", Math.toDegrees(finalHoodAngle));
+        SmartDashboard.putNumber("Traj5 Launch Vel", CurrentLaunchVelocity);
+        SmartDashboard.putNumber("Traj6 Launch Angle", Math.toDegrees(CurrentLaunchAngle));
+        SmartDashboard.putNumber("Traj7 Air Time", finalAirTime);
+
+        
+        return new double[]{finalTurretAngle, finalTargetRPM, finalHoodAngle, finalAirTime}; // Target Turret Angle, Target Flywheel rpm (rough estimate), Target hood angle (based on current flywheel rpm), Estimated Air time
+    }
+
+
+    public double[] getTargettingData(Translation3d Target, double TargetForwardOffset, double TargetVerticleOffset) {
+        return getTargettingData(Target, TargetForwardOffset, TargetVerticleOffset, true); // default to high angle solution
     }
 
 
@@ -787,10 +819,8 @@ public class OuttakeSubsystem extends SubsystemBase {
                 SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
 
                 SmartDashboard.putNumber("Turntable Error (Deg)", Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
-                SmartDashboard.putString("Goal Pose", Functions.stringifyPose(new Pose2d(ZoneConstants.redHub, new Rotation2d(0))));
+                SmartDashboard.putString("TARGET", Functions.stringifyTrans(TARGET));
 
-
-                
                 SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
                 SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
  
