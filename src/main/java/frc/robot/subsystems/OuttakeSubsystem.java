@@ -136,10 +136,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         hoodCalibrationTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
-        results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
-        if (alliance.get() == Alliance.Red) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
-        else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
-        
+    
 
         p1 = new WeightedObservedPoint(1, distanceVector.mag(), 3);
         
@@ -280,6 +277,14 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
+    public void start(){
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+        results = LimelightHelpers.getLatestResults(TurretConstants.limelightName);
+        if (alliance.get() == Alliance.Red) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
+        else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
+        
+    }
 
     public void update(){
 

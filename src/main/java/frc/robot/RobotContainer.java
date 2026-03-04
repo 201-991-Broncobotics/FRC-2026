@@ -83,12 +83,6 @@ public class RobotContainer {
 
         
 
-        Optional<Alliance> alliance = DriverStation.getAlliance();
-        ZoneConstants.allianceZone.setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
-
-        if (alliance.get() == Alliance.Red) drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180))); 
-        else drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0))); 
-
         drivetrain.configureAutoBuilder();
         autoChooser = AutoBuilder.buildAutoChooser("Example Path");
         SmartDashboard.putData("Auto Mode:", autoChooser);
@@ -188,7 +182,7 @@ public class RobotContainer {
 
         //Turret (triggers)
 
-        //Flywheel Speed (Automated) + Flywheel (A)
+        //Flywheel Speed (Automated or oprator POV up + down) + Flywheel (A)
         override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
 
         //Hood (Right Up + Down)
@@ -197,7 +191,7 @@ public class RobotContainer {
         override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
         override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
 
-        //Climb (POV Up + Down)
+        //Climb (POV Up + Down (driver only if fly speed is not automated))
         override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
         override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
 
@@ -219,6 +213,16 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
 
+    }
+
+    public void start(){//Stops the crashing
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        ZoneConstants.allianceZone.setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+
+        if (alliance.get() == Alliance.Red) drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180))); 
+        else drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0))); 
+
+        outtakeSubsystem.start();
     }
 
     /**
