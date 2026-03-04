@@ -165,7 +165,7 @@ public final class Constants {
         public static Translation3d blueHub = new Translation3d(4.5,4, 1.83);
         public static Translation3d redHub = new Translation3d(11.9,4, 1.83);
 
-        public static Translation2d allianceHub = blueHub;
+        public static Translation3d allianceHub = blueHub;
         public static Zoning allianceZone = new Zoning(blueZone);
     }
 }
