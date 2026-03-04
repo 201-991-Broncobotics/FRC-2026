@@ -14,6 +14,7 @@ import frc.robot.subsystems.DrivingProfiles;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TraverseSubsystem;
 import frc.robot.subsystems.OuttakeSubsystem;
+import frc.robot.utility.OverrideController;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -37,7 +38,7 @@ import java.util.Optional;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+ * "declarative" paradigm, very little robot logic should actualliance be handled in the {@link Robot}
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
@@ -59,6 +60,8 @@ public class RobotContainer {
     private final CommandXboxController operator = 
         new CommandXboxController(OperatorConstants.operatorControllerPort); 
 
+    //private final OverrideController override = new OverrideController(5,driver,operator);
+
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
@@ -78,8 +81,13 @@ public class RobotContainer {
 
         // CameraServer.startAutomaticCapture("Limelight", "http://limelight.local:5800/stream.mjpg");
 
-        Optional<Alliance> ally = DriverStation.getAlliance();
-        ZoneConstants.allianceZone.setZone((ally.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+        
+
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        ZoneConstants.allianceZone.setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+
+        if (alliance.get() == Alliance.Red) drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180))); 
+        else drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0))); 
 
         drivetrain.configureAutoBuilder();
         autoChooser = AutoBuilder.buildAutoChooser("Example Path");
@@ -110,7 +118,7 @@ public class RobotContainer {
 
         drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
+            // Drivetrain will execute this command periodicalliance
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
@@ -123,10 +131,10 @@ public class RobotContainer {
         driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
         //Driver should probably do climbing
-        driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
-        driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
-        //driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
-        //driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        //driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
+        //driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
+        driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
 
 
         //OPERATOR CONTROLS 
@@ -148,6 +156,61 @@ public class RobotContainer {
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
+
+        /*//Override Version
+         
+        //DRIVE CONTROLS
+        drivingProfile.setUpControllerInputs(
+            () -> -override.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
+            () -> override.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
+            () -> -override.getRightX(), 
+            () -> 0.3 + 0.7 * override.getRightTriggerAxis(), 
+            2, 2
+        );
+
+        drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
+        drivetrain.setDefaultCommand(
+            // Drivetrain will execute this command periodicalliance
+            drivetrain.applyRequest(() ->
+                drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(drivingProfile.getRotationOutput() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            )
+        ); 
+
+        //Brake (B)
+        override.b().whileTrue(drivetrain.applyRequest(() -> brake));
+
+        //Other/Reset Heading (Y)
+        override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        //Reverse All (Left Bumper)
+
+        //Turret (triggers)
+
+        //Flywheel Speed (Automated) + Flywheel (A)
+        override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
+
+        //Hood (Right Up + Down)
+
+        //Pivot (POV Left + Right)
+        override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
+        override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+
+        //Climb (POV Up + Down)
+        override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+
+        //Intake + Traverse (Right Bumper)
+        override.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+        override.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+
+        //Scoop (X) - CHECK
+        operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+        operator.x().and(override.rightBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+
+        outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
+        */
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.

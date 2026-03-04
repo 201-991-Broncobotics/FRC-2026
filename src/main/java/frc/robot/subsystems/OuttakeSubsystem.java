@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -15,6 +16,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.pathplanner.lib.path.RotationTarget;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -31,15 +33,19 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.AutoDrivingConstants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings;
+import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.ElapsedTime;
@@ -65,7 +71,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor;
     private TalonFXConfiguration flywheelConfig, turntableConfig; 
-    private final PositionVoltage turretPositionRequest = new PositionVoltage(0);
+    // private final PositionVoltage turretPositionRequest = new PositionVoltage(0);
+    private final MotionMagicVoltage turretPositionRequest = new MotionMagicVoltage(0);
     private SparkFlex hoodMotor;
     private SparkFlexConfig hoodConfig;
     private SparkClosedLoopController hoodClosedLoopController;
@@ -134,11 +141,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         else if (alliance.get() == Alliance.Blue) LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         
 
-        
-
-
-
-
         p1 = new WeightedObservedPoint(1, distanceVector.mag(), 3);
         
 
@@ -194,6 +196,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         turntableConfig.Slot0.kD = TurretSettings.tkD; 
         turntableConfig.Slot0.kS = TurretSettings.tkS; 
         turntableConfig.Slot0.kV = TurretSettings.tkV; 
+        turntableConfig.MotionMagic.MotionMagicCruiseVelocity = 50;
+        turntableConfig.MotionMagic.MotionMagicAcceleration = 50;
 
         
 
@@ -268,10 +272,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
         
 
-        turretStartingOffset = getAbsoluteTurretAngle() - turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0;
-        CurrentTurretAngle = () -> turntableMotor.getPosition().getValueAsDouble() * (2 * Math.PI) / 10.0 + turretStartingOffset; // TODO: needs starting offset
+        turretStartingOffset = getAbsoluteTurretAngle() - (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0;
+        CurrentTurretAngle = () -> (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0 + turretStartingOffset; // TODO: needs starting offset
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
         CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
+        TargetTurretAngle = CurrentTurretAngle.getAsDouble();
 
     }
 
@@ -292,11 +297,13 @@ public class OuttakeSubsystem extends SubsystemBase {
         TargetHoodAngle += MathUtil.applyDeadband(-controller.getRightY(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TargetHoodAngle);
 
+        TargetTurretAngle += MathUtil.applyDeadband(controller.getLeftX(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
+        TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
+        
+
         if (IsShooting) {
             // TURNTABLE
-            //temporarily here
-            TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-            // setTurntable(TargetTurretAngle); // TODO: still needs starting offset
+            //TargetTurretAngle = getTurretAutoRotation();
 
             // FLYWHEELS
             setFlywheels(TargetFlywheelRPM);
@@ -340,6 +347,16 @@ public class OuttakeSubsystem extends SubsystemBase {
             setHood(TurretConstants.minHoodAngle);
         }
 
+        setTurntable(TargetTurretAngle);
+
+        /*
+        //Auto Aiming
+        if(AutoTargetingSettings.AutoAimingEnabled && ZoneConstants.allianceZone.inZones(drivetrain.getState().Pose)){
+            setTurntable(getTurretAutoRotation().getRadians());
+        } else {
+            //Manual Turret Aiming
+        }
+        */
     }
 
     public void target(double X, double Y, double H) { // h is height
@@ -371,10 +388,40 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
+    private double getTurretAutoRotation(){ //Turns Turret to always get the balls in even while moving
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+        Translation2d goalPose;
+        if(alliance.get() == Alliance.Red) {
+            goalPose = ZoneConstants.redHub;
+        } else {
+            goalPose = ZoneConstants.blueHub;
+        }
+
+        //Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
+        //goalPose = goalPose.minus(velocity);
+
+        Translation2d relativeGoalPose = goalPose.minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+
+        Rotation2d targetRotation = new Rotation2d(relativeGoalPose.getX(), relativeGoalPose.getY());
+        targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
+
+        //Dead Zone
+        if(Math.abs(getTurretAngle() - targetRotation.getRadians()) < TurretConstants.AutoTurretDeadband){
+            targetRotation = new Rotation2d(getTurretAngle());//Set to get turret angle
+        }
+
+        double correctAngle = targetRotation.getRadians();
+        correctAngle = ((correctAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
+
+        return correctAngle;
+    }
+
 
     public void setTurntable(double Angle) {
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-        turntableMotor.setControl(turretPositionRequest.withPosition((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10));
+        // turntableMotor.setControl(turretPositionRequest.withPosition(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
+        turntableMotor.setControl(new MotionMagicVoltage(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
     }
 
     public void setHood(double Angle) {//Radians
@@ -667,15 +714,31 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTime = FrameTimer.time();
         FrameTimer.reset();
 
-        robotPose = drivetrain.getState().Pose;
+        // 1. Calculate and store poses once to save CPU cycles
+        Pose2d robotPose = drivetrain.getState().Pose;
+        Pose2d turretPose = DrivingProfiles.getTurretPose(robotPose);
 
+        // 2. Update and store the Alliance Zone state
         ZoneConstants.allianceZone.updateZones(robotPose);
-        //if(FlyZoning.ifLeftZones(robotPose) && !IsShooting && ZoneConstants.allianceZone.getZoningState()) IsShooting = true; //If entered the alliance zone and left trench zone, turn on the flywheel and hood
+        boolean inAllianceZone = ZoneConstants.allianceZone.getZoningState();
 
-        FlyZoning.updateZones(DrivingProfiles.getTurretPose(robotPose));
-        autoLowered = FlyZoning.getZoningState();
+        // 3. Check if we just left the Trench (FlyZoning) BEFORE updating its state
+        boolean leftTrenchZone = FlyZoning.ifLeftZones(turretPose);
+        SmartDashboard.putBoolean("Left Zone", leftTrenchZone);
 
-        if(FlyZoning.getZoningState() && IsShooting) IsShooting = false; //If entered the trench, stop flywheels + hood
+        // 4. Logic: Start shooting if we left the trench and are in the alliance zone
+        if (leftTrenchZone && !IsShooting && inAllianceZone) {
+            IsShooting = true; 
+        }
+
+        // 5. Update the Trench (FlyZoning) state
+        FlyZoning.updateZones(turretPose);
+        autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
+
+        // 6. Logic: Stop shooting if we are currently inside the trench
+        if (autoLowered && IsShooting) {
+            IsShooting = false; 
+        }
 
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
@@ -717,10 +780,15 @@ public class OuttakeSubsystem extends SubsystemBase {
                 SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
                 SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
                 SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
+
+                SmartDashboard.putNumber("Turntable Error (Deg)", Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
+                SmartDashboard.putString("Goal Pose", Functions.stringifyPose(new Pose2d(ZoneConstants.redHub, new Rotation2d(0))));
+
+
                 
                 SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
                 SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
-
+ 
             } catch (NullPointerException e) {
                 // do nothing
             }
@@ -744,6 +812,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
             SmartDashboard.putNumber("Turret Relative Position", Functions.round(Math.toDegrees(getTurretAngle()), 2));
             SmartDashboard.putNumber("Turret Absolute Position", Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
+            SmartDashboard.putNumber("Turret Target Position", Math.toDegrees(TargetTurretAngle));
             
 
             //Counter for the balls - IDK if it gives radians or degrees

@@ -105,7 +105,7 @@ public final class Constants {
         public static final double x44MaxRPM = 7750; 
 
         public static final boolean currentLimitsEnabled = true; 
-        public static final double supplyCurrent = 60; 
+        public static final double supplyCurrent = 80; 
         public static final double statorCurrent = 80; 
         public static final int hoodMotorCurrent = 40;
 
@@ -117,6 +117,8 @@ public final class Constants {
         // maxHoodMotorRot and minHoodMotorRot are now updated actively in the outtakeSubsystem
         
         public static final double counterThreshold = 0; //Degrees
+
+        public static final double AutoTurretDeadband = 2.5;
 
         public static final double incrementAngle = 1.5; //Degrees
     }
@@ -131,18 +133,18 @@ public final class Constants {
     }
 
     public static class ZoneConstants {//Zones on the field from the POV of blue Human player
-        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,7.375), 2, 1.25));
-        public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,0.625), 2, 1.25));
-        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(11.4,7.375), 2, 1.25));
-        public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(11.4,0.625), 2, 1.25));
+        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.4,7.375), 2, 1.25));
+        public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(4.4,0.625), 2, 1.25));
+        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(12.1,7.375), 2, 1.25));
+        public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(12.1,0.625), 2, 1.25));
 
         public static ArrayList<Zone> TrenchZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
 
-        public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,5.5), 2.5,2));
-        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,1.0), 2.5, 2));
-        public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(11.4,5.5), 2.5, 2));
-        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(11.4,1.0), 2.5, 2));
+        public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.4,5.5), 2.5,2));
+        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.4,1.0), 2.5, 2));
+        public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(12.1,5.5), 2.5, 2));
+        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(12.1,1.0), 2.5, 2));
 
         public static ArrayList<Zone> RampZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
@@ -158,6 +160,9 @@ public final class Constants {
         public static Zone middleZone = new Zone(new Shape.Rectangle(new Translation2d(4.75,8), new Translation2d(12,0)));
         public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,8), new Translation2d(4.5,0)));
         public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,8), new Translation2d(16.5,0)));
+
+        public static Translation2d blueHub = new Translation2d(4.5,4);
+        public static Translation2d redHub = new Translation2d(11.9,4);
 
         public static Zoning allianceZone = new Zoning(blueZone);
     }
