@@ -412,8 +412,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         double correctAngle = targetRotation.getRadians();
-        /*if (correctAngle > TurretSettings.maxTurretAngle) correctAngle -= 2*Math.PI;
-        if (correctAngle < TurretSettings.minTurretAngle) correctAngle += 2*Math.PI;*/
         correctAngle = ((correctAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
 
         return correctAngle;
@@ -716,17 +714,31 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTime = FrameTimer.time();
         FrameTimer.reset();
 
-        robotPose = drivetrain.getState().Pose;
+        // 1. Calculate and store poses once to save CPU cycles
+        Pose2d robotPose = drivetrain.getState().Pose;
+        Pose2d turretPose = DrivingProfiles.getTurretPose(robotPose);
 
+        // 2. Update and store the Alliance Zone state
         ZoneConstants.allianceZone.updateZones(robotPose);
-        SmartDashboard.putBoolean("Left Zone",  FlyZoning.ifLeftZones(DrivingProfiles.getTurretPose(robotPose)));
+        boolean inAllianceZone = ZoneConstants.allianceZone.getZoningState();
 
-        if(FlyZoning.ifLeftZones(DrivingProfiles.getTurretPose(robotPose)) && !IsShooting && ZoneConstants.allianceZone.getZoningState()) IsShooting = true; //If entered the alliance zone and left trench zone, turn on the flywheel and hood
+        // 3. Check if we just left the Trench (FlyZoning) BEFORE updating its state
+        boolean leftTrenchZone = FlyZoning.ifLeftZones(turretPose);
+        SmartDashboard.putBoolean("Left Zone", leftTrenchZone);
 
-        FlyZoning.updateZones(DrivingProfiles.getTurretPose(robotPose));
-        autoLowered = FlyZoning.getZoningState();
+        // 4. Logic: Start shooting if we left the trench and are in the alliance zone
+        if (leftTrenchZone && !IsShooting && inAllianceZone) {
+            IsShooting = true; 
+        }
 
-        if(FlyZoning.getZoningState() && IsShooting) IsShooting = false; //If entered the trench, stop flywheels + hood
+        // 5. Update the Trench (FlyZoning) state
+        FlyZoning.updateZones(turretPose);
+        autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
+
+        // 6. Logic: Stop shooting if we are currently inside the trench
+        if (autoLowered && IsShooting) {
+            IsShooting = false; 
+        }
 
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
