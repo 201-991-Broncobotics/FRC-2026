@@ -256,12 +256,12 @@ public class OuttakeSubsystem extends SubsystemBase {
         //if (!hoodStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motor with ID " + MotorConstants.hoodMotorID + " is broken!"); 
 
         if (Settings.tuningTelemetryEnabled) {
-            SmartDashboard.putNumber("Flywheel kP", TurretSettings.kP);
+            /*SmartDashboard.putNumber("Flywheel kP", TurretSettings.kP);
             SmartDashboard.putNumber("Flywheel kI", TurretSettings.kI);
             SmartDashboard.putNumber("Flywheel kD", TurretSettings.kD);
             SmartDashboard.putNumber("Flywheel kS", TurretSettings.kS);
             SmartDashboard.putNumber("Flywheel kV", TurretSettings.kV);
-            SmartDashboard.putNumber("Flywheel kA", TurretSettings.kA);
+            SmartDashboard.putNumber("Flywheel kA", TurretSettings.kA);*/
             SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
             SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
             SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
@@ -270,7 +270,6 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
             SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
             SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
-            SmartDashboard.putNumber("Predicted Velocity", getFlywheelTrajectory());
             SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
         }
         
@@ -819,12 +818,12 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(robotPose));
             
 
-            TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
+            /*TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
             TurretSettings.kI = SmartDashboard.getNumber("Flywheel kI", TurretSettings.kI);
             TurretSettings.kD = SmartDashboard.getNumber("Flywheel kD", TurretSettings.kD);
             TurretSettings.kS = SmartDashboard.getNumber("Flywheel kS", TurretSettings.kS);
             TurretSettings.kV = SmartDashboard.getNumber("Flywheel kV", TurretSettings.kV);
-            TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);
+            TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);*/
             TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
             TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
             TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
@@ -884,6 +883,7 @@ public class OuttakeSubsystem extends SubsystemBase {
                 ballsCounted++;
             }
 
+            /* 
             SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));
             // launch angle, launch vel, target dist, target height, flight time
             SmartDashboard.putString("Last Traj Sim", 
@@ -893,7 +893,7 @@ public class OuttakeSubsystem extends SubsystemBase {
                 " height: " + Functions.round(lastSimTraj[3] * 39.37, 2)
             );
             SmartDashboard.putNumber("Last Traj Sim Flight Time (s)", Functions.round(lastSimTraj[4], 3));
-
+            */ 
         } catch (NullPointerException e) {
             // do nothing
         }

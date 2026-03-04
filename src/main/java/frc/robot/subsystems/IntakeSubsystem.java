@@ -231,8 +231,8 @@ public class IntakeSubsystem extends SubsystemBase {
         }
 
         if (Settings.tuningTelemetryEnabled) {
-            IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
-            IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Power", IntakeSettings.runningPower); 
+            //IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
+            //IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Power", IntakeSettings.runningPower); 
             IntakeSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
             IntakeSettings.pivotMotorAcceleration = SmartDashboard.getNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
             IntakeSettings.pivotkP = SmartDashboard.getNumber("Pivot kP", IntakeSettings.pivotkP);

@@ -80,7 +80,7 @@ public class DrivingProfiles extends SubsystemBase {
         CurrentLimitTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         if (Settings.tuningTelemetryEnabled) {
-
+            /* 
             SmartDashboard.putNumber("Tune Auto Turning kP", AutoTargetingSettings.AutoTurningPID.getP());
             SmartDashboard.putNumber("Tune Auto Turning kI", AutoTargetingSettings.AutoTurningPID.getI());
             SmartDashboard.putNumber("Tune Auto Turning kD", AutoTargetingSettings.AutoTurningPID.getD());
@@ -91,7 +91,7 @@ public class DrivingProfiles extends SubsystemBase {
             SmartDashboard.putBoolean("Auto Aiming Enabled", AutoTargetingSettings.AutoAimingEnabled);
             SmartDashboard.putBoolean("Auto Driving Enabled", AutoTargetingSettings.AutoDrivingEnabled);
             SmartDashboard.putNumber("Auto Driving Power", AutoTargetingSettings.AutoDrivingPower);
-            SmartDashboard.putNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked);
+            SmartDashboard.putNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked); */
         }
 
         LimelightHelpers.setPipelineIndex("limelight", 0);
@@ -286,6 +286,7 @@ public class DrivingProfiles extends SubsystemBase {
             AutoTargetingSettings.AutoDrivingPower = SmartDashboard.getNumber("Auto Driving Power", AutoTargetingSettings.AutoDrivingPower);
             // AutoTargetingSettings.targetPercentageOfVisionBlocked = SmartDashboard.getNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked); */
 
+            /* 
             SmartDashboard.putNumber("Pigeon accel X", gyroData.accelX);
             SmartDashboard.putNumber("Pigeon accel Y", gyroData.accelY);
             SmartDashboard.putNumber("Pigeon accel Z", gyroData.accelZ);
@@ -294,7 +295,7 @@ public class DrivingProfiles extends SubsystemBase {
             
             SmartDashboard.putNumber("Pigeon angVel X", gyroData.angVelX);
             SmartDashboard.putNumber("Pigeon angVel Y", gyroData.angVelY);
-            SmartDashboard.putNumber("Pigeon angVel Z", gyroData.angVelZ);
+            SmartDashboard.putNumber("Pigeon angVel Z", gyroData.angVelZ); */
         }
 
         
