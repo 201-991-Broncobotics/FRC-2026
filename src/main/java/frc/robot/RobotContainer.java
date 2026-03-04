@@ -218,6 +218,7 @@ public class RobotContainer {
     public void start(){//Stops the crashing
         Optional<Alliance> alliance = DriverStation.getAlliance();
         ZoneConstants.allianceZone.setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+        ZoneConstants.allianceHub = alliance.get() == Alliance.Red ? ZoneConstants.redHub : ZoneConstants.blueHub;
 
         if (alliance.get() == Alliance.Red) drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180))); 
         else drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0))); 

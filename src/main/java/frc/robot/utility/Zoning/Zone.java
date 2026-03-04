@@ -1,6 +1,7 @@
 package frc.robot.utility.Zoning;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 /**
@@ -30,5 +31,9 @@ public class Zone {
 
     public boolean inZone(Pose2d Pose){
         return _shape.inArea(Pose.getTranslation());
+    }
+
+    public Pose2d getPose2d(){
+        return new Pose2d(_shape.getCenterPoint(), new Rotation2d(0));
     }
 }

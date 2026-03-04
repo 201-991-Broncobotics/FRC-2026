@@ -31,8 +31,9 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -128,6 +129,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
+
+    private Translation3d flyTargetPose = new Translation3d(ZoneConstants.allianceHub.getX(), ZoneConstants.allianceHub.getY(), ZoneConstants.hubHeight);
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
@@ -776,6 +779,15 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (autoLowered && IsShooting) {
             IsShooting = false; 
         }
+
+        if(!ZoneConstants.allianceZone.getZoningState() && IsShooting && (flyTargetPose.getX() == ZoneConstants.allianceHub.getX() && flyTargetPose.getY() == ZoneConstants.allianceHub.getY())){
+            flyTargetPose = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), robotPose.getY(), ZoneConstants.hubHeight);
+
+        } else if (ZoneConstants.allianceZone.getZoningState() && (flyTargetPose.getX() != ZoneConstants.allianceHub.getX() && flyTargetPose.getY() != ZoneConstants.allianceHub.getY() )){
+            flyTargetPose = new Translation3d(ZoneConstants.allianceHub.getX(), ZoneConstants.allianceHub.getY(), ZoneConstants.hubHeight);
+
+        }
+
 
         if (drivetrain != null) {
             RobotState = drivetrain.getState();
