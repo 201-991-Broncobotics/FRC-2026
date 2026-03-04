@@ -14,6 +14,7 @@ import frc.robot.subsystems.DrivingProfiles;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TraverseSubsystem;
 import frc.robot.subsystems.OuttakeSubsystem;
+import frc.robot.utility.Override;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -67,6 +68,8 @@ public class RobotContainer {
     private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain, operator); 
     private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
+
+    private final Override override = new Override(driver,operator);
 
     private final SendableChooser<Command> autoChooser;
 
@@ -153,6 +156,61 @@ public class RobotContainer {
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
+
+        /*//Override Version
+         
+        //DRIVE CONTROLS
+        drivingProfile.setUpControllerInputs(
+            () -> -override.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
+            () -> override.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
+            () -> -override.getRightX(), 
+            () -> 0.3 + 0.7 * override.getRightTriggerAxis(), 
+            2, 2
+        );
+
+        drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
+        drivetrain.setDefaultCommand(
+            // Drivetrain will execute this command periodicalliance
+            drivetrain.applyRequest(() ->
+                drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(drivingProfile.getRotationOutput() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            )
+        ); 
+
+        //Brake (B)
+        override.b().whileTrue(drivetrain.applyRequest(() -> brake));
+
+        //Other/Reset Heading (Y)
+        override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        //Reverse All (Left Bumper)
+
+        //Turret (triggers)
+
+        //Flywheel Speed (Automated) + Flywheel (A)
+        override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
+
+        //Hood (Right Up + Down)
+
+        //Pivot (POV Left + Right)
+        override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
+        override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+
+        //Climb (POV Up + Down)
+        override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+
+        //Intake + Traverse (Right Bumper)
+        override.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+        override.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+
+        //Scoop (X) - CHECK
+        operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+        operator.x().and(override.rightBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+
+        outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
+        */
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
