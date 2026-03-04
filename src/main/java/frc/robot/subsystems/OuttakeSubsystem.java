@@ -31,8 +31,9 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -123,6 +124,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
+
+    private Translation3d flyTargetPose = new Translation3d(ZoneConstants.allianceHub.getX(), ZoneConstants.allianceHub.getY(), ZoneConstants.hubHeight);
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
@@ -396,12 +399,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double getTurretAutoRotation(){ //Turns Turret to always get the balls in even while moving
         Optional<Alliance> alliance = DriverStation.getAlliance();
 
-        Translation2d goalPose;
-        if(alliance.get() == Alliance.Red) {
-            goalPose = ZoneConstants.redHub;
-        } else {
-            goalPose = ZoneConstants.blueHub;
-        }
+        Translation2d goalPose = ZoneConstants.allianceHub;
 
         //Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
         //goalPose = goalPose.minus(velocity);
@@ -744,6 +742,15 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (autoLowered && IsShooting) {
             IsShooting = false; 
         }
+
+        if(!ZoneConstants.allianceZone.getZoningState() && IsShooting && (flyTargetPose.getX() == ZoneConstants.allianceHub.getX() && flyTargetPose.getY() == ZoneConstants.allianceHub.getY())){
+            flyTargetPose = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), robotPose.getY(), ZoneConstants.hubHeight);
+
+        } else if (ZoneConstants.allianceZone.getZoningState() && (flyTargetPose.getX() != ZoneConstants.allianceHub.getX() && flyTargetPose.getY() != ZoneConstants.allianceHub.getY() )){
+            flyTargetPose = new Translation3d(ZoneConstants.allianceHub.getX(), ZoneConstants.allianceHub.getY(), ZoneConstants.hubHeight);
+
+        }
+
 
         if (drivetrain != null) {
             RobotState = drivetrain.getState();

@@ -93,4 +93,8 @@ public class Zoning {
     public void addZone(Zone zone){
         this.Zones.add(zone);
     }
+
+    public Pose2d getPose2d(){
+        return Zones.get(0).getPose2d();
+    }
 }
