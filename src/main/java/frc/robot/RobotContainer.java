@@ -14,7 +14,7 @@ import frc.robot.subsystems.DrivingProfiles;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TraverseSubsystem;
 import frc.robot.subsystems.OuttakeSubsystem;
-import frc.robot.utility.Override;
+import frc.robot.utility.OverrideController;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -60,6 +60,8 @@ public class RobotContainer {
     private final CommandXboxController operator = 
         new CommandXboxController(OperatorConstants.operatorControllerPort); 
 
+    //private final OverrideController override = new OverrideController(5,driver,operator);
+
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
@@ -68,8 +70,6 @@ public class RobotContainer {
     private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain, operator); 
     private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
-
-    private final Override override = new Override(driver,operator);
 
     private final SendableChooser<Command> autoChooser;
 

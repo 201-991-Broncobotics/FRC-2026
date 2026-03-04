@@ -212,7 +212,7 @@ public class ElapsedTime {
     /**
      * Returns a string indicating the current elapsed time of the timer.
      */
-    //@Override - CHECK
+    @Override
     public String toString() {
         return String.format("%1.4f %s", time(), resolutionStr());
     }
