@@ -151,7 +151,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void setPivotAngle(double angle){
         targetAngle = angle;
 
-        if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
+        // if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
 
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
@@ -218,24 +218,24 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void resetStoragePosition() { //AI Stuff
-    double currentUsage = rightPivotMotor.getStatorCurrent().getValueAsDouble();
-    double currentVelocity = rightPivotMotor.getVelocity().getValueAsDouble();
+        double currentUsage = rightPivotMotor.getStatorCurrent().getValueAsDouble();
+        double currentVelocity = rightPivotMotor.getVelocity().getValueAsDouble();
 
-    // If current is high and we aren't moving, we've hit a physical stop
-    if (Math.abs(currentUsage) > IntakeSettings.STALL_CURRENT_THRESHOLD && 
-        Math.abs(currentVelocity) < IntakeSettings.STALL_VELOCITY_THRESHOLD) {
-        
-        // Determine which stop we hit based on the direction we are trying to go
-        // or the current 'supposed' position.
-        if (m_request.Position > CurrentPivotPosition.getAsDouble() / (2*Math.PI)) {
-            // We were trying to go UP, so we are at the High Limit
-            rightPivotMotor.setPosition(IntakeConstants.highLimitAngle / (2*Math.PI));
-        } else {
-            // We were trying to go DOWN, so we are at the Low Limit
-            rightPivotMotor.setPosition(IntakeConstants.lowLimitAngle / (2*Math.PI));
+        // If current is high and we aren't moving, we've hit a physical stop
+        if (Math.abs(currentUsage) > IntakeSettings.STALL_CURRENT_THRESHOLD && 
+            Math.abs(currentVelocity) < IntakeSettings.STALL_VELOCITY_THRESHOLD) {
+            
+            // Determine which stop we hit based on the direction we are trying to go
+            // or the current 'supposed' position.
+            if (m_request.Position > CurrentPivotPosition.getAsDouble() / (2*Math.PI)) {
+                // We were trying to go UP, so we are at the High Limit
+                rightPivotMotor.setPosition(IntakeConstants.highLimitAngle / (2*Math.PI));
+            } else {
+                // We were trying to go DOWN, so we are at the Low Limit
+                rightPivotMotor.setPosition(IntakeConstants.lowLimitAngle / (2*Math.PI));
+            }
         }
     }
-}
 
     @Override
     public void periodic(){
@@ -263,7 +263,7 @@ public class IntakeSubsystem extends SubsystemBase {
             }
         }
 
-        resetStoragePosition();
+        // resetStoragePosition();
 
         // 4. ALWAYS update the zones at the end of the loop!
         // This ensures the state machine keeps tracking the robot even if autoControl is false,
