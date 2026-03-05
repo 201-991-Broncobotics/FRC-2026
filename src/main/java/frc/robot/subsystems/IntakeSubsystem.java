@@ -237,6 +237,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic(){
+        resetStoragePosition();
 
         // 1. Get the current pose once
         RobotPose = drivetrain.getState().Pose;
@@ -260,8 +261,6 @@ public class IntakeSubsystem extends SubsystemBase {
                 drop();
             }
         }
-
-        resetStoragePosition();
 
         // 4. ALWAYS update the zones at the end of the loop!
         // This ensures the state machine keeps tracking the robot even if autoControl is false,
