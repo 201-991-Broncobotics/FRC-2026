@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -73,7 +74,6 @@ public class RobotContainer {
 
     private final SendableChooser<Command> autoChooser;
 
-    Trigger reverseFeed; 
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -141,17 +141,32 @@ public class RobotContainer {
         driver.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
         driver.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
         //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
-        reverseFeed = new Trigger(operator.rightBumper()).and(operator.rightTrigger(0.05))
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed, intakeSubsystem)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
-        operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
-        operator.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        driver.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
-        driver.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        operator.rightBumper().and(operator.rightTrigger(0.05))
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed, intakeSubsystem))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
+
+        operator.rightBumper()
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+            .onTrue(new InstantCommand(traverseSubsystem::transfer))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+            .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        driver.rightBumper()
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+            .onTrue(new InstantCommand(traverseSubsystem::transfer))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+            .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+
+        driver.b()
+            .toggleOnTrue(new InstantCommand(traverseSubsystem::enablePulseTransferRoller))
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::aidFly))
+            .toggleOnFalse(new InstantCommand(traverseSubsystem::disablePulseTransferRoller))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
+
 
         driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
         // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting))
         //temporary
-        operator.y().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel)); //.toggleOnFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));
+        // operator.y().toggleOnTrue(new ParallelCommandGroup(new InstantCommand(outtakeSubsystem::tuneFlywheel), new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
         driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
@@ -190,7 +205,7 @@ public class RobotContainer {
         //Turret (triggers)
 
         //Flywheel Speed (Automated or oprator POV up + down) + Flywheel (A)
-        override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
+        override.a().toggleOnTrue(new ParallelCommandGroup(new InstantCommand(outtakeSubsystem::tuneFlywheel), new InstantCommand(intakeSubsystem::aidFly)));
 
         //Hood (Right Up + Down)
 

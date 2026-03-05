@@ -394,14 +394,14 @@ public class OuttakeSubsystem extends SubsystemBase {
         // TRAJECTORY MATH (Sorry my math was based on old stuff and the tests which are all in inches)
         double Distance = Math.hypot(RelativeTarget.getX(), RelativeTarget.getY());
         double LaunchHeight = 22.3; // INCHES sorry, can also be made to change based on hood angle  
-        double finalTargetRPM = (Traj.k1 * (39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * RelativeTarget.getZ()) + LaunchHeight));
+        double finalTargetRPM = (Traj.k1 * (39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * RelativeTarget.getZ()) + LaunchHeight + Traj.k3));
 
         // assume minimum necessary flywheel rpm when no where close to the speed needed and end early
         SmartDashboard.putNumber("Traj1 Dist", 39.3701 * Distance);
         SmartDashboard.putNumber("Traj2 Height", 39.3701 * RelativeTarget.getZ());
         SmartDashboard.putNumber("Traj3 RPM", finalTargetRPM);
         if (CurrentFlywheelRPM.getAsDouble() < 500) {
-            SmartDashboard.putNumber("Traj4 Hood Angle", 0); // clear data so I can tell when it endds early
+            SmartDashboard.putNumber("Traj4 Hood Angle", 0); // clear data so I can tell when it ends early
             SmartDashboard.putNumber("Traj5 Launch Vel", 0);
             SmartDashboard.putNumber("Traj6 Launch Angle", 0);
             SmartDashboard.putNumber("Traj7 Air Time", 0);
@@ -415,7 +415,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (aimHigh) CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) + Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * RelativeTarget.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
         else CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) - Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) + EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * RelativeTarget.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
 
-        double finalHoodAngle = Math.toRadians(((-Traj.b2 + Math.sqrt(Math.pow(Traj.b2, 2) - 4*Traj.b3*(Traj.b1-CurrentLaunchAngle))) / (2*Traj.b3)));
+        // double finalHoodAngle = Math.toRadians(((-Traj.b2 + Math.sqrt(Math.pow(Traj.b2, 2) - 4*Traj.b3*(Traj.b1-CurrentLaunchAngle))) / (2*Traj.b3)));
+        
+        double finalHoodAngle = Math.toRadians(90 - (Traj.m1*(CurrentLaunchAngle)+Traj.m2*(Math.pow(CurrentLaunchAngle, 2)+Traj.m3*(CurrentLaunchVelocity)+Traj.m4*(CurrentLaunchAngle)*(CurrentLaunchVelocity))) + Traj.m5); // i did actually convert launch angle to radians before I regressed this in desmos cause im too lazy to write Math.toRadians() like 5 times, but also I guess I not too lazy to write this extemely long comment at 3am
 
         double finalAirTime = (39.3701 * Distance) / (CurrentLaunchVelocity * Math.cos(CurrentLaunchAngle));
 
@@ -437,16 +439,20 @@ public class OuttakeSubsystem extends SubsystemBase {
         
         double[] finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
         double airTime = finalRegression[3];
+        Translation3d newTarget = Target;
         for (int i = 1; i <= 5; i++) {
             // code that moves relativeGoalPose based on airtime
-            Translation2d acceleration = new Translation2d(CommandSwerveDrivetrain.gyroData.accelX, CommandSwerveDrivetrain.gyroData.accelY);
-            Translation2d velocityAdded = acceleration.times(airTime);
             Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
-            Translation2d distanceTraveled = velocity.times(airTime);
+            Translation2d acceleration = new Translation2d(CommandSwerveDrivetrain.gyroData.accelX, CommandSwerveDrivetrain.gyroData.accelY);
 
-            Target = Target.minus(new Translation3d(distanceTraveled));
+            // d = v*t + 0.5*a*t^2
+            Translation2d distanceFromVelocity = velocity.times(airTime);
+            Translation2d distanceFromAcceleration = acceleration.times(0.5 * airTime * airTime);
+            Translation2d distanceTraveled = distanceFromVelocity.plus(distanceFromAcceleration);
 
-            offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+            newTarget = Target.minus(new Translation3d(distanceTraveled));
+
+            offsetTranslation2d = newTarget.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
             relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
 
             finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
@@ -649,7 +655,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void changeRPMSlow() { rpmAdjustment = 50; }
 
     public void startShooting() { IsShooting = true; }
-    public void stopShooting() { IsShooting = true; }
+    public void stopShooting() { IsShooting = false; }
 
 
     public static double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
