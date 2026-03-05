@@ -118,7 +118,13 @@ public class IntakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); 
         }
 
-        
+        if(IntakeConstants.highLimitAngle > IntakeConstants.lowLimitAngle){
+            IntakeConstants.maxPivotAngle = IntakeConstants.highLimitAngle;
+            IntakeConstants.minPivotAngle = IntakeConstants.lowLimitAngle;
+        } else {
+            IntakeConstants.minPivotAngle = IntakeConstants.highLimitAngle;
+            IntakeConstants.maxPivotAngle = IntakeConstants.lowLimitAngle;
+        }
       
     }
 
@@ -143,11 +149,13 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void aidFly(){
-        setPivotAngle(10,IntakeConstants.lowLimitAngle);
+        setPivotAngle(Math.toRadians(10),IntakeConstants.lowLimitAngle);
     }
 
     public void setPivotAngle(double angle){
         if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
+
+        angle = Math.min(Math.max(angle, IntakeConstants.minPivotAngle), IntakeConstants.maxPivotAngle);
 
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
@@ -156,6 +164,16 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setPivotAngle(double angle, double baseAngle){
+        double angleToSet = baseAngle + angle;
+
+        if(angleToSet > IntakeConstants.maxPivotAngle || angleToSet < IntakeConstants.minPivotAngle){
+            angleToSet = baseAngle - angle;
+
+            if(angleToSet < IntakeConstants.maxPivotAngle || angleToSet > IntakeConstants.minPivotAngle){
+                angleToSet = baseAngle + angle;
+            }
+        }
+
         setPivotAngle(baseAngle+angle);
     }
 
@@ -256,7 +274,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
             // Ramp Zone Logic
             if (enteredRampZone) {
-                setPivotAngle(10, IntakeConstants.lowLimitAngle);
+                setPivotAngle(Math.toRadians(10), IntakeConstants.lowLimitAngle);
             } else if (leftRampZone) {
                 drop();
             }
