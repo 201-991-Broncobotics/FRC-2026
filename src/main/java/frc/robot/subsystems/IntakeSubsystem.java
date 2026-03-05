@@ -238,24 +238,24 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void resetStoragePosition() { //AI Stuff
-    double currentUsage = rightPivotMotor.getStatorCurrent().getValueAsDouble();
-    double currentVelocity = rightPivotMotor.getVelocity().getValueAsDouble();
+        double currentUsage = rightPivotMotor.getStatorCurrent().getValueAsDouble();
+        double currentVelocity = rightPivotMotor.getVelocity().getValueAsDouble();
 
-    // If current is high and we aren't moving, we've hit a physical stop
-    if (Math.abs(currentUsage) > IntakeSettings.STALL_CURRENT_THRESHOLD && 
-        Math.abs(currentVelocity) < IntakeSettings.STALL_VELOCITY_THRESHOLD) {
-        
-        // Determine which stop we hit based on the direction we are trying to go
-        // or the current 'supposed' position.
-        if (m_request.Position > CurrentPivotPosition.getAsDouble() / (2*Math.PI)) {
-            // We were trying to go UP, so we are at the High Limit
-            rightPivotMotor.setPosition(IntakeConstants.highLimitAngle / (2*Math.PI));
-        } else {
-            // We were trying to go DOWN, so we are at the Low Limit
-            rightPivotMotor.setPosition(IntakeConstants.lowLimitAngle / (2*Math.PI));
+        // If current is high and we aren't moving, we've hit a physical stop
+        if (Math.abs(currentUsage) > IntakeSettings.STALL_CURRENT_THRESHOLD && 
+            Math.abs(currentVelocity) < IntakeSettings.STALL_VELOCITY_THRESHOLD) {
+            
+            // Determine which stop we hit based on the direction we are trying to go
+            // or the current 'supposed' position.
+            if (m_request.Position > CurrentPivotPosition.getAsDouble() / (2*Math.PI)) {
+                // We were trying to go UP, so we are at the High Limit
+                rightPivotMotor.setPosition(IntakeConstants.highLimitAngle / (2*Math.PI));
+            } else {
+                // We were trying to go DOWN, so we are at the Low Limit
+                rightPivotMotor.setPosition(IntakeConstants.lowLimitAngle / (2*Math.PI));
+            }
         }
     }
-}
 
     @Override
     public void periodic(){
@@ -299,6 +299,7 @@ public class IntakeSubsystem extends SubsystemBase {
             IntakeSettings.pivotkI = SmartDashboard.getNumber("Pivot kI", IntakeSettings.pivotkI); 
             IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
             IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
+            IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot Error", Math.toDegrees(targetAngle - CurrentPivotPosition.getAsDouble())); 
         }
         
 
