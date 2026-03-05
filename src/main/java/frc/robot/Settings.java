@@ -53,12 +53,15 @@ public class Settings {
         public static final double STALL_CURRENT_THRESHOLD = 20.0; // Amps
         public static final double STALL_VELOCITY_THRESHOLD = 0.1; // Rotations per second
         
+        public static double airShooterPivotAngle = Math.toRadians(20); // this is set to be correct where 90 is up and 0 is straight out
     }
 
     public static class TraverseSettings {
 
         public static double rollerMotorPower = 1.0; 
         public static double scoopMotorPower = 1.0;
+
+        public static double traversePulseFreq = 2; // times per second
 
     }
 
@@ -157,8 +160,16 @@ public class Settings {
         public static final double b2 = 2.25026043353;
         public static final double b3 = -0.0117303333665;
 
-        public static final double k1 = 0.000529982565868; // K1
-        public static final double k2 = 10.4671074829; // K2
+        public static final double k1 = 0.000529982565868; // n1
+        public static final double k2 = 10.4671074829; // n2
+        public static final double k3 = 0; // n3
+
+        // temporary or maybe permanent simplified regression version
+        public static final double m1 = 0;
+        public static final double m2 = 0;
+        public static final double m3 = 0;
+        public static final double m4 = 0;
+        public static final double m5 = 0;
 
         public static final double g1 = 0.000312494918492; // actual k1
     }

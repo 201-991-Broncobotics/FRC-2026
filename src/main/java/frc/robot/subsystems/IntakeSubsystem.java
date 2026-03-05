@@ -143,7 +143,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void aidFly(){
-        setPivotAngle(10,IntakeConstants.lowLimitAngle);
+        setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle);
     }
 
     public void setPivotAngle(double angle){
@@ -155,9 +155,7 @@ public class IntakeSubsystem extends SubsystemBase {
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
-    public void setPivotAngle(double angle, double baseAngle){
-        setPivotAngle(baseAngle+angle);
-    }
+    
 
     private double getGravityFeedForward() {
         // Get current arm position in rotations and convert to radians
@@ -255,7 +253,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
             // Ramp Zone Logic
             if (enteredRampZone) {
-                setPivotAngle(10, IntakeConstants.lowLimitAngle);
+                aidFly();
             } else if (leftRampZone) {
                 drop();
             }

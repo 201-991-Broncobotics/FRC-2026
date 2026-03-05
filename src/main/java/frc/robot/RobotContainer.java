@@ -142,18 +142,31 @@ public class RobotContainer {
         driver.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
         //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
         operator.rightBumper().and(operator.rightTrigger(0.05))
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed, intakeSubsystem)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
-        operator.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
-        operator.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        driver.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
-        driver.rightBumper().and(driver.b().negate()).toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed, intakeSubsystem))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
 
-        
+        operator.rightBumper()
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+            .onTrue(new InstantCommand(traverseSubsystem::transfer))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+            .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        driver.rightBumper()
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+            .onTrue(new InstantCommand(traverseSubsystem::transfer))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+            .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+
+        driver.b()
+            .toggleOnTrue(new InstantCommand(traverseSubsystem::enablePulseTransferRoller))
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::aidFly))
+            .toggleOnFalse(new InstantCommand(traverseSubsystem::disablePulseTransferRoller))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
+
 
         driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
         // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting))
         //temporary
-        operator.y().toggleOnTrue(new ParallelCommandGroup(new InstantCommand(outtakeSubsystem::tuneFlywheel), new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
+        // operator.y().toggleOnTrue(new ParallelCommandGroup(new InstantCommand(outtakeSubsystem::tuneFlywheel), new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
         driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));

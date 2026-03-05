@@ -57,7 +57,7 @@ public final class Constants {
         public static final double pivotStatorCurrent = 30; 
 
         public static final double x60ShaftRadius = 4/25.4; //inches
-        public static final double lowLimitAngle = Math.toRadians(95.2); //radians
+        public static final double lowLimitAngle = Math.toRadians(95.2); //radians, also I hate this cause I can't switch these without the motion profile breaking
         public static final double highLimitAngle = 0; //radians
         public static final double startingPosition = highLimitAngle; //radians
         public static final double gearRatio = (1.0/25.0); 
