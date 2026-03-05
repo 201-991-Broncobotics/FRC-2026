@@ -120,7 +120,13 @@ public class IntakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); 
         }
 
-        
+        if(IntakeConstants.highLimitAngle > IntakeConstants.lowLimitAngle){
+            IntakeConstants.maxPivotAngle = IntakeConstants.highLimitAngle;
+            IntakeConstants.minPivotAngle = IntakeConstants.lowLimitAngle;
+        } else {
+            IntakeConstants.minPivotAngle = IntakeConstants.highLimitAngle;
+            IntakeConstants.maxPivotAngle = IntakeConstants.lowLimitAngle;
+        }
       
     }
 
@@ -153,13 +159,27 @@ public class IntakeSubsystem extends SubsystemBase {
 
         // if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
 
+        angle = Math.min(Math.max(angle, IntakeConstants.minPivotAngle), IntakeConstants.maxPivotAngle);
+
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
         //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
-    
+    public void setPivotAngle(double angle, double baseAngle){
+        double angleToSet = baseAngle + angle;
+
+        if(angleToSet > IntakeConstants.maxPivotAngle || angleToSet < IntakeConstants.minPivotAngle){
+            angleToSet = baseAngle - angle;
+
+            if(angleToSet < IntakeConstants.maxPivotAngle || angleToSet > IntakeConstants.minPivotAngle){
+                angleToSet = baseAngle + angle;
+            }
+        }
+
+        setPivotAngle(baseAngle+angle);
+    }
 
     private double getGravityFeedForward() {
         // Get current arm position in rotations and convert to radians
@@ -239,6 +259,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic(){
+        resetStoragePosition();
 
         // 1. Get the current pose once
         RobotPose = drivetrain.getState().Pose;
@@ -257,7 +278,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
             // Ramp Zone Logic
             if (enteredRampZone) {
-                aidFly();
+                setPivotAngle(Math.toRadians(10), IntakeConstants.lowLimitAngle);
             } else if (leftRampZone) {
                 drop();
             }
