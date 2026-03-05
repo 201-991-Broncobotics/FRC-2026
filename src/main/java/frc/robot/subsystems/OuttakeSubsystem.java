@@ -653,7 +653,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void changeRPMSlow() { rpmAdjustment = 50; }
 
     public void startShooting() { IsShooting = true; }
-    public void stopShooting() { IsShooting = true; }
+    public void stopShooting() { IsShooting = false; }
 
 
     public static double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
