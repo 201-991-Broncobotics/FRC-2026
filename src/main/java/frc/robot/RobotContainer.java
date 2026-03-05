@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -151,7 +152,7 @@ public class RobotContainer {
         driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
         // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting))
         //temporary
-        operator.y().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel)); //.toggleOnFalse(new InstantCommand(outtakeSubsystem::stopFlywheels));
+        operator.y().toggleOnTrue(new ParallelCommandGroup(new InstantCommand(outtakeSubsystem::tuneFlywheel), new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
         driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
@@ -190,7 +191,7 @@ public class RobotContainer {
         //Turret (triggers)
 
         //Flywheel Speed (Automated or oprator POV up + down) + Flywheel (A)
-        override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
+        override.a().toggleOnTrue(new ParallelCommandGroup(new InstantCommand(outtakeSubsystem::tuneFlywheel), new InstantCommand(intakeSubsystem::aidFly)));
 
         //Hood (Right Up + Down)
 
