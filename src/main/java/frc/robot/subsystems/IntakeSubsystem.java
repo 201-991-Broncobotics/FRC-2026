@@ -46,6 +46,8 @@ public class IntakeSubsystem extends SubsystemBase {
     private Zoning rampZoneing = new Zoning(ZoneConstants.RampZones);
     private Zoning ballZoning = new Zoning(ZoneConstants.ballsZone);
 
+    private double targetAngle;
+
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
 
@@ -149,10 +151,12 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void aidFly(){
-        setPivotAngle(Math.toRadians(10),IntakeConstants.lowLimitAngle);
+        setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle);
     }
 
     public void setPivotAngle(double angle){
+        targetAngle = angle;
+
         if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
 
         angle = Math.min(Math.max(angle, IntakeConstants.minPivotAngle), IntakeConstants.maxPivotAngle);

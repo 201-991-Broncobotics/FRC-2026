@@ -53,9 +53,11 @@ public final class Constants {
         public static final boolean currentLimitsEnabled = true;  
         public static final double supplyCurrent = 40; // helps prevent brownouts
         public static final double statorCurrent = 60; // helps prevent motor overheating
+        public static final double pivotSupplyCurrent = 30;
+        public static final double pivotStatorCurrent = 30; 
 
         public static final double x60ShaftRadius = 4/25.4; //inches
-        public static final double lowLimitAngle = Math.toRadians(95.2); //radians
+        public static final double lowLimitAngle = Math.toRadians(95.2); //radians, also I hate this cause I can't switch these without the motion profile breaking
         public static final double highLimitAngle = 0; //radians
         public static double maxPivotAngle = lowLimitAngle; //radians
         public static double minPivotAngle = highLimitAngle; //radians
