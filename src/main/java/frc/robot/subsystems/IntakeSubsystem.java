@@ -46,6 +46,8 @@ public class IntakeSubsystem extends SubsystemBase {
     private Zoning rampZoneing = new Zoning(ZoneConstants.RampZones);
     private Zoning ballZoning = new Zoning(ZoneConstants.ballsZone);
 
+    private double targetAngle;
+
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
 
@@ -143,6 +145,8 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void setPivotAngle(double angle){
+        targetAngle = angle;
+
         if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
 
         double feedforward = getGravityFeedForward();
@@ -215,7 +219,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void periodic(){
 
         RobotPose = drivetrain.getState().Pose;
-        if((ballZoning.ifEnteredZones(RobotPose)) && IntakeSettings.autoControl){
+        if((ballZoning.inZones(RobotPose)) && IntakeSettings.autoControl){
             drop();
             ballZoning.updateZones(RobotPose);
         } else if ((ballZoning.ifLeftZones(RobotPose)) && IntakeSettings.autoControl){
@@ -229,6 +233,8 @@ public class IntakeSubsystem extends SubsystemBase {
             rampZoneing.updateZones(RobotPose);
             drop();
         }
+
+        //if(rightPivotMotor.getCurrent > )
 
         if (Settings.tuningTelemetryEnabled) {
             //IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);

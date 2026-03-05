@@ -812,10 +812,10 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (Settings.tuningTelemetryEnabled) {
 
             //Auto Lower
-            SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(robotPose));
-            SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(robotPose));
-            SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(robotPose));
-            SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(robotPose));
+            SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
+            SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
+            SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
+            SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
             
 
             /*TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);

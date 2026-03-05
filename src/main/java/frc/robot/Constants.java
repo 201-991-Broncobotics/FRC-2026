@@ -132,9 +132,9 @@ public final class Constants {
     }
 
     public static class ZoneConstants {//Zones on the field from the POV of blue Human player
-        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.4,7.375), 2, 1.25));
+        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.4,8.25), 2, 1.5));
         public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(4.4,0.625), 2, 1.25));
-        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(12.1,7.375), 2, 1.25));
+        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(12.1,8.25), 2, 1.5));
         public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(12.1,0.625), 2, 1.25));
 
         public static ArrayList<Zone> TrenchZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
