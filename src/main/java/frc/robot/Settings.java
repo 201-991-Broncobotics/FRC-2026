@@ -40,10 +40,10 @@ public class Settings {
         public static double runningPower = 0.75; 
         public static double reversePower = -0.75; 
 
-        public static double pivotMotorVelocity = 10.0; //7
-        public static double pivotMotorAcceleration = 3.5; //2 
+        public static double pivotMotorVelocity = 5; //7
+        public static double pivotMotorAcceleration = 5; //2 
 
-        public static double pivotkP = 6.0; 
+        public static double pivotkP = 8.0; 
         public static double pivotkI = 0; 
         public static double pivotkD = 0; 
         public static double pivotkG = 0.0; // 0.35
