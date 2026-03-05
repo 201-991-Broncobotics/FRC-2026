@@ -54,6 +54,8 @@ public class OverrideController extends CommandXboxController {
     @Override
     public double getRightTriggerAxis() { return getPriorityAxis(override.getRightTriggerAxis(), singlePlayer.getRightTriggerAxis()); }
 
+    public double getCombinedTriggerAxis() { return getRightTriggerAxis() - getLeftTriggerAxis();}
+
     // ==========================================
     // BUTTON OVERRIDES
     // ==========================================

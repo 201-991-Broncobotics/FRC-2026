@@ -291,11 +291,14 @@ public class OuttakeSubsystem extends SubsystemBase {
         } else if (alliance.get() == Alliance.Blue) {
             LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         }
+
+        if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.redHub;
+        } else TARGET = ZoneConstants.blueHub;
     }
 
     public void update(){
 
-        // Temporary
+        // CONTROLLS
         if (controller.povUp().getAsBoolean()) {
             if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
             justChangedPower = true;
@@ -304,18 +307,29 @@ public class OuttakeSubsystem extends SubsystemBase {
             justChangedPower = true;
         } else justChangedPower = false;
 
+        double hoodControl = -controller.getRightY();
+        double turretControl = controller.getLeftX();
+
+        /*//Override Controls
+        if (controller.povUp().getAsBoolean()) {
+            if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
+            justChangedPower = true;
+        } else if (controller.povDown().getAsBoolean()) {
+            if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
+            justChangedPower = true;
+        } else justChangedPower = false;
+
+        double turretControl = controller.getCombinedTriggerAxis();*/
+
+
         TargetFlywheelRPM = TurretSettings.setVelocities;
 
-        TargetHoodAngle += MathUtil.applyDeadband(-controller.getRightY(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
+        TargetHoodAngle += MathUtil.applyDeadband(hoodControl, 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TargetHoodAngle);
 
-        TargetTurretAngle += MathUtil.applyDeadband(controller.getLeftX(), 0.05) * Math.toRadians(TurretConstants.incrementAngle);
+        TargetTurretAngle += MathUtil.applyDeadband(turretControl, 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-        
-
-        if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.redHub;
-        } else TARGET = ZoneConstants.blueHub;
-
+    
         lastTargettingData = getTargettingData(TARGET, 0, 0); // turret, flywheel, hood, air time
 
 
@@ -326,13 +340,8 @@ public class OuttakeSubsystem extends SubsystemBase {
             TargetFlywheelRPM = lastTargettingData[1];
             TargetHoodAngle = lastTargettingData[2];
 
-
-            // TURNTABLE
-            //TargetTurretAngle = getTurretAutoRotation();
-
             // FLYWHEELS
             setFlywheels(TargetFlywheelRPM);
-
 
             // HOOD
             if (autoLowered && TurretSettings.autoLowerHood) {
@@ -388,7 +397,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         Rotation2d targetRotation = new Rotation2d(RelativeTarget.getX(), RelativeTarget.getY());
         targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
         double finalTurretAngle = targetRotation.getRadians();
-        finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
+        //finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
+
+        SmartDashboard.putNumber("Traj0 Turret Rot", Math.toDegrees(finalTurretAngle));
 
 
         // TRAJECTORY MATH (Sorry my math was based on old stuff and the tests which are all in inches)
