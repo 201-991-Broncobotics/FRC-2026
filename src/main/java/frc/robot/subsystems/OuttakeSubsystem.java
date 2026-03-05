@@ -791,7 +791,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         if(!ZoneConstants.allianceZone.getZoningState() && IsShooting && TARGET.equals(ZoneConstants.allianceHub)){
             double Yval = robotPose.getY();
 
-            if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) {
+            if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
                 if(ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() + ZoneConstants.hubWidth)) < ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() - ZoneConstants.hubWidth))){
                     //if its closer to the right of the hub shoot there
                     Yval = robotPose.getY() - ZoneConstants.hubWidth;
