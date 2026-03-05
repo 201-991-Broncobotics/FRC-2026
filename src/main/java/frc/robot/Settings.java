@@ -49,6 +49,9 @@ public class Settings {
         public static double pivotkG = 0.0; // 0.35
 
         public static boolean autoControl = false;
+
+        public static final double STALL_CURRENT_THRESHOLD = 20.0; // Amps
+        public static final double STALL_VELOCITY_THRESHOLD = 0.1; // Rotations per second
         
     }
 

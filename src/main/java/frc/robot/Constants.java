@@ -134,35 +134,34 @@ public final class Constants {
     }
 
     public static class ZoneConstants {//Zones on the field from the POV of blue Human player
-        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.4,7.375), 2, 1.25));
-        public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(4.4,0.625), 2, 1.25));
-        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(12.1,7.375), 2, 1.25));
-        public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(12.1,0.625), 2, 1.25));
+        public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,7.25), 2, 1.6));
+        public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,0.8), 2, 1.6));
+        public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(11.9,7.25), 2, 1.6));
+        public static Zone redRightTrench = new Zone(new Shape.Rectangle(new Translation2d(11.9,0.8), 2, 1.6));
 
         public static ArrayList<Zone> TrenchZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
 
-        public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.4,5.5), 2.5,2));
-        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.4,1.0), 2.5, 2));
-        public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(12.1,5.5), 2.5, 2));
-        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(12.1,1.0), 2.5, 2));
+        public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,5.5), 2,2.25));
+        public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,2.5), 2, 2.25));
+        public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(11.9,5.5), 2, 2.25));
+        public static Zone redRightRamp = new Zone(new Shape.Rectangle(new Translation2d(11.9,2.5), 2, 2.25));
 
         public static ArrayList<Zone> RampZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
 
-        public static Zone blueClimb = new Zone(new Shape.Rectangle(new Translation2d(0,5), new Translation2d(1.5,3.5)));
-        public static Zone redClimb = new Zone(new Shape.Rectangle(new Translation2d(15,5), new Translation2d(16.5,3.5)));
+        public static Zone blueClimb = new Zone(new Shape.Rectangle(new Translation2d(0,3.75), new Translation2d(1.5,3.5)));
+        public static Zone redClimb = new Zone(new Shape.Rectangle(new Translation2d(15,4.25), new Translation2d(16.5,3.5)));
 
         public static ArrayList<Zone> ClimbZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
-
-        public static Zone ballsZone = new Zone(new Shape.Rectangle(new Translation2d(8.25,4), 2.5,5));
+        public static Zone ballsZone = new Zone(new Shape.Rectangle(new Translation2d(8.25,4), 2,5));
 
         public static Zone middleZone = new Zone(new Shape.Rectangle(new Translation2d(4.75,8), new Translation2d(12,0)));
         public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,8), new Translation2d(4.5,0)));
         public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,8), new Translation2d(16.5,0)));
 
-        public static Translation3d blueHub = new Translation3d(4.5,4, 1.83);
+        public static Translation3d blueHub = new Translation3d(4.6,4, 1.83);
         public static Translation3d redHub = new Translation3d(11.9,4, 1.83);
 
         public static Translation3d allianceHub = blueHub;

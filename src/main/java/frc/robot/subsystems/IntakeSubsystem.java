@@ -142,6 +142,10 @@ public class IntakeSubsystem extends SubsystemBase {
         setPivotAngle(IntakeConstants.lowLimitAngle);
     }
 
+    public void aidFly(){
+        setPivotAngle(10,IntakeConstants.lowLimitAngle);
+    }
+
     public void setPivotAngle(double angle){
         if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
 
@@ -211,24 +215,59 @@ public class IntakeSubsystem extends SubsystemBase {
         if (valueHasChanged) rightPivotMotor.getConfigurator().apply(pivotMotorConfig);
     }
 
+    public void resetStoragePosition() { //AI Stuff
+    double currentUsage = rightPivotMotor.getStatorCurrent().getValueAsDouble();
+    double currentVelocity = rightPivotMotor.getVelocity().getValueAsDouble();
+
+    // If current is high and we aren't moving, we've hit a physical stop
+    if (Math.abs(currentUsage) > IntakeSettings.STALL_CURRENT_THRESHOLD && 
+        Math.abs(currentVelocity) < IntakeSettings.STALL_VELOCITY_THRESHOLD) {
+        
+        // Determine which stop we hit based on the direction we are trying to go
+        // or the current 'supposed' position.
+        if (m_request.Position > CurrentPivotPosition.getAsDouble() / (2*Math.PI)) {
+            // We were trying to go UP, so we are at the High Limit
+            rightPivotMotor.setPosition(IntakeConstants.highLimitAngle / (2*Math.PI));
+        } else {
+            // We were trying to go DOWN, so we are at the Low Limit
+            rightPivotMotor.setPosition(IntakeConstants.lowLimitAngle / (2*Math.PI));
+        }
+    }
+}
+
     @Override
     public void periodic(){
 
+        // 1. Get the current pose once
         RobotPose = drivetrain.getState().Pose;
-        if((ballZoning.ifEnteredZones(RobotPose)) && IntakeSettings.autoControl){
-            drop();
-            ballZoning.updateZones(RobotPose);
-        } else if ((ballZoning.ifLeftZones(RobotPose)) && IntakeSettings.autoControl){
-            ballZoning.updateZones(RobotPose);
+
+        // 2. Check all transitions BEFORE updating the internal state
+        boolean enteredBallZone = ballZoning.ifEnteredZones(RobotPose);
+        boolean enteredRampZone = rampZoneing.ifEnteredZones(RobotPose);
+        boolean leftRampZone = rampZoneing.ifLeftZones(RobotPose);
+
+        // 3. Only run the intake actions if auto control is enabled
+        if (IntakeSettings.autoControl) {
+            // Ball Zone Logic
+            if (enteredBallZone) {
+                drop();
+            }
+
+            // Ramp Zone Logic
+            if (enteredRampZone) {
+                setPivotAngle(10, IntakeConstants.lowLimitAngle);
+            } else if (leftRampZone) {
+                drop();
+            }
         }
 
-        if(rampZoneing.ifEnteredZones(RobotPose) && IntakeSettings.autoControl){
-            setPivotAngle(10, IntakeConstants.lowLimitAngle);
-            rampZoneing.updateZones(RobotPose);
-        } else if (rampZoneing.ifLeftZones(RobotPose) && IntakeSettings.autoControl){
-            rampZoneing.updateZones(RobotPose);
-            drop();
-        }
+        resetStoragePosition();
+
+        // 4. ALWAYS update the zones at the end of the loop!
+        // This ensures the state machine keeps tracking the robot even if autoControl is false,
+        // preventing weird glitches when the driver turns autoControl back on.
+        ballZoning.updateZones(RobotPose);
+        rampZoneing.updateZones(RobotPose);
 
         if (Settings.tuningTelemetryEnabled) {
             //IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
