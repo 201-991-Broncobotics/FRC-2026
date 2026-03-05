@@ -421,6 +421,12 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         double finalAirTime = (39.3701 * Distance) / (CurrentLaunchVelocity * Math.cos(CurrentLaunchAngle));
 
+        if (Double.isNaN(CurrentLaunchAngle) || Double.isInfinite(CurrentLaunchAngle) || Double.isNaN(finalHoodAngle) || Double.isInfinite(finalHoodAngle)) {
+            CurrentLaunchAngle = 0;
+            finalHoodAngle = TurretConstants.minHoodAngle;
+            finalAirTime = 0;
+        }
+
         
         SmartDashboard.putNumber("Traj4 Hood Angle", Math.toDegrees(finalHoodAngle));
         SmartDashboard.putNumber("Traj5 Launch Vel", CurrentLaunchVelocity);
