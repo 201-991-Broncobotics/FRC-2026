@@ -775,21 +775,14 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d robotPose = drivetrain.getState().Pose;
         Pose2d turretPose = DrivingProfiles.getTurretPose(robotPose);
 
-        // 2. Update and store the Alliance Zone state
-        ZoneConstants.allianceZone.updateZones(robotPose);
-        boolean inAllianceZone = ZoneConstants.allianceZone.getZoningState();
-
-        // 3. Check if we just left the Trench (FlyZoning) BEFORE updating its state
-        boolean leftTrenchZone = FlyZoning.ifLeftZones(turretPose);
-        SmartDashboard.putBoolean("Left Zone", leftTrenchZone);
-
         // 4. Logic: Start shooting if we left the trench and are in the alliance zone
-        if (leftTrenchZone && !IsShooting && inAllianceZone) {
+        if ((FlyZoning.ifLeftZones(turretPose) && !IsShooting && ZoneConstants.allianceZone.inZones(turretPose)) || (ZoneConstants.allianceZone.ifEnteredZones(turretPose) && !IsShooting && !FlyZoning.inZones(turretPose))) {
             IsShooting = true; 
         }
 
         // 5. Update the Trench (FlyZoning) state
         FlyZoning.updateZones(turretPose);
+        ZoneConstants.allianceZone.updateZones(robotPose);
         autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
 
         // 6. Logic: Stop shooting if we are currently inside the trench
@@ -798,7 +791,17 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         if(!ZoneConstants.allianceZone.getZoningState() && IsShooting && TARGET.equals(ZoneConstants.allianceHub)){
-            TARGET = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), robotPose.getY(), ZoneConstants.allianceHub.getZ());
+            double Yval = robotPose.getY();
+
+            if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) {
+                if(ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() + ZoneConstants.hubWidth)) < ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() - ZoneConstants.hubWidth))){
+                    //if its closer to the right of the hub shoot there
+                    Yval = robotPose.getY() - ZoneConstants.hubWidth;
+                } else {
+                    Yval = robotPose.getY() + ZoneConstants.hubWidth;
+                }
+            }
+            TARGET = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), Yval, ZoneConstants.allianceHub.getZ());
 
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
             TARGET = ZoneConstants.allianceHub;
