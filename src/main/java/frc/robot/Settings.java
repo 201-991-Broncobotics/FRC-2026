@@ -160,16 +160,16 @@ public class Settings {
         public static final double b2 = 2.25026043353;
         public static final double b3 = -0.0117303333665;
 
-        public static final double k1 = 0.000529982565868; // n1
-        public static final double k2 = 10.4671074829; // n2
-        public static final double k3 = 0; // n3
+        public static final double k1 = -0.00276176; // n1
+        public static final double k2 = -4082.94445; // n2
+        public static final double k3 = 22.56115; // n3
 
         // temporary or maybe permanent simplified regression version
-        public static final double m1 = 0;
-        public static final double m2 = 0;
-        public static final double m3 = 0;
-        public static final double m4 = 0;
-        public static final double m5 = 0;
+        public static final double m1 = -409.73231;
+        public static final double m2 = 129.5842;
+        public static final double m3 = -0.766076;
+        public static final double m4 = 0.585504;
+        public static final double m5 = -380.63038;
 
         public static final double g1 = 0.000312494918492; // actual k1
     }
