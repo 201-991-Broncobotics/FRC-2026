@@ -437,16 +437,20 @@ public class OuttakeSubsystem extends SubsystemBase {
         
         double[] finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
         double airTime = finalRegression[3];
+        Translation3d newTarget = Target;
         for (int i = 1; i <= 5; i++) {
             // code that moves relativeGoalPose based on airtime
-            Translation2d acceleration = new Translation2d(CommandSwerveDrivetrain.gyroData.accelX, CommandSwerveDrivetrain.gyroData.accelY);
-            Translation2d velocityAdded = acceleration.times(airTime);
             Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
-            Translation2d distanceTraveled = velocity.times(airTime);
+            Translation2d acceleration = new Translation2d(CommandSwerveDrivetrain.gyroData.accelX, CommandSwerveDrivetrain.gyroData.accelY);
 
-            Target = Target.minus(new Translation3d(distanceTraveled));
+            // d = v*t + 0.5*a*t^2
+            Translation2d distanceFromVelocity = velocity.times(airTime);
+            Translation2d distanceFromAcceleration = acceleration.times(0.5 * airTime * airTime);
+            Translation2d distanceTraveled = distanceFromVelocity.plus(distanceFromAcceleration);
 
-            offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+            newTarget = Target.minus(new Translation3d(distanceTraveled));
+
+            offsetTranslation2d = newTarget.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
             relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
 
             finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
