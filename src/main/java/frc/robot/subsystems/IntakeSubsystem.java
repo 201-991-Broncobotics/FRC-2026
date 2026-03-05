@@ -157,7 +157,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void setPivotAngle(double angle){
         targetAngle = angle;
 
-        if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
+        // if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
 
         angle = Math.min(Math.max(angle, IntakeConstants.minPivotAngle), IntakeConstants.maxPivotAngle);
 
@@ -283,6 +283,8 @@ public class IntakeSubsystem extends SubsystemBase {
                 drop();
             }
         }
+
+        // resetStoragePosition();
 
         // 4. ALWAYS update the zones at the end of the loop!
         // This ensures the state machine keeps tracking the robot even if autoControl is false,
