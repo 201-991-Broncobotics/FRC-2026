@@ -304,6 +304,9 @@ public class IntakeSubsystem extends SubsystemBase {
             IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot Error", Math.toDegrees(targetAngle - CurrentPivotPosition.getAsDouble())); 
         }
         
+        SmartDashboard.putBoolean("Balls Zone", ballZoning.getZoningState());
+        SmartDashboard.putBoolean("Ramp Zone", rampZoneing.getZoningState());
+
 
         try {
             //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();

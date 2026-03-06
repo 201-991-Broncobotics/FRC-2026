@@ -122,7 +122,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private ElapsedTime hoodCalibrationTimer;
     
     private double lowestHoodMotorRev = 0, highestHoodMotorRev = 2.31; // should be just a rough underestimate because it will get retuned when the robot tries to the shoot for the first time
-    private boolean IsShooting = false;
+    private boolean Shooting = false;
     private double turretStartingOffset = 0;
 
     private boolean justChangedPower = false;
@@ -130,11 +130,15 @@ public class OuttakeSubsystem extends SubsystemBase {
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
 
+    
+    private ArrayList<Double> averageTurntableAngle = new ArrayList(), averageFlywheelRPM = new ArrayList(), averageHoodAngle = new ArrayList();
+    private double[] averageData = new double[]{0, 0, 0};
+
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
         Optional<Alliance> alliance = DriverStation.getAlliance();
         distanceVector = new Vector2d();
-        IsShooting = false;
+        Shooting = false;
 
         controller = operator;
 
@@ -142,9 +146,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         FrameTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         hoodCalibrationTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
-    
-
-        p1 = new WeightedObservedPoint(1, distanceVector.mag(), 3);
+        averageTurntableAngle.add(0.0);
+        averageFlywheelRPM.add(0.0);
+        averageHoodAngle.add(0.0);
         
 
         /*table.add(p1);
@@ -275,7 +279,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         
 
         turretStartingOffset = getAbsoluteTurretAngle() - (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0;
-        CurrentTurretAngle = () -> (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0 + turretStartingOffset; // TODO: needs starting offset
+        CurrentTurretAngle = () -> (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0 + turretStartingOffset;
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
         CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
         TargetTurretAngle = CurrentTurretAngle.getAsDouble();
@@ -322,7 +326,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         double turretControl = controller.getCombinedTriggerAxis();*/
 
 
-        TargetFlywheelRPM = TurretSettings.setVelocities;
+        // TargetFlywheelRPM = TurretSettings.setVelocities;
 
         TargetHoodAngle += MathUtil.applyDeadband(hoodControl, 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetHoodAngle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, TargetHoodAngle);
@@ -332,21 +336,45 @@ public class OuttakeSubsystem extends SubsystemBase {
     
         lastTargettingData = getTargettingData(TARGET, 0, 0); // turret, flywheel, hood, air time
 
+        averageTurntableAngle.add(lastTargettingData[0]);
+        averageFlywheelRPM.add(lastTargettingData[1]);
+        averageHoodAngle.add(lastTargettingData[2]);
+        if (averageTurntableAngle.size() > TurretSettings.numberOfIterations) {
+            averageTurntableAngle.remove(0);
+            averageFlywheelRPM.remove(0);
+            averageHoodAngle.remove(0);
+        }
 
-        if (IsShooting) {
+        averageData = new double[]{
+            averageTurntableAngle.stream().mapToDouble(Double::doubleValue).average().orElse(0.0),
+            averageFlywheelRPM.stream().mapToDouble(Double::doubleValue).average().orElse(0.0),
+            averageHoodAngle.stream().mapToDouble(Double::doubleValue).average().orElse(0.0),
+        };
+
+        SmartDashboard.putNumber("Average Turntable Angle:", Math.toDegrees(averageData[0]));
+        SmartDashboard.putNumber("Average Flywheel RPM:", averageData[1]);
+        SmartDashboard.putNumber("Average Hood Angle:", Math.toDegrees(averageData[2]));
+
+
+        if (Shooting) {
+            //DrivingProfiles.allowedToUseLimelight = false;
+            if (TurretSettings.tuningMode) {
+                TargetFlywheelRPM = TurretSettings.setVelocities;
+            } else {
+                if (Math.abs(CurrentTurretAngle.getAsDouble() - averageData[0]) > TurretSettings.TurntableDeadband) TargetTurretAngle = averageData[0];
+                if (Math.abs(CurrentFlywheelRPM.getAsDouble() - averageData[1]) > TurretSettings.FlywheelDeadband) TargetFlywheelRPM = averageData[1];
+                if (Math.abs(CurrentHoodAngle.getAsDouble() - averageData[2]) > TurretSettings.HoodDeadband) TargetHoodAngle = averageData[2];
+            }
             
-            // Waiting just a sec
-            //TargetTurretAngle = lastTargettingData[0];
-            TargetFlywheelRPM = lastTargettingData[1];
-            TargetHoodAngle = lastTargettingData[2];
+            // TURNTABLE
+            
 
             // FLYWHEELS
             setFlywheels(TargetFlywheelRPM);
 
             // HOOD
-            if (autoLowered && TurretSettings.autoLowerHood) {
+            if (autoLowered && TurretSettings.autoLowerHood && !TurretSettings.tuningMode) {
                 setHood(TurretConstants.minHoodAngle);
-
             } else if (hoodNeedsToBeCalibrated) {
                 switch (hoodCalibrationPhase) {
                     case 0: // reset timer
@@ -375,13 +403,17 @@ public class OuttakeSubsystem extends SubsystemBase {
                 // Normal Hood operation
                 setHood(TargetHoodAngle);
             }
+            
         } else { // Not shooting
+            
             
             stopFlywheels();
             setHood(TurretConstants.minHoodAngle);
+            //DrivingProfiles.allowedToUseLimelight = true;
         }
 
         setTurntable(TargetTurretAngle);
+
 
         /*
         //Auto Aiming
@@ -397,9 +429,11 @@ public class OuttakeSubsystem extends SubsystemBase {
         Rotation2d targetRotation = new Rotation2d(RelativeTarget.getX(), RelativeTarget.getY());
         targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
         double finalTurretAngle = targetRotation.getRadians();
-        //finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
+        //if (finalTurretAngle > TurretSettings.maxTurretAngle) finalTurretAngle -= 2*Math.PI;
+        //if (finalTurretAngle < TurretSettings.minTurretAngle) finalTurretAngle += 2*Math.PI;
+        finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
 
-        SmartDashboard.putNumber("Traj0 Turret Rot", Math.toDegrees(finalTurretAngle));
+        SmartDashboard.putNumber("Traj0 Turret", Math.toDegrees(finalTurretAngle));
 
 
         // TRAJECTORY MATH (Sorry my math was based on old stuff and the tests which are all in inches)
@@ -411,7 +445,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Traj1 Dist", 39.3701 * Distance);
         SmartDashboard.putNumber("Traj2 Height", 39.3701 * RelativeTarget.getZ());
         SmartDashboard.putNumber("Traj3 RPM", finalTargetRPM);
-        if (CurrentFlywheelRPM.getAsDouble() < 500) {
+        if (CurrentFlywheelRPM.getAsDouble() < 1000) {
             SmartDashboard.putNumber("Traj4 Hood Angle", 0); // clear data so I can tell when it ends early
             SmartDashboard.putNumber("Traj5 Launch Vel", 0);
             SmartDashboard.putNumber("Traj6 Launch Angle", 0);
@@ -478,10 +512,12 @@ public class OuttakeSubsystem extends SubsystemBase {
             airTime = finalRegression[3];
         }
 
-        //Dead Zone
-        if(Math.abs(getTurretAngle() - finalRegression[0]) < TurretConstants.AutoTurretDeadband){
-            finalRegression[0] = getTurretAngle();
-        }
+        /*Dead Zone
+        if(Math.abs(Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2)) < TurretConstants.AutoTurretDeadband){
+            finalRegression[0] = getAbsoluteTurretAngle();
+        }*/
+
+        
         
         return finalRegression; // Target Turret Angle, Target Flywheel rpm (rough estimate), Target hood angle (based on current flywheel rpm), Estimated Air time
     }
@@ -553,14 +589,14 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     public void tuneFlywheel(){
         if (!justToggledTuning) {
-            IsShooting = true;
+            Shooting = true;
             // rightFlyMotor.setControl
             //rightFlyMotor.setControl(flywheelVelocityRequest.withVelocity(TargetFlywheelRPM / 60.0)); 
             //leftFlyMotor.setControl(new Follower(MotorConstants.rightFlyID, MotorAlignmentValue.Opposed)); 
             justToggledTuning = true;
         } else {
             //stopFlywheels();
-            IsShooting = false;
+            Shooting = false;
             justToggledTuning = false;
         }
     }
@@ -673,8 +709,8 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void changeRPMFast() { rpmAdjustment = 500; }
     public void changeRPMSlow() { rpmAdjustment = 50; }
 
-    public void startShooting() { IsShooting = true; }
-    public void stopShooting() { IsShooting = false; }
+    public void startShooting() { Shooting = true; }
+    public void stopShooting() { Shooting = false; }
 
 
     public static double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
@@ -793,8 +829,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d turretPose = DrivingProfiles.getTurretPose(robotPose);
 
         // 4. Logic: Start shooting if we left the trench and are in the alliance zone
-        if ((FlyZoning.ifLeftZones(turretPose) && !IsShooting && ZoneConstants.allianceZone.inZones(turretPose)) || (ZoneConstants.allianceZone.ifEnteredZones(turretPose) && !IsShooting && !FlyZoning.inZones(turretPose))) {
-            IsShooting = true; 
+        if (!TurretSettings.tuningMode && (FlyZoning.ifLeftZones(turretPose) && !Shooting && ZoneConstants.allianceZone.inZones(turretPose)) || (ZoneConstants.allianceZone.ifEnteredZones(turretPose) && !Shooting && !FlyZoning.inZones(turretPose))) {
+            Shooting = true; 
         }
 
         // 5. Update the Trench (FlyZoning) state
@@ -803,21 +839,21 @@ public class OuttakeSubsystem extends SubsystemBase {
         autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
 
         // 6. Logic: Stop shooting if we are currently inside the trench
-        if (autoLowered && IsShooting) {
-            IsShooting = false; 
+        if (autoLowered && Shooting) {
+            Shooting = false; 
         }
 
-        if(!ZoneConstants.allianceZone.getZoningState() && IsShooting && TARGET.equals(ZoneConstants.allianceHub)){
+        if(!ZoneConstants.allianceZone.getZoningState() && Shooting && TARGET.equals(ZoneConstants.allianceHub)){
             double Yval = robotPose.getY();
 
-            if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
+            /*if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
                 if(ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() + ZoneConstants.hubWidth)) < ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() - ZoneConstants.hubWidth))){
                     //if its closer to the right of the hub shoot there
                     Yval = robotPose.getY() - ZoneConstants.hubWidth;
                 } else {
                     Yval = robotPose.getY() + ZoneConstants.hubWidth;
                 }
-            }
+            }*/
             TARGET = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), Yval, ZoneConstants.allianceHub.getZ());
 
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
@@ -830,7 +866,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             RobotState = drivetrain.getState();
         }
 
-        SmartDashboard.putBoolean("Is Shooting", IsShooting);
+        SmartDashboard.putBoolean("Is Shooting", Shooting);
         SmartDashboard.putBoolean("Trench Zone",  FlyZoning.inZones(robotPose));
         SmartDashboard.putBoolean("Alliance Zone", ZoneConstants.allianceZone.getZoningState());
 
