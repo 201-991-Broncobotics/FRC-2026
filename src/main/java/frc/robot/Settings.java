@@ -61,7 +61,7 @@ public class Settings {
         public static double rollerMotorPower = 1.0; 
         public static double scoopMotorPower = 1.0;
 
-        public static double traversePulseFreq = 2; // times per second
+        public static double traversePulseFreq = 1; // times per second
 
     }
 
@@ -123,7 +123,14 @@ public class Settings {
         public static double minTurretAngle = Math.toRadians(-45);
         public static double maxTurretAngle = Math.toRadians(225);
 
-        public static double TurretAbsoluteOffset = Math.toRadians(-246.5);
+        public static double TurretAbsoluteOffset = Math.toRadians(-246.5 + 19.6);
+
+        public static int numberOfIterations = 5;
+        public static double TurntableDeadband = Math.toRadians(1);
+        public static double FlywheelDeadband = 10; // rpm
+        public static double HoodDeadband = Math.toRadians(0.5);
+
+        public static boolean tuningMode = false;
     }
 
 
@@ -192,6 +199,10 @@ public class Settings {
         public static double leftCorrectX = 0;
         public static double rightCorrectX = 0;
 
+    }
+
+    public static class RobotSettings{
+        public static final boolean overrideMode = false;
     }
 
 }

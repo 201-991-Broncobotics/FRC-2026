@@ -121,8 +121,6 @@ public final class Constants {
         
         public static final double counterThreshold = 0; //Degrees
 
-        public static final double AutoTurretDeadband = 2.5;
-
         public static final double incrementAngle = 1.5; //Degrees
     }
 

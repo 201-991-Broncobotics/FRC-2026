@@ -62,7 +62,7 @@ public class DrivingProfiles extends SubsystemBase {
 
     private Pose2d ClosestFieldTargetPoint = new Pose2d();
 
-    public boolean allowedToUseLimelight = true;
+    public static boolean allowedToUseLimelight = true;
 
     private double BatteryVoltage = 14;
     private int currentDriveSupplyCurrentLimit = 120;
@@ -230,7 +230,14 @@ public class DrivingProfiles extends SubsystemBase {
 
                 SmartDashboard.putString("REAL TURRET POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.3, 0.3, 10.0)); // standard deviation of vision measurements in meters and degrees
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
+            }
+
+            PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
+            if (LimelightPoseEstimate2 != null) {
+                SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
+
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) drivetrain.addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.1, 0.1, 4.0));
             }
             
 
