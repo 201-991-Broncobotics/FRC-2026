@@ -19,8 +19,6 @@ public class TraverseSubsystem extends SubsystemBase {
     private TalonFXConfiguration rollerMotorConfig, scoopMotorConfig; 
     private StatusCode rollerMotorStatus, scoopMotorStatus;
     private CurrentLimitsConfigs rollerCurrentLimits, scoopCurrentLimits; 
-    private ElapsedTime pulseTimer;
-    private boolean PulseTransferRoller = false;
 
     public TraverseSubsystem(){
 
@@ -64,17 +62,10 @@ public class TraverseSubsystem extends SubsystemBase {
         if (!rollerMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Traverse roller motor with ID " + MotorConstants.traverseRollerID + " is broken!");
         if (!scoopMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Traverse scoop motor with ID " + MotorConstants.traverseScoopID + " is broken!");
 
-        pulseTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-
     }
 
     public void transfer(){ 
-        if (PulseTransferRoller && pulseTimer.time() > 0.5/TraverseSettings.traversePulseFreq) {
-            stopRoller();
-            if (pulseTimer.time() > 1.0/TraverseSettings.traversePulseFreq) pulseTimer.reset();
-        } else {
-            rollerMotor.set(-TraverseSettings.rollerMotorPower); 
-        }
+        rollerMotor.set(-TraverseSettings.rollerMotorPower); 
     }
     public void scoop() { scoopMotor.set(TraverseSettings.scoopMotorPower); }
 
@@ -83,9 +74,6 @@ public class TraverseSubsystem extends SubsystemBase {
 
     public void stopRoller(){ rollerMotor.stopMotor(); }
     public void stopScoop() { scoopMotor.stopMotor(); }
-
-    public void enablePulseTransferRoller() { PulseTransferRoller = true; }
-    public void disablePulseTransferRoller() { PulseTransferRoller = false; }
 
     @Override
     public void periodic(){

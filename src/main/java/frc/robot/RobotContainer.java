@@ -39,7 +39,7 @@ import java.util.Optional;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actualliance be handled in the {@link Robot}
+ * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
@@ -112,7 +112,7 @@ public class RobotContainer {
 
         drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodicalliance
+            // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
@@ -136,14 +136,14 @@ public class RobotContainer {
         operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
         operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
 
-        operator.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-        operator.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
-        driver.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-        driver.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+        operator.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+        operator.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+        driver.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+        driver.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
         //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
         operator.rightBumper().and(operator.rightTrigger(0.05))
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed, intakeSubsystem))
-            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
 
         operator.rightBumper()
             .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
@@ -151,14 +151,12 @@ public class RobotContainer {
             .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
             .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
         driver.rightBumper()
-            .toggleOnTrue(new InstantCommand(traverseSubsystem::transfer))
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+            .onTrue(new InstantCommand(traverseSubsystem::transfer))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
             .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-            
-        driver.rightBumper().and(driver.b().negate())
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed));
-        driver.rightBumper().and(driver.b())
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed));
-        driver.rightBumper().toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+        driver.b().toggleOnTrue(new InstantCommand(intakeSubsystem::shuffle)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopShuffle));
+
 
 
         driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
@@ -170,13 +168,14 @@ public class RobotContainer {
         driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
 
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
+        intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));
 
         //Override Version
          
         /*//DRIVE CONTROLS
         drivingProfile.setUpControllerInputs(
-            () -> -override.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
-            () -> override.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
+            () -> -override.getLeftY(),
+            () -> override.getLeftX(),
             () -> -override.getightX(), 
             () -> 0.3 + 0.7 * override.getRightTriggerAxis(), 
             2, 2
@@ -184,7 +183,7 @@ public class RobotContainer {
 
         drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodicalliance
+            // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)

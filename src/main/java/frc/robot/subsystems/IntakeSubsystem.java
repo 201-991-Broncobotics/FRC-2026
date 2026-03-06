@@ -24,6 +24,7 @@ import frc.robot.Settings;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Settings.IntakeSettings;
 import frc.robot.Settings.TurretSettings;
+import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Zoning.Zoning;
 
 public class IntakeSubsystem extends SubsystemBase {
@@ -49,9 +50,13 @@ public class IntakeSubsystem extends SubsystemBase {
     private double targetPivotAngle;
 
     private double TargetIntakePower = 0;
+    private boolean shuffleIntake = false;
+    private ElapsedTime shuffleTimer; 
 
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
+
+        shuffleTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
         rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
@@ -135,7 +140,17 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void update() {
-        intakeMotor.set(TargetIntakePower); 
+        if (shuffleIntake) {
+            if (shuffleTimer.time() < 0.3 * IntakeSettings.shufflePulsePeriod) {
+                intakeMotor.set(IntakeSettings.reversePower); 
+            } else if (shuffleTimer.time() < IntakeSettings.shufflePulsePeriod) {
+                intakeMotor.set(IntakeSettings.runningPower); 
+            } else {
+                shuffleTimer.reset();
+            }
+        } else {
+            intakeMotor.set(TargetIntakePower); 
+        }
     }
 
     public void feed(){ TargetIntakePower = IntakeSettings.runningPower; }
@@ -145,6 +160,9 @@ public class IntakeSubsystem extends SubsystemBase {
     public void lift(){ setPivotAngle(IntakeConstants.highLimitAngle); }
     public void drop(){ setPivotAngle(IntakeConstants.lowLimitAngle); }
     // public void aidFly(){ setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle); }
+
+    public void shuffle() { shuffleIntake = true; }
+    public void stopShuffle() { shuffleIntake = false; }
 
     public void setPivotAngle(double angle){
         targetPivotAngle = angle;
@@ -159,7 +177,7 @@ public class IntakeSubsystem extends SubsystemBase {
         leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
-    public void setPivotAngle(double angle, double baseAngle){
+    public void setPivotAngle(double angle, double baseAngle){ // wtf
         double angleToSet = baseAngle + angle;
 
         if(angleToSet > IntakeConstants.maxPivotAngle || angleToSet < IntakeConstants.minPivotAngle){
@@ -229,7 +247,7 @@ public class IntakeSubsystem extends SubsystemBase {
         if (valueHasChanged) rightPivotMotor.getConfigurator().apply(pivotMotorConfig);
     }
 
-    public void resetStoragePosition() { //AI Stuff
+    public void resetStoragePosition() { //AI Stuff - thats crazy
         double currentUsage = rightPivotMotor.getStatorCurrent().getValueAsDouble();
         double currentVelocity = rightPivotMotor.getVelocity().getValueAsDouble();
 
@@ -251,7 +269,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic(){
-        resetStoragePosition();
+        // resetStoragePosition(); // didn't work
 
         // 1. Get the current pose once
         RobotPose = drivetrain.getState().Pose;

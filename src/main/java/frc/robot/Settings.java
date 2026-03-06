@@ -54,6 +54,8 @@ public class Settings {
         public static final double STALL_VELOCITY_THRESHOLD = 0.1; // Rotations per second
         
         public static double airShooterPivotAngle = Math.toRadians(20); // this is set to be correct where 90 is up and 0 is straight out
+
+        public static double shufflePulsePeriod = 1.5; // 
     }
 
     public static class TraverseSettings {
@@ -61,7 +63,7 @@ public class Settings {
         public static double rollerMotorPower = 1.0; 
         public static double scoopMotorPower = 1.0;
 
-        public static double traversePulseFreq = 1; // times per second
+        
 
     }
 
