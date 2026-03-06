@@ -760,10 +760,8 @@ public class OuttakeSubsystem extends SubsystemBase {
                 }
             }
 
-
-
-
-            TARGET = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), Yval, ZoneConstants.allianceHub.getZ());
+            //Uses alliance hub as the regression already accounts for height
+            TARGET = new Translation3d(ZoneConstants.allianceHub.getX(), Yval, ZoneConstants.allianceHub.getZ());
 
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
             TARGET = ZoneConstants.allianceHub;
