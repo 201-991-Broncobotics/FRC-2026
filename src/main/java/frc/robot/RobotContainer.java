@@ -162,10 +162,10 @@ public class RobotContainer {
         driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
         // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting))
         //temporary
-        operator.y().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));//, new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
+        operator.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));//, new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
         operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
-        driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
+        driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
 
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
         intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));

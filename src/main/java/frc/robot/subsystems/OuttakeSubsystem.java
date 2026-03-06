@@ -16,12 +16,10 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
-import com.pathplanner.lib.path.RotationTarget;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -38,17 +36,13 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.AutoDrivingConstants;
 import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings;
-import frc.robot.Settings.AutoTargetingSettings;
-import frc.robot.Settings.OuttakeTrajectorySettings;
 import frc.robot.Settings.Traj;
 import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.ElapsedTime;
@@ -56,19 +50,12 @@ import frc.robot.utility.Functions;
 import frc.robot.utility.LimelightHelpers;
 import frc.robot.utility.ThroughBoreEncoder;
 import frc.robot.utility.Vector2d;
-import frc.robot.utility.ElapsedTime.Resolution;
 import frc.robot.utility.LimelightHelpers.LimelightResults;
 import frc.robot.utility.Zoning.Zoning;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Optional;
-import java.util.Vector;
 import java.util.function.DoubleSupplier;
-
-import org.apache.commons.math3.fitting.PolynomialCurveFitter;
-import org.apache.commons.math3.fitting.WeightedObservedPoint;
-import org.apache.commons.math3.analysis.polynomials.*;
 
 public class OuttakeSubsystem extends SubsystemBase {
 
@@ -84,20 +71,12 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double lastkP, lastkI, lastkD, lastkS, lastkV, lastkA, 
                    lastTkP, lastTkI, lastTkD, lastTkS, lastTkV, lastPkP, lastPkI, lastPkD;
     private Vector2d distanceVector;  
-    private PolynomialCurveFitter regression; 
-    private PolynomialFunction function;
-    private Collection<WeightedObservedPoint> table; 
-    private WeightedObservedPoint 
-            p1, p2, p3, p4, p5,
-            p6, p7, p8, p9, p10; 
     private LimelightResults results; 
     private SwerveDriveState RobotState;
     private CommandSwerveDrivetrain drivetrain;
     private double FrameTime = 0.1;
     private ElapsedTime FrameTimer;
     private boolean justToggledTuning = false;
-    private double lastSimSolveTime = 0;
-    private double[] lastSimTraj = new double[] {0,0,0,0,0}; // launch angle, launch vel, target dist, target height, flight time
     private final VelocityVoltage flywheelVelocityRequest = new VelocityVoltage(0);
     private CommandXboxController controller;
     private Optional<Alliance> alliance;
@@ -133,6 +112,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     
     private ArrayList<Double> averageTurntableAngle = new ArrayList(), averageFlywheelRPM = new ArrayList(), averageHoodAngle = new ArrayList();
     private double[] averageData = new double[]{0, 0, 0};
+
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
         this.drivetrain = Drivetrain;
@@ -300,6 +280,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         } else TARGET = ZoneConstants.blueHub;
     }
 
+
     public void update(){
 
         // CONTROLLS
@@ -334,6 +315,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         TargetTurretAngle += MathUtil.applyDeadband(turretControl, 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
     
+
+        
         lastTargettingData = getTargettingData(TARGET, 0, 0); // turret, flywheel, hood, air time
 
         averageTurntableAngle.add(lastTargettingData[0]);
@@ -363,7 +346,8 @@ public class OuttakeSubsystem extends SubsystemBase {
             } else {
                 if (Math.abs(CurrentTurretAngle.getAsDouble() - averageData[0]) > TurretSettings.TurntableDeadband) TargetTurretAngle = averageData[0];
                 if (Math.abs(CurrentFlywheelRPM.getAsDouble() - averageData[1]) > TurretSettings.FlywheelDeadband) TargetFlywheelRPM = averageData[1];
-                if (Math.abs(CurrentHoodAngle.getAsDouble() - averageData[2]) > TurretSettings.HoodDeadband) TargetHoodAngle = averageData[2];
+                // if (Math.abs(CurrentHoodAngle.getAsDouble() - averageData[2]) > TurretSettings.HoodDeadband) TargetHoodAngle = averageData[2];
+                TargetHoodAngle = lastTargettingData[2]; // hood can be as precise as possible
             }
             
             // TURNTABLE
@@ -485,7 +469,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     public double[] getTargettingData(Translation3d Target, double TargetForwardOffset, double TargetVerticleOffset, boolean aimHigh) { // TargetForwardOffset is so we can make it always aim for the back half of the goal
 
         //Get Starting Airtime
-        Translation2d offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+        Translation2d offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose().getTranslation());
         Translation3d relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
         
         SmartDashboard.putString("relative Goal Pose", Functions.stringifyTrans(relativeGoalPose));
@@ -493,24 +477,25 @@ public class OuttakeSubsystem extends SubsystemBase {
         double[] finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
         double airTime = finalRegression[3];
         Translation3d newTarget = Target;
-        for (int i = 1; i <= 0; i++) {
+        for (int i = 1; i <= 5; i++) {
             // code that moves relativeGoalPose based on airtime
-            Translation2d velocity = new Translation2d(RobotState.Speeds.vxMetersPerSecond, RobotState.Speeds.vyMetersPerSecond);
-            Translation2d acceleration = new Translation2d(CommandSwerveDrivetrain.gyroData.accelX, CommandSwerveDrivetrain.gyroData.accelY);
+            Translation2d velocity = DrivingProfiles.getTurretVelocity();
+            Translation2d acceleration = DrivingProfiles.getTurretAcceleration().toTranslation2d();
 
-            // d = v*t + 0.5*a*t^2
+            velocity = velocity.plus(acceleration.times(FrameTime)); // btw the ball doesn't keep accelerating with the robots accel after it leaves the robot, so technically we can only use it to estimate what the velocity will be in the next frame
             Translation2d distanceFromVelocity = velocity.times(airTime);
-            Translation2d distanceFromAcceleration = acceleration.times(0.5 * airTime * airTime);
-            Translation2d distanceTraveled = distanceFromVelocity.plus(distanceFromAcceleration);
 
-            newTarget = Target.minus(new Translation3d(distanceTraveled));
+            newTarget = Target.minus(new Translation3d(distanceFromVelocity));
 
-            offsetTranslation2d = newTarget.toTranslation2d().minus(DrivingProfiles.getTurretPose(drivetrain.getState().Pose).getTranslation());
+            offsetTranslation2d = newTarget.toTranslation2d().minus(DrivingProfiles.getTurretPose().getTranslation());
             relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
 
             finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
             airTime = finalRegression[3];
         }
+
+        SmartDashboard.putNumber("TargettingData final airtime", airTime);
+        SmartDashboard.putString("TargettingData final target pose", Functions.stringifyTrans(relativeGoalPose));
         
         return finalRegression; // Target Turret Angle, Target Flywheel rpm (rough estimate), Target hood angle (based on current flywheel rpm), Estimated Air time
     }
@@ -580,7 +565,9 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }    
 
-    public void tuneFlywheel(){
+    public void toggleShooting(){
+        Shooting = !Shooting;
+        /* 
         if (!justToggledTuning) {
             Shooting = true;
             // rightFlyMotor.setControl
@@ -591,11 +578,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             //stopFlywheels();
             Shooting = false;
             justToggledTuning = false;
-        }
-    }
-
-    public void tuneTurntable(){
-        turntableMotor.setControl(new MotionMagicDutyCycle(TurretSettings.targetTurntableAngle / 360 * 10)); 
+        }*/
     }
 
 
@@ -737,80 +720,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         return (-4.954998 * Math.sin(launchAngle - Math.toRadians(25.140344)) + 1.71) / 39.37;
     }
 
-    // REALLY COMPLICATED MATH STUFF - mostly chatgpt
-
-    double solveForAngle(double targetDistance, double targetHeight, double currentLaunchVel, double currentFlywheelRPM) {
-        ElapsedTime timer = new ElapsedTime(Resolution.MILLISECONDS);
-        timer.reset();
-
-        double low = TurretConstants.minHoodAngle;
-        double high = TurretConstants.maxHoodAngle;
-        double tolerance = OuttakeTrajectorySettings.SolutionTolerance;
-
-        for (int i = 0; i < 25; i++) {
-            double mid = (low + high) / 2.0;
-
-            double yAtX = simulateTrajectory(mid, currentLaunchVel, targetDistance, currentFlywheelRPM * 2*Math.PI/60);
-
-            double error = yAtX - targetHeight;
-
-            if (error > 0) {
-                high = mid;
-            } else {
-                low = mid;
-            }
-
-            if (Math.abs(error) < tolerance) {
-                break;
-            }
-        }
-
-        lastSimSolveTime = timer.time();
-        return (low + high) / 2.0;
-    }
-
-    double solveForAngle(double targetDistance, double targetHeight, double currentFlywheelRPM) {
-        return solveForAngle(targetDistance, targetHeight, getTargetLaunchVelocity(currentFlywheelRPM), currentFlywheelRPM);
-    }
-
-
-    double simulateTrajectory(double launchAngle, double launchVelocity, double targetDistance, double flywheelAngVel) { // meters and radians
-        double flightTime = 0;
-        
-        double x = getLaunchForward(launchAngle);
-        double y = getLaunchHeight(launchAngle);
-
-        double vx = launchVelocity * Math.cos(launchAngle);
-        double vy = launchVelocity * Math.sin(launchAngle);
-
-        double ballSpinOmega = OuttakeTrajectorySettings.SpinTransferEfficiency * (flywheelAngVel * /*roller radius*/(2/39.37) / /*ball radius*/(5.91/39.37/2)); // assumed constant across trajectory
-
-        while (x < targetDistance && y > 0) {
-            double v = Math.sqrt(vx*vx + vy*vy);
-
-            double dragAx = -OuttakeTrajectorySettings.KD * v * vx;
-            double dragAy = -OuttakeTrajectorySettings.KD * v * vy;
-
-            double liftAx = -OuttakeTrajectorySettings.KL * ballSpinOmega * (5.91 / 39.37 / 2) * vy;
-            double liftAy =  OuttakeTrajectorySettings.KL * ballSpinOmega * (5.91 / 39.37 / 2) * vx;
-
-            double ax = dragAx + liftAx;
-            double ay = -(9.81) + dragAy + liftAy;
-
-            vx += ax * OuttakeTrajectorySettings.dt;
-            vy += ay * OuttakeTrajectorySettings.dt;
-            x += vx * OuttakeTrajectorySettings.dt;
-            y += vy * OuttakeTrajectorySettings.dt;
-            flightTime += OuttakeTrajectorySettings.dt;
-        }
-        lastSimTraj[4] = flightTime;
-        return y;
-    }
-
-
-    public void testRunSim() {
-        solveForAngle(OuttakeTrajectorySettings.targetDistance, OuttakeTrajectorySettings.targetHeight, TargetFlywheelRPM);
-    }
 
     @Override
     public void periodic(){
@@ -819,7 +728,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         // 1. Calculate and store poses once to save CPU cycles
         Pose2d robotPose = drivetrain.getState().Pose;
-        Pose2d turretPose = DrivingProfiles.getTurretPose(robotPose);
+        Pose2d turretPose = DrivingProfiles.getTurretPose();
 
         // 4. Logic: Start shooting if we left the trench and are in the alliance zone
         if (!TurretSettings.tuningMode && (FlyZoning.ifLeftZones(turretPose) && !Shooting && ZoneConstants.allianceZone.inZones(turretPose)) || (ZoneConstants.allianceZone.ifEnteredZones(turretPose) && !Shooting && !FlyZoning.inZones(turretPose))) {
@@ -839,6 +748,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         if(!ZoneConstants.allianceZone.getZoningState() && Shooting && TARGET.equals(ZoneConstants.allianceHub)){
             double Yval = robotPose.getY();
 
+            // TODO: Bruh I already made stuff to counter this like the TargetForwardOffset and just building this into the regression, if i understand what this is doing
             if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
                 if(ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() + ZoneConstants.hubWidth)) < ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() - ZoneConstants.hubWidth))){
                     //if its closer to the right of the hub shoot there
@@ -847,6 +757,10 @@ public class OuttakeSubsystem extends SubsystemBase {
                     Yval = robotPose.getY() + ZoneConstants.hubWidth;
                 }
             }
+
+
+
+
             TARGET = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), Yval, ZoneConstants.allianceHub.getZ());
 
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
@@ -869,10 +783,10 @@ public class OuttakeSubsystem extends SubsystemBase {
         if (Settings.tuningTelemetryEnabled) {
 
             //Auto Lower
-            SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
-            SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
-            SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
-            SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(DrivingProfiles.getTurretPose(robotPose)));
+            SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(DrivingProfiles.getTurretPose()));
+            SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(DrivingProfiles.getTurretPose()));
+            SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(DrivingProfiles.getTurretPose()));
+            SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(DrivingProfiles.getTurretPose()));
             
 
             /*TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
@@ -931,7 +845,6 @@ public class OuttakeSubsystem extends SubsystemBase {
             //Counter for the balls - IDK if it gives radians or degrees
             double lastCounterAngle = counterAngle;
             counterAngle = throughBoreCounter.getRelativeAngle();
-            //AIDAN & MAEL TAKE A LOOK PLS
             if(!TurretSettings.reverseCounterDirection && (Math.abs(counterAngle) > TurretConstants.counterThreshold && Math.abs(lastCounterAngle) < TurretConstants.counterThreshold)){
 
                 ballsCounted++;
@@ -940,17 +853,6 @@ public class OuttakeSubsystem extends SubsystemBase {
                 ballsCounted++;
             }
 
-            /* 
-            SmartDashboard.putNumber("Last Traj Sim Solve Time (ms)", Math.round(lastSimSolveTime));
-            // launch angle, launch vel, target dist, target height, flight time
-            SmartDashboard.putString("Last Traj Sim", 
-                "angle: " + Functions.round(Math.toDegrees(lastSimTraj[0]), 2) + 
-                " vel: " + Functions.round(lastSimTraj[1], 2) + 
-                " dist: " + Functions.round(lastSimTraj[2] * 39.37, 2) + 
-                " height: " + Functions.round(lastSimTraj[3] * 39.37, 2)
-            );
-            SmartDashboard.putNumber("Last Traj Sim Flight Time (s)", Functions.round(lastSimTraj[4], 3));
-            */ 
         } catch (NullPointerException e) {
             // do nothing
         }

@@ -104,13 +104,12 @@ public class Settings {
         public static double tkP = 25; // turntable
         public static double tkI = 1; 
         public static double tkD = 0;  
-        public static double tkS = 1;
+        public static double tkS = 1.5;
         public static double tkV = 1;
         public static double hkP = 1; // hood
         public static double hkI = 0; 
         public static double hkD = 0; 
-        public static double setVelocities = 1000; // rpm
-        public static double targetTurntableAngle = 0; // degrees
+        public static double setVelocities = 2000; // rpm
 
         public static boolean autoLowerHood = true;
 
@@ -135,31 +134,6 @@ public class Settings {
         public static boolean tuningMode = false;
     }
 
-
-    public static class OuttakeTrajectorySettings {
-        public static double HubXOffset = 10.4;
-        public static double HubYOffset = 64;
-
-
-        //Im sorry but maybe I'm going to far with this
-        public static double Cd = 0.5; // drag coefficient - I might remove this
-        public static double kL = 1.5; // lift constant
-        public static double airDensity = 1.1; // kg/m^3
-
-        public static double KD = airDensity * (Math.PI * Math.pow(5.91/2.0, 2)) * Cd / (0.203+0.227); // (0.203+0.227) is average mass / 2 * 2
-        public static double KL = airDensity * (Math.PI * Math.pow(5.91/2.0, 2)) * kL / (0.203+0.227);
-        public static double SpinTransferEfficiency = 0.3; // related to how much backspin the ball will get relative to roller speed
-
-
-        // These change how many times the simulated trajectory is simulated
-        public static double dt = 0.002; // time step for trajectory prediction
-        public static double SolutionTolerance = 0.01; // how precise angle result is 
-
-
-
-        public static double targetDistance = 100; // inches
-        public static double targetHeight = 10; // inches
-    }
 
     public static class Traj { // prob don't need another class for outtake but like, it has a shorter name
         public static final double a1 = 0.0943943432755;

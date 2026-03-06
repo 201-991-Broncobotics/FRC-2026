@@ -11,7 +11,10 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -218,6 +221,8 @@ public class DrivingProfiles extends SubsystemBase {
         try {
             PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
+            // this limelight sucks too much
+            /* 
             if (LimelightPoseEstimate != null) {
                 double TurretAngle = OuttakeSubsystem.getTurretAngle();
                 // SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
@@ -231,7 +236,7 @@ public class DrivingProfiles extends SubsystemBase {
                 SmartDashboard.putString("REAL TURRET POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
-            }
+            }*/
 
             PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
             if (LimelightPoseEstimate2 != null) {
@@ -243,7 +248,7 @@ public class DrivingProfiles extends SubsystemBase {
 
             RobotPose = drivetrain.getState().Pose;
             SmartDashboard.putString("ROBOT POSE:", "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3));
-            SmartDashboard.putString("TURRET POSE:", Functions.stringifyPose(getTurretPose(RobotPose)));
+            SmartDashboard.putString("TURRET POSE:", Functions.stringifyPose(getTurretPose()));
             
 
 
@@ -257,9 +262,9 @@ public class DrivingProfiles extends SubsystemBase {
             //SmartDashboard.putNumber("AUTO Driving forward", autoForwardOutput);
             //SmartDashboard.putNumber("AUTO Driving strafe", autoStrafeOutput);
             //SmartDashboard.putNumber("AUTO Driving rotation", autoRotationOutput);
-            SmartDashboard.putNumber("forward", forwardOutput);
-            SmartDashboard.putNumber("strafe", strafeOutput);
-            SmartDashboard.putNumber("rotation", rotationOutput);
+            //SmartDashboard.putNumber("forward", forwardOutput);
+            //SmartDashboard.putNumber("strafe", strafeOutput);
+            //SmartDashboard.putNumber("rotation", rotationOutput);
             
 
             BatteryVoltage = RobotController.getBatteryVoltage();
@@ -293,37 +298,45 @@ public class DrivingProfiles extends SubsystemBase {
             AutoTargetingSettings.AutoDrivingPower = SmartDashboard.getNumber("Auto Driving Power", AutoTargetingSettings.AutoDrivingPower);
             // AutoTargetingSettings.targetPercentageOfVisionBlocked = SmartDashboard.getNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked); */
 
-            /* 
-            SmartDashboard.putNumber("Pigeon accel X", gyroData.accelX);
-            SmartDashboard.putNumber("Pigeon accel Y", gyroData.accelY);
-            SmartDashboard.putNumber("Pigeon accel Z", gyroData.accelZ);
-            SmartDashboard.putNumber("Pigeon pitch", gyroData.pitch);
-            SmartDashboard.putNumber("Pigeon roll", gyroData.roll);
             
-            SmartDashboard.putNumber("Pigeon angVel X", gyroData.angVelX);
-            SmartDashboard.putNumber("Pigeon angVel Y", gyroData.angVelY);
-            SmartDashboard.putNumber("Pigeon angVel Z", gyroData.angVelZ); */
+            SmartDashboard.putString("Pigeon accel", Functions.stringifyTrans(new Translation3d(gyroData.accelX, gyroData.accelY, gyroData.accelZ)));
+            SmartDashboard.putString("Pigeon angVel", Functions.stringifyTrans(new Translation3d(gyroData.angVelX, gyroData.angVelY, gyroData.angVelZ)));
+            SmartDashboard.putNumber("Pigeon pitch", Functions.round(Math.toDegrees(gyroData.pitch), 2));
+            SmartDashboard.putNumber("Pigeon roll", Functions.round(Math.toDegrees(gyroData.roll), 2));
+            SmartDashboard.putNumber("Pigeon yaw", Functions.round(Math.toDegrees(gyroData.yaw), 2));
+            
         }
-
-        
-        
-        
-        
     }
 
-    public static Pose2d getTurretPose(Pose2d robotPose2d) {
-        // 1. Translation: X is backward (negative), Y is distance from the center.
-        // Note: Assuming positive Y is to the "left" of the robot. 
-        // If the turret is to the right, make 0.237765 negative.
+    public static Pose2d getTurretPose() {
         Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
         
-        // 2. Rotation: The turret's mounting angle relative to the robot's front
-        Rotation2d turretRotation = Rotation2d.fromDegrees(55.885527);
-        
-        // 3. Create the transform from the center of the robot to the turret
-        Transform2d robotToTurret = new Transform2d(turretTranslation, turretRotation);
-        
-        // 4. Apply the transform to get the turret's absolute pose on the field
-        return robotPose2d.transformBy(robotToTurret);
+        return (drivetrain.getState().Pose).transformBy(new Transform2d(turretTranslation, Rotation2d.fromDegrees(55.885527)));
+    }
+
+    public static Translation2d getTurretVelocity() { // Field Centric
+        Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
+
+        double angVel = drivetrain.getState().Speeds.omegaRadiansPerSecond;
+
+        Translation2d robotVelocity = drivetrain.getFieldCentricVelocity().toTranslation2d();
+
+        Translation2d rotationalVelocity = new Translation2d(-angVel * turretTranslation.getY(), angVel * turretTranslation.getX());
+
+        return robotVelocity.plus(rotationalVelocity.rotateBy(drivetrain.getState().Pose.getRotation()));
+}
+
+    public static Translation3d getTurretAcceleration() { // Field Centric
+        Translation3d robotAccel = drivetrain.getFieldCentricAcceleration();
+        double angAccel = drivetrain.getAngAcceleration().getRadians(); 
+
+        Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
+
+        double angVel = drivetrain.getState().Speeds.omegaRadiansPerSecond;
+
+        double ax = - angAccel * turretTranslation.getY() - angVel * angVel * turretTranslation.getX();
+        double ay = angAccel * turretTranslation.getX() - angVel * angVel * turretTranslation.getY();
+
+        return robotAccel.plus(new Translation3d(ax, ay, 0));
     }
 }

@@ -24,6 +24,8 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -41,6 +43,7 @@ import frc.robot.Constants;
 import frc.robot.Settings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.utility.ElapsedTime;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -65,6 +68,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    private double lastAngVelX = 0, lastAngVelY = 0, lastAngVelZ = 0;
+    private ElapsedTime gyroTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -338,17 +344,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
 
         // Also update pigeon acceleration and rotation 
-        gyroData.accelX = getPigeon2().getAccelerationX().getValueAsDouble();
-        gyroData.accelY = getPigeon2().getAccelerationY().getValueAsDouble();
-        gyroData.accelZ = getPigeon2().getAccelerationZ().getValueAsDouble();
+        gyroData.accelX = getPigeon2().getAccelerationX().getValueAsDouble() * 9.80665;
+        gyroData.accelY = getPigeon2().getAccelerationY().getValueAsDouble() * 9.80665;
+        gyroData.accelZ = getPigeon2().getAccelerationZ().getValueAsDouble() * 9.80665;
 
-        gyroData.pitch = getPigeon2().getPitch().getValueAsDouble();
-        gyroData.roll = getPigeon2().getRoll().getValueAsDouble();
-        gyroData.yaw = getPigeon2().getYaw().getValueAsDouble();
+        gyroData.pitch = Math.toRadians(getPigeon2().getPitch().getValueAsDouble());
+        gyroData.roll = Math.toRadians(getPigeon2().getRoll().getValueAsDouble());
+        gyroData.yaw = Math.toRadians(getPigeon2().getYaw().getValueAsDouble());
 
-        gyroData.angVelX = getPigeon2().getAngularVelocityXDevice().getValueAsDouble();
-        gyroData.angVelY = getPigeon2().getAngularVelocityYDevice().getValueAsDouble();
-        gyroData.angVelZ = getPigeon2().getAngularVelocityZDevice().getValueAsDouble();
+        gyroData.angVelX = Math.toRadians(getPigeon2().getAngularVelocityXDevice().getValueAsDouble());
+        gyroData.angVelY = Math.toRadians(getPigeon2().getAngularVelocityYDevice().getValueAsDouble());
+        gyroData.angVelZ = Math.toRadians(getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+
+        double FrameTime = gyroTimer.time();
+        gyroTimer.reset();
+        gyroData.angAccelX = (lastAngVelX - gyroData.angVelX) * FrameTime;
+        gyroData.angAccelY = (lastAngVelY - gyroData.angVelY) * FrameTime;
+        gyroData.angAccelZ = (lastAngVelZ - gyroData.angVelZ) * FrameTime;
     }
 
     private void startSimThread() {
@@ -412,8 +424,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
     }
 
+    public Translation3d getFieldCentricAcceleration() {
+        // pigeon: +x is down, +y is left, +z is forward for current robot
+        //robot relative is x is forward, y is left, and z is up
+        Translation3d robotRelative = new Translation3d(gyroData.accelZ, gyroData.accelY, -gyroData.accelX);
+        return robotRelative.rotateBy(new Rotation3d(getState().Pose.getRotation()));
+    }
 
-    public static class gyroData {
+    public Translation3d getFieldCentricVelocity() {
+        Translation3d robotRelative = new Translation3d(getState().Speeds.vxMetersPerSecond, getState().Speeds.vyMetersPerSecond, 0);
+        return robotRelative.rotateBy(new Rotation3d(getState().Pose.getRotation()));
+    }
+
+    public Rotation2d getAngAcceleration() {
+        return new Rotation2d(gyroData.angAccelX);
+    }
+
+
+    public static class gyroData { // accelerations are in Gs 
         public static double accelX = 0;
         public static double accelY = 0;
         public static double accelZ = 0;
@@ -423,5 +451,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         public static double angVelX = 0;
         public static double angVelY = 0;
         public static double angVelZ = 0;
+        public static double angAccelX = 0;
+        public static double angAccelY = 0;
+        public static double angAccelZ = 0;
     }
 }
