@@ -7,6 +7,7 @@ package frc.robot;
 import frc.robot.auton.Autos;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ZoneConstants;
+import frc.robot.Settings.RobotSettings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.ClimbingSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -38,14 +39,20 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    public static double MaxAngularRate = RotationsPerSecond.of(1.0).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
+                                                                                        // speed
+    public static double MaxAngularRate = RotationsPerSecond.of(1.0).in(RadiansPerSecond); // 3/4 of a rotation per
+                                                                                           // second max angular
+                                                                                           // velocity
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.02).withRotationalDeadband(MaxAngularRate * 0.02)
@@ -56,36 +63,38 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
-    private final CommandXboxController driver =
-        new CommandXboxController(OperatorConstants.driverControllerPort);
-    private final CommandXboxController operator = 
-        new CommandXboxController(OperatorConstants.operatorControllerPort); 
+    private final CommandXboxController driver = new CommandXboxController(OperatorConstants.driverControllerPort);
+    private final CommandXboxController operator = new CommandXboxController(OperatorConstants.operatorControllerPort);
 
-    //private final OverrideController override = new OverrideController(5,driver,operator);
+    private final OverrideController override = new OverrideController(5,driver,operator);
 
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    //private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+    // private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem(drivetrain);
     private final TraverseSubsystem traverseSubsystem = new TraverseSubsystem();
-    private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain, operator); 
-    private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem(); 
+    private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain, operator);
+    private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem();
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 
     private final SendableChooser<Command> autoChooser;
 
-
-    /** The container for the robot. Contains subsystems, OI devices, and commands. */
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
     public RobotContainer() {
         // Configure the trigger bindings
 
-        // CameraServer.startAutomaticCapture("Limelight", "http://limelight.local:5800/stream.mjpg");
-
-        
+        // CameraServer.startAutomaticCapture("Limelight",
+        // "http://limelight.local:5800/stream.mjpg");
 
         drivetrain.configureAutoBuilder();
         autoChooser = AutoBuilder.buildAutoChooser("Example Path");
         SmartDashboard.putData("Auto Mode:", autoChooser);
+
+        if(RobotSettings.overrideMode){
+            outtakeSubsystem.setController(override);
+        }
 
         configureBindings();
     }
@@ -101,6 +110,7 @@ public class RobotContainer {
      */
     private void configureBindings() {
 
+        if(!RobotSettings.overrideMode){
         //DRIVER CONTROLS
         drivingProfile.setUpControllerInputs(
             () -> -driver.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
@@ -170,13 +180,13 @@ public class RobotContainer {
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
         intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));
 
-        //Override Version
-         
-        /*//DRIVE CONTROLS
+        } else {
+        //Override Version 
+        //DRIVE CONTROLS
         drivingProfile.setUpControllerInputs(
             () -> -override.getLeftY(),
             () -> override.getLeftX(),
-            () -> -override.getightX(), 
+            () -> -override.getRightX(), 
             () -> 0.3 + 0.7 * override.getRightTriggerAxis(), 
             2, 2
         );
@@ -202,7 +212,7 @@ public class RobotContainer {
         //Turret (triggers)
 
         //Flywheel Speed (Automated or oprator POV up + down) + Flywheel (A)
-        override.a().toggleOnTrue(new ParallelCommandGroup(new InstantCommand(outtakeSubsystem::tuneFlywheel), new InstantCommand(intakeSubsystem::aidFly)));
+        //override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel));
 
         //Hood (Right Up + Down)
 
@@ -223,7 +233,7 @@ public class RobotContainer {
         override.x().and(override.rightBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
 
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
-        */
+        }
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -234,13 +244,16 @@ public class RobotContainer {
 
     }
 
-    public void start(){//Stops the crashing
+    public void start() {// Stops the crashing
         Optional<Alliance> alliance = DriverStation.getAlliance();
-        ZoneConstants.allianceZone.setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
+        ZoneConstants.allianceZone
+                .setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
         ZoneConstants.allianceHub = alliance.get() == Alliance.Red ? ZoneConstants.redHub : ZoneConstants.blueHub;
 
-        if (alliance.get() == Alliance.Red) drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180))); 
-        else drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0))); 
+        if (alliance.get() == Alliance.Red)
+            drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180)));
+        else
+            drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0)));
 
         outtakeSubsystem.start();
     }
@@ -252,6 +265,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return autoChooser.getSelected(); //Autos.exampleAuto(m_exampleSubsystem);
+        return autoChooser.getSelected(); // Autos.exampleAuto(m_exampleSubsystem);
     }
 }

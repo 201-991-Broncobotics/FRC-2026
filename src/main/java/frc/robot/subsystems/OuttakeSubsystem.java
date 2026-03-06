@@ -43,6 +43,7 @@ import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings;
+import frc.robot.Settings.RobotSettings;
 import frc.robot.Settings.Traj;
 import frc.robot.Settings.TurretSettings;
 import frc.robot.utility.ElapsedTime;
@@ -282,29 +283,30 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
     public void update(){
-
-        // CONTROLLS
-        if (controller.povUp().getAsBoolean()) {
-            if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
-            justChangedPower = true;
-        } else if (controller.povDown().getAsBoolean()) {
-            if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
-            justChangedPower = true;
-        } else justChangedPower = false;
-
         double hoodControl = -controller.getRightY();
         double turretControl = controller.getLeftX();
 
-        /*//Override Controls
-        if (controller.povUp().getAsBoolean()) {
-            if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
-            justChangedPower = true;
-        } else if (controller.povDown().getAsBoolean()) {
-            if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
-            justChangedPower = true;
-        } else justChangedPower = false;
+        if(!RobotSettings.overrideMode){
+            // CONTROLLS
+            if (controller.povUp().getAsBoolean()) {
+                if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
+                justChangedPower = true;
+            } else if (controller.povDown().getAsBoolean()) {
+                if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
+                justChangedPower = true;
+            } else justChangedPower = false;
+        } else {
+            //Override Controls
+            if (controller.povUp().getAsBoolean()) {
+                if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
+                justChangedPower = true;
+            } else if (controller.povDown().getAsBoolean()) {
+                if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
+                justChangedPower = true;
+            } else justChangedPower = false;
 
-        double turretControl = controller.getCombinedTriggerAxis();*/
+            turretControl = controller.getRightTriggerAxis() - controller.getLeftTriggerAxis();
+        }
 
 
         // TargetFlywheelRPM = TurretSettings.setVelocities;
@@ -748,7 +750,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         if(!ZoneConstants.allianceZone.getZoningState() && Shooting && TARGET.equals(ZoneConstants.allianceHub)){
             double Yval = robotPose.getY();
 
-            // TODO: Bruh I already made stuff to counter this like the TargetForwardOffset and just building this into the regression, if i understand what this is doing
+            // TODO: Bruh I already made stuff to counter this like the TargetForwardOffset and just building this into the regression, if i understand what this is doing - Alrs
             if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
                 if(ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() + ZoneConstants.hubWidth)) < ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() - ZoneConstants.hubWidth))){
                     //if its closer to the right of the hub shoot there
@@ -869,5 +871,9 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     public int getBallsCounted(){
         return ballsCounted;
+    }
+
+    public void setController(CommandXboxController newController){
+        controller = newController;
     }
 }
