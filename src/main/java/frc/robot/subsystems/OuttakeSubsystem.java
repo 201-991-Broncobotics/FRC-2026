@@ -511,13 +511,6 @@ public class OuttakeSubsystem extends SubsystemBase {
             finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
             airTime = finalRegression[3];
         }
-
-        /*Dead Zone
-        if(Math.abs(Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2)) < TurretConstants.AutoTurretDeadband){
-            finalRegression[0] = getAbsoluteTurretAngle();
-        }*/
-
-        
         
         return finalRegression; // Target Turret Angle, Target Flywheel rpm (rough estimate), Target hood angle (based on current flywheel rpm), Estimated Air time
     }
@@ -846,14 +839,14 @@ public class OuttakeSubsystem extends SubsystemBase {
         if(!ZoneConstants.allianceZone.getZoningState() && Shooting && TARGET.equals(ZoneConstants.allianceHub)){
             double Yval = robotPose.getY();
 
-            /*if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
+            if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
                 if(ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() + ZoneConstants.hubWidth)) < ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() - ZoneConstants.hubWidth))){
                     //if its closer to the right of the hub shoot there
                     Yval = robotPose.getY() - ZoneConstants.hubWidth;
                 } else {
                     Yval = robotPose.getY() + ZoneConstants.hubWidth;
                 }
-            }*/
+            }
             TARGET = new Translation3d(ZoneConstants.allianceZone.getPose2d().getX(), Yval, ZoneConstants.allianceHub.getZ());
 
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
