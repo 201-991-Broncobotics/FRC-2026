@@ -46,7 +46,9 @@ public class IntakeSubsystem extends SubsystemBase {
     private Zoning rampZoneing = new Zoning(ZoneConstants.RampZones);
     private Zoning ballZoning = new Zoning(ZoneConstants.ballsZone);
 
-    private double targetAngle;
+    private double targetPivotAngle;
+
+    private double TargetIntakePower = 0;
 
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
@@ -127,40 +129,30 @@ public class IntakeSubsystem extends SubsystemBase {
             IntakeConstants.minPivotAngle = IntakeConstants.highLimitAngle;
             IntakeConstants.maxPivotAngle = IntakeConstants.lowLimitAngle;
         }
+
+        TargetIntakePower = 0;
       
     }
 
-    public void feed(){
-        intakeMotor.set(IntakeSettings.runningPower); 
+    public void update() {
+        intakeMotor.set(TargetIntakePower); 
     }
 
-    public void stopRollers(){
-        intakeMotor.stopMotor();
-    }
+    public void feed(){ TargetIntakePower = IntakeSettings.runningPower; }
+    public void stopRollers(){ TargetIntakePower = 0; }
+    public void reverseFeed(){ TargetIntakePower = IntakeSettings.reversePower; }
 
-    public void reverseFeed(){
-        intakeMotor.set(IntakeSettings.reversePower);
-    }
-
-    public void lift(){
-        setPivotAngle(IntakeConstants.highLimitAngle);
-    }
-
-    public void drop(){
-        setPivotAngle(IntakeConstants.lowLimitAngle);
-    }
-
-    public void aidFly(){
-        setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle);
-    }
+    public void lift(){ setPivotAngle(IntakeConstants.highLimitAngle); }
+    public void drop(){ setPivotAngle(IntakeConstants.lowLimitAngle); }
+    // public void aidFly(){ setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle); }
 
     public void setPivotAngle(double angle){
-        targetAngle = angle;
-
-        // if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;}
-
+        targetPivotAngle = angle;
         angle = Math.min(Math.max(angle, IntakeConstants.minPivotAngle), IntakeConstants.maxPivotAngle);
 
+        // if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;} // we don't need this anymore
+
+        
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
         //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
@@ -301,7 +293,7 @@ public class IntakeSubsystem extends SubsystemBase {
             IntakeSettings.pivotkI = SmartDashboard.getNumber("Pivot kI", IntakeSettings.pivotkI); 
             IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
             IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
-            IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot Error", Math.toDegrees(targetAngle - CurrentPivotPosition.getAsDouble())); 
+            IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot Error", Math.toDegrees(targetPivotAngle - CurrentPivotPosition.getAsDouble())); 
         }
         
 
