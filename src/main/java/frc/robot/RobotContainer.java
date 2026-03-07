@@ -249,6 +249,7 @@ public class RobotContainer {
         ZoneConstants.allianceZone
                 .setZone((alliance.get() == Alliance.Red) ? ZoneConstants.redZone : ZoneConstants.blueZone);
         ZoneConstants.allianceHub = alliance.get() == Alliance.Red ? ZoneConstants.redHub : ZoneConstants.blueHub;
+        ZoneConstants.alliance = alliance.get() == Alliance.Blue;
 
         if (alliance.get() == Alliance.Red)
             drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(180)));

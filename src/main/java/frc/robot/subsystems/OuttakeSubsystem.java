@@ -722,6 +722,49 @@ public class OuttakeSubsystem extends SubsystemBase {
         return (-4.954998 * Math.sin(launchAngle - Math.toRadians(25.140344)) + 1.71) / 39.37;
     }
 
+     /**
+     * Calculates the point L using Translation2D inputs.
+     * Includes a safety check for points inside the radius.
+     * * @param c The center point of the hub
+     * @param q The shooting point
+     * @param tolerance The tolerance of the circle
+     * @return A new Translation2D representing point L, or null if Q is inside R
+     */
+    public Translation2d calculateTargetForHub(Translation2d c, Translation2d q, double tolerance) {
+        double a; //Alliance 1 is Red, -1 is Blue
+        if(ZoneConstants.alliance){
+            a = -1;
+        } else {
+            a = 1;
+        }
+
+        double r = 1.13383893709 + (tolerance);//Calculated in the desmos
+
+        double dx = q.getX() - c.getX();
+        double dy = q.getY() - c.getY();
+        double dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Safety Check: acos(x) is undefined if x > 1
+        if (dist < r) {
+            return null; // Or handle as an error/default to q
+        }
+
+        // F(C, Q, R) components
+        double thetaX = Math.atan2(dy, dx);
+        double thetaY = Math.acos(r / dist);
+
+        // {C.y > 0 : 1, -1}
+        double sign = (dy > 0) ? 1.0 : -1.0;
+
+        // Combined Angle P(..., F(...))
+        double phi = thetaX + (a * sign * thetaY);
+
+        // Resulting Point L
+        double lx = c.getX() + r * Math.cos(phi);
+        double ly = c.getY() + r * Math.sin(phi);
+
+        return new Translation2d(lx, ly);
+    }
 
     @Override
     public void periodic(){
@@ -747,21 +790,11 @@ public class OuttakeSubsystem extends SubsystemBase {
             Shooting = false; 
         }
 
-        if(!ZoneConstants.allianceZone.getZoningState() && Shooting && TARGET.equals(ZoneConstants.allianceHub)){
-            double Yval = robotPose.getY();
-
-            // TODO: Bruh I already made stuff to counter this like the TargetForwardOffset and just building this into the regression, if i understand what this is doing - Alrs
-            if (ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY())) < ZoneConstants.hubWidth) { // If its too close to the alloiance hub counter act for that.
-                if(ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() + ZoneConstants.hubWidth)) < ZoneConstants.allianceHub.toTranslation2d().getDistance(new Translation2d(ZoneConstants.allianceHub.getX(), robotPose.getY() - ZoneConstants.hubWidth))){
-                    //if its closer to the right of the hub shoot there
-                    Yval = robotPose.getY() - ZoneConstants.hubWidth;
-                } else {
-                    Yval = robotPose.getY() + ZoneConstants.hubWidth;
-                }
-            }
+        if(!ZoneConstants.allianceZone.getZoningState() && Shooting && TARGET.equals(ZoneConstants.allianceHub)){  
+            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.25);
 
             //Uses alliance hub as the regression already accounts for height
-            TARGET = new Translation3d(ZoneConstants.allianceHub.getX(), Yval, ZoneConstants.allianceHub.getZ());
+            TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
 
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
             TARGET = ZoneConstants.allianceHub;
