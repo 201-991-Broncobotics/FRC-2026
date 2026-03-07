@@ -60,6 +60,15 @@ import java.util.function.DoubleSupplier;
 
 public class OuttakeSubsystem extends SubsystemBase {
 
+    public static enum States {
+        Off,
+        AutoLowered,
+        AutoTargetingHub,
+        AutoTargetingAllianceZone
+    }
+
+    public static States states = States.Off;
+
     private TalonFX leftFlyMotor,rightFlyMotor, turntableMotor;
     private TalonFXConfiguration flywheelConfig, turntableConfig; 
     // private final PositionVoltage turretPositionRequest = new PositionVoltage(0);
@@ -389,16 +398,17 @@ public class OuttakeSubsystem extends SubsystemBase {
                 // Normal Hood operation
                 setHood(TargetHoodAngle);
             }
+
+            setTurntable(TargetTurretAngle);
             
         } else { // Not shooting
             
             
             stopFlywheels();
             setHood(TurretConstants.minHoodAngle);
+            setTurntable(Math.toDegrees(180));
             //DrivingProfiles.allowedToUseLimelight = true;
         }
-
-        setTurntable(TargetTurretAngle);
 
 
         /*
@@ -800,6 +810,8 @@ public class OuttakeSubsystem extends SubsystemBase {
             TARGET = ZoneConstants.allianceHub;
 
         }
+
+        if(IntakeSubsystem.states == IntakeSubsystem.States.Up && Shooting) Shooting = false;
 
 
         if (drivetrain != null) {

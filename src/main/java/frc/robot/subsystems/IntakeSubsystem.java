@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.lang.Thread.State;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.StatusCode;
@@ -28,6 +29,15 @@ import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Zoning.Zoning;
 
 public class IntakeSubsystem extends SubsystemBase {
+    public enum States {
+        Up,
+        DownAndOn,
+        DownAndOff,
+        SemiUp
+    }
+
+    public static States states = States.Up;
+
 
     private TalonFX intakeMotor, rightPivotMotor, leftPivotMotor; 
     private TalonFXConfiguration intakeMotorConfig, pivotMotorConfig;
