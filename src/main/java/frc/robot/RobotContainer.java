@@ -66,7 +66,7 @@ public class RobotContainer {
     private final CommandXboxController driver = new CommandXboxController(OperatorConstants.driverControllerPort);
     private final CommandXboxController operator = new CommandXboxController(OperatorConstants.operatorControllerPort);
 
-    private final OverrideController override = new OverrideController(5,driver,operator);
+    private final OverrideController override = new OverrideController(5, driver, operator, 0.05);
 
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
@@ -201,9 +201,10 @@ public class RobotContainer {
             )
         ); 
 
-        //Brake (B)
-        override.b().whileTrue(drivetrain.applyRequest(() -> brake));
+        //Brake (rS)
+        override.rightStick().whileTrue(drivetrain.applyRequest(() -> brake));
 
+        
         //Other/Reset Heading (Y)
         override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
@@ -221,17 +222,18 @@ public class RobotContainer {
         override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
 
         //Climb (POV Up + Down (driver only if fly speed is not automated))
-        override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
-        override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+        override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
+        override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
 
         //Intake + Traverse (Right Bumper)
-        override.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
-        override.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        override.rightBumper().toggleOnTrue(new InstantCommand(intakeSubsystem::feed, intakeSubsystem)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem));
+        override.rightBumper().toggleOnTrue(new InstantCommand(traverseSubsystem::transfer, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller, traverseSubsystem));
 
         //Scoop (X) - CHECK
-        override.x().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
-        override.x().and(override.rightBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+        override.x().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
+        override.x().and(override.rightBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
 
+        intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
         }
 
