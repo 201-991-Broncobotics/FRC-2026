@@ -115,7 +115,6 @@ public class Settings {
 
         public static boolean reverseCounterDirection = false;
 
-
         public static double hoodCalibrationDownTime = 0.1; // time spent going to down position (which should be short since it already is in the down position)
         public static double hoodCalibrationUpTime = 0.25; // time spent going up after it has reached its underestimate for max height
         public static double hoodCalibrationPower = 0.2;
@@ -156,8 +155,6 @@ public class Settings {
 
         public static final double g1 = 0.000312494918492; // actual k1
     }
-
-
 
     public static class AutoTargetingSettings {
 
