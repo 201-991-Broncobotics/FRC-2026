@@ -150,7 +150,7 @@ public class ClimbingSubsystem extends SubsystemBase {
         if (elevatorMotor.getStatorCurrent().getValueAsDouble() > 25) {
             elevatorMotor.stopMotor();
         }
-        elevatorMotor.set(0.2);
+        elevatorMotor.set(1.0);
          
     }
 
@@ -158,7 +158,7 @@ public class ClimbingSubsystem extends SubsystemBase {
         if (elevatorMotor.getStatorCurrent().getValueAsDouble() > 25) {
             elevatorMotor.stopMotor();
         }
-        elevatorMotor.set(-0.2);
+        elevatorMotor.set(-1.0);
          
     }
 
