@@ -102,9 +102,9 @@ public class Settings {
         public static double kV = 0.12; 
         public static double kA = 0; 
         public static double tkP = 25; // turntable
-        public static double tkI = 1; 
+        public static double tkI = 0; 
         public static double tkD = 0;  
-        public static double tkS = 1.5;
+        public static double tkS = 2.0;
         public static double tkV = 1;
         public static double hkP = 1; // hood
         public static double hkI = 0; 

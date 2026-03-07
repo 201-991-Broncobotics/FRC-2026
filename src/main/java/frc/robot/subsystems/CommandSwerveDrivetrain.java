@@ -425,9 +425,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public Translation3d getFieldCentricAcceleration() {
-        // pigeon: +x is down, +y is left, +z is forward for current robot
+        // pigeon: +x is right, +y is down, +z is forward for current robot
         //robot relative is x is forward, y is left, and z is up
-        Translation3d robotRelative = new Translation3d(gyroData.accelZ, gyroData.accelY, -gyroData.accelX);
+        Translation3d robotRelative = new Translation3d(gyroData.accelZ, -gyroData.accelX, -gyroData.accelY);
         return robotRelative.rotateBy(new Rotation3d(getState().Pose.getRotation()));
     }
 
@@ -437,7 +437,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public Rotation2d getAngAcceleration() {
-        return new Rotation2d(gyroData.angAccelX);
+        return new Rotation2d(-gyroData.angAccelY);
     }
 
 
