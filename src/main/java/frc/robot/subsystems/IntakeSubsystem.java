@@ -104,6 +104,8 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotorConfig.Slot0.kI = IntakeSettings.pivotkI; 
         pivotMotorConfig.Slot0.kD = IntakeSettings.pivotkD; 
         //pivotMotorConfig.Slot0.kG = IntakeSettings.pivotkG;
+
+        //Maybe get rid of PID on the following motor so it actually follows the right motor?
     
 
         intakeMotor.getConfigurator().apply(intakeMotorConfig); 

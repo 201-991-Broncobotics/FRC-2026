@@ -802,7 +802,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             Shooting = false; 
         }
 
-        if(!ZoneConstants.allianceZone.getZoningState() && Shooting && TARGET.equals(ZoneConstants.allianceHub)){  
+        if(!ZoneConstants.allianceZone.getZoningState() && TARGET.equals(ZoneConstants.allianceHub)){  
             Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.25);
 
             //Uses alliance hub as the regression already accounts for height
@@ -813,7 +813,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         }
 
-        if(IntakeSubsystem.states == IntakeSubsystem.States.Up && Shooting) Shooting = false;
+        //if(IntakeSubsystem.states == IntakeSubsystem.States.Up && Shooting) Shooting = false;
 
 
         if (drivetrain != null) {
