@@ -306,15 +306,15 @@ public class OuttakeSubsystem extends SubsystemBase {
             } else justChangedPower = false;
         } else {
             //Override Controls
-            if (controller.povUp().getAsBoolean()) {
+            if (controller.povRight().getAsBoolean()) {
                 if (!justChangedPower) TurretSettings.setVelocities += rpmAdjustment;
                 justChangedPower = true;
-            } else if (controller.povDown().getAsBoolean()) {
+            } else if (controller.povLeft().getAsBoolean()) {
                 if (!justChangedPower) TurretSettings.setVelocities -= rpmAdjustment;
                 justChangedPower = true;
             } else justChangedPower = false;
 
-            turretControl = controller.getRightTriggerAxis() - controller.getLeftTriggerAxis();
+            //turretControl = controller.getRightTriggerAxis() - controller.getLeftTriggerAxis();
         }
 
 
@@ -406,7 +406,8 @@ public class OuttakeSubsystem extends SubsystemBase {
             
             stopFlywheels();
             setHood(TurretConstants.minHoodAngle);
-            setTurntable(Math.toDegrees(180));
+            
+            //setTurntable(Math.toDegrees(180)); - AIDAN TS IS FOR THE TURNTABLE TO ALIGN WHEN THE PIVOT IS UP
             //DrivingProfiles.allowedToUseLimelight = true;
         }
 
@@ -766,7 +767,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         double thetaY = Math.acos(r / dist);
 
         // {C.y > 0 : 1, -1}
-        double sign = (dy > 0) ? 1.0 : -1.0;
+        double sign = (dy > 0) ? -1.0 : 1.0;
 
         // Combined Angle P(..., F(...))
         double phi = thetaX + (a * sign * thetaY);
@@ -802,8 +803,8 @@ public class OuttakeSubsystem extends SubsystemBase {
             Shooting = false; 
         }
 
-        if(!ZoneConstants.allianceZone.getZoningState() && TARGET.equals(ZoneConstants.allianceHub)){  
-            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.25);
+        if(!ZoneConstants.allianceZone.getZoningState()){  
+            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15);
 
             //Uses alliance hub as the regression already accounts for height
             TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
@@ -828,6 +829,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         
 
         if (Settings.tuningTelemetryEnabled) {
+            SmartDashboard.putString("Middle Aim", Functions.stringifyPose(new Pose2d(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15), new Rotation2d(0))));
+
 
             //Auto Lower
             SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(DrivingProfiles.getTurretPose()));

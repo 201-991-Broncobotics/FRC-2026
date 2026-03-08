@@ -277,12 +277,13 @@ public class DrivingProfiles extends SubsystemBase {
             BatteryVoltage = RobotController.getBatteryVoltage();
             SmartDashboard.putNumber("BATTERY VOLTAGE:", BatteryVoltage);
 
+            /* 
             if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 20 && CurrentLimitTimer.time() > 1) {
                 CurrentLimitTimer.reset();
                 currentDriveSupplyCurrentLimit -= 20;
                 drivetrain.setDriveMotorCurrentLimit(currentDriveSupplyCurrentLimit);
             }
-            SmartDashboard.putNumber("Drive Motors Supply Current Limit:", currentDriveSupplyCurrentLimit);
+            SmartDashboard.putNumber("Drive Motors Supply Current Limit:", currentDriveSupplyCurrentLimit);*/
 
         } catch (NullPointerException e) {
             // do nothing
