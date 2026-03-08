@@ -66,7 +66,7 @@ public class RobotContainer {
     private final CommandXboxController driver = new CommandXboxController(OperatorConstants.driverControllerPort);
     private final CommandXboxController operator = new CommandXboxController(OperatorConstants.operatorControllerPort);
 
-    private final OverrideController override = new OverrideController(5,driver,operator);
+    private final OverrideController override = new OverrideController(5, driver, operator, 0.05);
 
     // The robot's subsystems and commands are defined here...
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();

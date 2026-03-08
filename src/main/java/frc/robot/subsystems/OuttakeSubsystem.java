@@ -437,6 +437,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         double LaunchHeight = 22.3; // INCHES sorry, can also be made to change based on hood angle  
         double finalTargetRPM = Traj.k1 * ((39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * RelativeTarget.getZ()) + LaunchHeight + Traj.k3));
 
+        double currentFlywheelRPM = finalTargetRPM;//CurrentFlywheelRPM.getAsDouble();
+
         // assume minimum necessary flywheel rpm when no where close to the speed needed and end early
         SmartDashboard.putNumber("Traj1 Dist", 39.3701 * Distance);
         SmartDashboard.putNumber("Traj2 Height", 39.3701 * RelativeTarget.getZ());
@@ -450,7 +452,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         // in inches per second, also current means the current target, not based on current position
-        double CurrentLaunchVelocity = Traj.a1 * CurrentFlywheelRPM.getAsDouble() + Traj.a2 * Math.pow(CurrentFlywheelRPM.getAsDouble(), 2);
+        double CurrentLaunchVelocity = Traj.a1 * currentFlywheelRPM + Traj.a2 * Math.pow(currentFlywheelRPM, 2);
         double EffectiveGravity = 386.088 - Traj.g1 * Math.pow(CurrentLaunchVelocity, 2);
         double CurrentLaunchAngle = 0;
         if (aimHigh) CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) + Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) - EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * RelativeTarget.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));

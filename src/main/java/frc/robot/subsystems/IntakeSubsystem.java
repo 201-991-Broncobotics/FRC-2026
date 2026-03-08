@@ -151,7 +151,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void update() {
         if (shuffleIntake) {
-            if (shuffleTimer.time() < 0.3 * IntakeSettings.shufflePulsePeriod) {
+            if (shuffleTimer.time() < 0.2 * IntakeSettings.shufflePulsePeriod) {
                 intakeMotor.set(IntakeSettings.reversePower); 
             } else if (shuffleTimer.time() < IntakeSettings.shufflePulsePeriod) {
                 intakeMotor.set(IntakeSettings.runningPower); 

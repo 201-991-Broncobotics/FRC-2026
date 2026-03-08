@@ -242,7 +242,14 @@ public class DrivingProfiles extends SubsystemBase {
             if (LimelightPoseEstimate2 != null) {
                 SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
 
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) drivetrain.addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.1, 0.1, 4.0));
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) drivetrain.addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.1, 0.1, 4.0));
+            }
+
+            PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
+            if (LimelightPoseEstimate3 != null) {
+                SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
+
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) drivetrain.addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.1, 0.1, 4.0));
             }
             
 

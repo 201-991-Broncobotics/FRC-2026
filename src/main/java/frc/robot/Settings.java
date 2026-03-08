@@ -55,7 +55,7 @@ public class Settings {
         
         public static double airShooterPivotAngle = Math.toRadians(20); // this is set to be correct where 90 is up and 0 is straight out
 
-        public static double shufflePulsePeriod = 1.5; // 
+        public static double shufflePulsePeriod = 0.5; // 
     }
 
     public static class TraverseSettings {
