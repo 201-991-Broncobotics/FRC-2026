@@ -184,8 +184,8 @@ public class RobotContainer {
         //Override Version 
         //DRIVE CONTROLS
         drivingProfile.setUpControllerInputs(
-            () -> -override.getLeftY(),
-            () -> override.getLeftX(),
+            () -> -override.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
+            () -> override.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
             () -> -override.getRightX(), 
             () -> 0.3 + 0.7 * override.getLeftTriggerAxis(), 
             2, 2
