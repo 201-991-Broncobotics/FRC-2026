@@ -291,6 +291,12 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
 
+
+
+
+
+
+
     public void update(){
         double hoodControl = -controller.getRightY();
         double turretControl = controller.getLeftX();
@@ -355,14 +361,15 @@ public class OuttakeSubsystem extends SubsystemBase {
             if (TurretSettings.tuningMode) {
                 TargetFlywheelRPM = TurretSettings.setVelocities;
             } else {
+
+                // TURNTABLE
                 if (Math.abs(CurrentTurretAngle.getAsDouble() - averageData[0]) > TurretSettings.TurntableDeadband) TargetTurretAngle = averageData[0];
+
+                // Initial flywheel
                 if (Math.abs(CurrentFlywheelRPM.getAsDouble() - averageData[1]) > TurretSettings.FlywheelDeadband) TargetFlywheelRPM = averageData[1];
                 // if (Math.abs(CurrentHoodAngle.getAsDouble() - averageData[2]) > TurretSettings.HoodDeadband) TargetHoodAngle = averageData[2];
                 TargetHoodAngle = lastTargettingData[2]; // hood can be as precise as possible
             }
-            
-            // TURNTABLE
-            
 
             // FLYWHEELS
             setFlywheels(TargetFlywheelRPM);
@@ -421,6 +428,15 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
         */
     }
+
+
+
+
+
+    
+    // ==================================================================================================
+    // MATH AND TRAJECTORY CALCULATIONS
+    // ==================================================================================================
 
     public double[] regressTargettingData(Translation3d RelativeTarget, boolean aimHigh) {
         Rotation2d targetRotation = new Rotation2d(RelativeTarget.getX(), RelativeTarget.getY());
@@ -521,6 +537,14 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
 
+
+    
+
+
+    // ==================================================================================================
+    // MECHANISM CONTROLS
+    // ==================================================================================================
+
     public void setTurntable(double Angle) {
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
         // turntableMotor.setControl(turretPositionRequest.withPosition(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
@@ -544,35 +568,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         leftFlyMotor.stopMotor();
     }
 
-
-    public double getTargetFlywheelRPM(double launchVelocity) {
-        return 0; // TODO: math
-    }
-
-    public double getTargetLaunchVelocity(double targetFlywheelRPM) {
-        return 0; // TODO: math
-    }
-
-    public double getTargetHoodAngle(double launchAngle) {
-        return 0; // TODO: math
-    }
-
-    
-
-    public void neutralPosition() {
-
-    }
-
-
-
-    public double getFlywheelTrajectory(){
-        distanceVector.x = RobotState.Pose.getX();
-        distanceVector.y = RobotState.Pose.getY();
-
-        return distanceVector.mag(); 
-
-    }
-
     public double getTurntableTrajectory() { //copied from limelight documentation
         // tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of your limelight 3 feed, tx should return roughly 31 degrees.
         double targetingAngularVelocity = -(LimelightHelpers.getTX(TurretConstants.limelightName)/360);
@@ -580,6 +575,11 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }    
 
+    public void changeRPMFast() { rpmAdjustment = 500; }
+    public void changeRPMSlow() { rpmAdjustment = 50; }
+
+    public void startShooting() { Shooting = true; }
+    public void stopShooting() { Shooting = false; }
     public void toggleShooting(){
         Shooting = !Shooting;
         /* 
@@ -596,6 +596,19 @@ public class OuttakeSubsystem extends SubsystemBase {
         }*/
     }
 
+    public void enableAutoLower(){ TurretSettings.autoLowerHood = true; }
+    public void disableAutoLower(){ TurretSettings.autoLowerHood = false; }
+
+
+    public void setController(CommandXboxController newController){ controller = newController; }
+
+
+
+
+    
+    // ==================================================================================================
+    // TUNING
+    // ==================================================================================================
 
     public void checkForTuning(){
         boolean flywheelValueHasChanged = false; 
@@ -697,23 +710,23 @@ public class OuttakeSubsystem extends SubsystemBase {
     }
 
 
-    public void changeRPMFast() { rpmAdjustment = 500; }
-    public void changeRPMSlow() { rpmAdjustment = 50; }
 
-    public void startShooting() { Shooting = true; }
-    public void stopShooting() { Shooting = false; }
-
+    
+    // ==================================================================================================
+    // STATUS METHODS
+    // ==================================================================================================
 
     public static double getTurretAngle() { return CurrentTurretAngle.getAsDouble(); }
     public static double getHoodAngle() { return CurrentHoodAngle.getAsDouble(); }
     public static double getFlywheelRPM() { return CurrentFlywheelRPM.getAsDouble(); }
+
+    public int getBallsCounted(){ return ballsCounted; }
 
     public static double getAbsoluteTurretAngle() {
         double R = (throughBore19.getAbsoluteRaw() - throughBore21.getAbsoluteRaw()) * 2*Math.PI;
         if (R < 0) R += 2* Math.PI;
         return -0.9975 * R - TurretSettings.TurretAbsoluteOffset; // fixes angle being slightly off, also means the turret can't keep rotating
     }
-
 
     /**
      * Gets the height in meters of the ball when it starts its freefall trajectory or basically when it stops 
@@ -779,6 +792,13 @@ public class OuttakeSubsystem extends SubsystemBase {
         return new Translation2d(lx, ly);
     }
 
+
+
+
+
+
+
+
     @Override
     public void periodic(){
         FrameTime = FrameTimer.time();
@@ -799,27 +819,20 @@ public class OuttakeSubsystem extends SubsystemBase {
         autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
 
         // 6. Logic: Stop shooting if we are currently inside the trench
-        if (autoLowered && Shooting) {
-            Shooting = false; 
-        }
+        // if (autoLowered && Shooting) Shooting = false; // only lower hood if inside trench
 
         if(!ZoneConstants.allianceZone.getZoningState()){  
             Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15);
-
             //Uses alliance hub as the regression already accounts for height
             TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
-
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
             TARGET = ZoneConstants.allianceHub;
-
         }
 
         //if(IntakeSubsystem.states == IntakeSubsystem.States.Up && Shooting) Shooting = false;
 
 
-        if (drivetrain != null) {
-            RobotState = drivetrain.getState();
-        }
+        if (drivetrain != null) RobotState = drivetrain.getState();
 
         SmartDashboard.putBoolean("Is Shooting", Shooting);
         SmartDashboard.putBoolean("Trench Zone",  FlyZoning.inZones(robotPose));
@@ -909,19 +922,5 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
 
-    public void enableAutoLower(){
-        TurretSettings.autoLowerHood = true;
-    }
-
-    public void disableAutoLower(){
-        TurretSettings.autoLowerHood = false;
-    }
-
-    public int getBallsCounted(){
-        return ballsCounted;
-    }
-
-    public void setController(CommandXboxController newController){
-        controller = newController;
-    }
+    
 }

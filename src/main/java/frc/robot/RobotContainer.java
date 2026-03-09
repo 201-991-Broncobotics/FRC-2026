@@ -165,7 +165,7 @@ public class RobotContainer {
             .onTrue(new InstantCommand(traverseSubsystem::transfer))
             .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
             .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        driver.b().toggleOnTrue(new InstantCommand(intakeSubsystem::shuffle)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopShuffle));
+        driver.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
 
 
 
