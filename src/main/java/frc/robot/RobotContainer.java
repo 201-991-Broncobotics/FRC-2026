@@ -220,42 +220,38 @@ public class RobotContainer {
             )
         ); 
 
-        //Brake (rS)
-        override.rightStick().whileTrue(drivetrain.applyRequest(() -> brake));
-
+        //Brake (b)
+        override.b().whileTrue(drivetrain.applyRequest(() -> brake));
         
-        //Other/Reset Heading (Y)
+        //Reset Heading (Y)
         override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        //Reverse All (Left Bumper)
-
-        //Turret (triggers)
-
-        //Flywheel Speed (Automated or oprator POV up + down) + Flywheel (A)
-        override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
-
-        //Hood (Right Up + Down)
-
-        //Pivot (POV Left + Right)
-        // override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-        // override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
-
-        //Climb (POV Up + Down (driver only if fly speed is not automated))
-        override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
-        override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
-
-        //Intake + Traverse (Right Bumper)
+        //Intake On
         override.rightBumper()
             .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
             .onTrue(new InstantCommand(traverseSubsystem::transfer))
             .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
             .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        
-        //Scoop (X) - CHECK
-        override.x().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
-        override.x().and(override.leftBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
 
-        //operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
+        //Reverse Intake
+        override.rightBumper().and(override.leftBumper())
+            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
+            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+
+        //Pivot (POV Left + Right)
+        override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
+        override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+
+        //Flywheel (A)
+        override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
+
+        //Climb (POV Up + Down (driver only if fly speed is not automated))
+        override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
+        override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
+        
+        //Scoop (RS)
+        override.rightStick().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
+        override.rightStick().and(override.leftBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
 
 
         intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));

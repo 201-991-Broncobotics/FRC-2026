@@ -3,6 +3,7 @@ package frc.robot.utility;
 import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 
 public class Functions {
@@ -110,5 +111,11 @@ public class Functions {
     public static String stringifyTrans(Translation3d translation){
         return "X:" + Functions.round(translation.getX(), 3) + " Y:" + Functions.round(translation.getY(), 3) + " Z:" + Functions.round(translation.getZ(), 3);
     }
+
+
+    public static String stringifyTrans(Translation2d translation){
+        return "X:" + Functions.round(translation.getX(), 3) + " Y:" + Functions.round(translation.getY(), 3);
+    }
+
 
 }

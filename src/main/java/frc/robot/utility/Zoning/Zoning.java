@@ -3,6 +3,8 @@ package frc.robot.utility.Zoning;
 import java.util.ArrayList;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.Constants.ZoneConstants;
 import frc.robot.utility.Zoning.Zone;
 
 public class Zoning {
@@ -96,5 +98,14 @@ public class Zoning {
 
     public Pose2d getPose2d(){
         return Zones.get(0).getPose2d();
+    }
+
+    public static boolean inZones(Pose2d pose, ArrayList<Zone> zones){
+        for (Zone zone : zones) {
+            if(zone.inZone(pose)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
