@@ -792,13 +792,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         return new Translation2d(lx, ly);
     }
 
-
-
-
-
-
-
-
     @Override
     public void periodic(){
         FrameTime = FrameTimer.time();
@@ -808,8 +801,10 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d robotPose = drivetrain.getState().Pose;
         Pose2d turretPose = DrivingProfiles.getTurretPose();
 
-        // 4. Logic: Start shooting if we left the trench and are in the alliance zone
-        if (!TurretSettings.tuningMode && (FlyZoning.ifLeftZones(turretPose) && !Shooting && ZoneConstants.allianceZone.inZones(turretPose)) || (ZoneConstants.allianceZone.ifEnteredZones(turretPose) && !Shooting && !FlyZoning.inZones(turretPose))) {
+        // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
+        if ((FlyZoning.ifLeftZones(turretPose) && Shooting && !ZoneConstants.allianceZone.inZones(turretPose)) || FlyZoning.ifEnteredZones(turretPose) && Shooting && ZoneConstants.allianceZone.inZones(turretPose)) {
+            Shooting = false;
+        } else if ((FlyZoning.ifEnteredZones(turretPose) && !Shooting && !ZoneConstants.allianceZone.inZones(turretPose))) {
             Shooting = true; 
         }
 
@@ -818,9 +813,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         ZoneConstants.allianceZone.updateZones(robotPose);
         autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
 
-        // 6. Logic: Stop shooting if we are currently inside the trench
-        // if (autoLowered && Shooting) Shooting = false; // only lower hood if inside trench
-
+        //Change targeting
         if(!ZoneConstants.allianceZone.getZoningState()){  
             Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15);
             //Uses alliance hub as the regression already accounts for height
@@ -829,7 +822,6 @@ public class OuttakeSubsystem extends SubsystemBase {
             TARGET = ZoneConstants.allianceHub;
         }
 
-        //if(IntakeSubsystem.states == IntakeSubsystem.States.Up && Shooting) Shooting = false;
 
 
         if (drivetrain != null) RobotState = drivetrain.getState();

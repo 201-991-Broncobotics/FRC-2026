@@ -14,6 +14,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.estimator.SteadyStateKalmanFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -170,8 +171,8 @@ public class IntakeSubsystem extends SubsystemBase {
     public void stopRollers(){ TargetIntakePower = 0; }
     public void reverseFeed(){ TargetIntakePower = IntakeSettings.reversePower; }
 
-    public void lift(){ setPivotAngle(IntakeConstants.highLimitAngle); }
-    public void drop(){ setPivotAngle(IntakeConstants.lowLimitAngle); }
+    public void lift(){ setPivotAngle(IntakeConstants.highLimitAngle); states = States.Up;}
+    public void drop(){ setPivotAngle(IntakeConstants.lowLimitAngle); states = States.DownAndOn;}
     // public void aidFly(){ setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle); }
 
     public void agitate() { agitateIntake = true; }
@@ -180,9 +181,6 @@ public class IntakeSubsystem extends SubsystemBase {
     public void setPivotAngle(double angle){
         targetPivotAngle = angle;
         angle = Functions.minMaxValue(IntakeConstants.minPivotAngle, IntakeConstants.maxPivotAngle, angle);
-
-        // if(rampZoneing.getZoningState() || ballZoning.getZoningState()){return;} // we don't need this anymore
-
         
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
