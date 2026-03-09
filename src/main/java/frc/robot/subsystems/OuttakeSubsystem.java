@@ -786,8 +786,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         double phi = thetaX + (a * sign * thetaY);
 
         // Resulting Point L
-        double lx = c.getX() + r * Math.cos(phi);
-        double ly = c.getY() + r * Math.sin(phi);
+        double lx = c.getX();
+        double ly = c.getX() * (Math.tan(phi - Math.toRadians(90)));
 
         return new Translation2d(lx, ly);
     }
@@ -801,17 +801,19 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d robotPose = drivetrain.getState().Pose;
         Pose2d turretPose = DrivingProfiles.getTurretPose();
 
-        // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
-        if ((FlyZoning.ifLeftZones(turretPose) && Shooting && !ZoneConstants.allianceZone.inZones(turretPose)) || FlyZoning.ifEnteredZones(turretPose) && Shooting && ZoneConstants.allianceZone.inZones(turretPose)) {
-            Shooting = false;
-        } else if ((FlyZoning.ifEnteredZones(turretPose) && !Shooting && !ZoneConstants.allianceZone.inZones(turretPose))) {
-            Shooting = true; 
-        }
+        if(TurretSettings.autoLowerHood){
+            // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
+            if ((FlyZoning.ifLeftZones(turretPose) && Shooting && !ZoneConstants.allianceZone.inZones(turretPose)) || FlyZoning.ifEnteredZones(turretPose) && Shooting && ZoneConstants.allianceZone.inZones(turretPose)) {
+                Shooting = false;
+            } else if ((FlyZoning.ifEnteredZones(turretPose) && !Shooting && !ZoneConstants.allianceZone.inZones(turretPose))) {
+                Shooting = true; 
+            }
 
-        // 5. Update the Trench (FlyZoning) state
-        FlyZoning.updateZones(turretPose);
-        ZoneConstants.allianceZone.updateZones(robotPose);
-        autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
+            // 5. Update the Trench (FlyZoning) state
+            FlyZoning.updateZones(turretPose);
+            ZoneConstants.allianceZone.updateZones(robotPose);
+            autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
+        }
 
         //Change targeting
         if(!ZoneConstants.allianceZone.getZoningState()){  
