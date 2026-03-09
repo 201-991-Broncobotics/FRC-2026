@@ -51,8 +51,8 @@ public final class Constants {
         public static final double maxReverseVoltage = -12; 
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double supplyCurrent = 40; // helps prevent brownouts
-        public static final double statorCurrent = 60; // helps prevent motor overheating
+        public static final double supplyCurrent = 25; // helps prevent brownouts
+        public static final double statorCurrent = 30; // helps prevent motor overheating
         public static final double pivotSupplyCurrent = 30;
         public static final double pivotStatorCurrent = 30; 
 
@@ -72,13 +72,10 @@ public final class Constants {
         public static final double maxReverseVoltage = -12; 
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double rollerSupplyCurrent = 40; 
-        public static final double rollerStatorCurrent = 60; 
-        public static final double scoopSupplyCurrent = 40; 
-        public static final double scoopStatorCurrent = 60; 
-
-        
-        public static final int vortexCurrentLimit = 80; //in amps 
+        public static final double rollerSupplyCurrent = 30; 
+        public static final double rollerStatorCurrent = 40; 
+        public static final double scoopSupplyCurrent = 30; 
+        public static final double scoopStatorCurrent = 40; 
     }
 
     public static class ClimbingConstants {
@@ -108,9 +105,9 @@ public final class Constants {
         public static final double x44MaxRPM = 7750; 
 
         public static final boolean currentLimitsEnabled = true; 
-        public static final double supplyCurrent = 80; 
-        public static final double statorCurrent = 80; 
-        public static final int hoodMotorCurrent = 40;
+        public static final double supplyCurrent = 40; 
+        public static final double statorCurrent = 50; 
+        public static final int hoodMotorCurrent = 15;
 
         public static final double gravityInches = 386.0885826; // in inches per second
 

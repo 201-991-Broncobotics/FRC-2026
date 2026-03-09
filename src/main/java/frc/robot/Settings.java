@@ -43,7 +43,7 @@ public class Settings {
         public static double pivotMotorVelocity = 5; //7
         public static double pivotMotorAcceleration = 5; //2 
 
-        public static double pivotkP = 8.0; 
+        public static double pivotkP = 2.0; 
         public static double pivotkI = 0; 
         public static double pivotkD = 0; 
         public static double pivotkG = 0.0; // 0.35
@@ -121,7 +121,7 @@ public class Settings {
 
         public static double defaultTurretPosition = Math.toRadians(170); // position at slight angle to allow intake to go up
         public static double minTurretAngle = Math.toRadians(-45);
-        public static double maxTurretAngle = Math.toRadians(225);
+        public static double maxTurretAngle = Math.toRadians(180);
 
         public static double TurretAbsoluteOffset = Math.toRadians(-246.5 + 19.6);
 
@@ -175,7 +175,7 @@ public class Settings {
     }
 
     public static class RobotSettings{
-        public static final boolean overrideMode = false;
+        public static final boolean overrideMode = true;
     }
 
 }
