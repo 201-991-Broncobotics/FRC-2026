@@ -195,13 +195,14 @@ public class DrivingProfiles extends SubsystemBase {
     }
 
     public void keepRobotInPerimeter() {
+        Pose2d CenterOfRobotMech = RobotPose.plus(new Transform2d(Constants.ForwardCenterDist * Math.cos(RobotPose.getRotation().getRadians()), Constants.ForwardCenterDist * Math.sin(RobotPose.getRotation().getRadians()), new Rotation2d(0)));
 
         double effectiveWidth = 2 * Math.max(
-            Math.hypot(Constants.RobotWidth/2.0, Constants.RobotLength/2.0) * Math.cos(RobotPose.getRotation().getRadians() + Math.atan2(Constants.RobotLength, Constants.RobotWidth)),
-            Math.hypot(Constants.RobotWidth/2.0, Constants.RobotLength/2.0) * Math.cos(RobotPose.getRotation().getRadians() - Math.atan2(Constants.RobotLength, Constants.RobotWidth)));
+            Math.hypot(Constants.RobotWidth/2.0, Constants.RobotLength/2.0) * Math.cos(CenterOfRobotMech.getRotation().getRadians() + Math.atan2(Constants.RobotLength, Constants.RobotWidth)),
+            Math.hypot(Constants.RobotWidth/2.0, Constants.RobotLength/2.0) * Math.cos(CenterOfRobotMech.getRotation().getRadians() - Math.atan2(Constants.RobotLength, Constants.RobotWidth)));
         double effectiveLength = 2 * Math.max(
-            Math.hypot(Constants.RobotWidth, Constants.RobotLength) * Math.sin(RobotPose.getRotation().getRadians() + Math.atan2(Constants.RobotLength, Constants.RobotWidth)),
-            Math.hypot(Constants.RobotWidth, Constants.RobotLength) * Math.sin(RobotPose.getRotation().getRadians() - Math.atan2(Constants.RobotLength, Constants.RobotWidth)));
+            Math.hypot(Constants.RobotWidth, Constants.RobotLength) * Math.sin(CenterOfRobotMech.getRotation().getRadians() + Math.atan2(Constants.RobotLength, Constants.RobotWidth)),
+            Math.hypot(Constants.RobotWidth, Constants.RobotLength) * Math.sin(CenterOfRobotMech.getRotation().getRadians() - Math.atan2(Constants.RobotLength, Constants.RobotWidth)));
 
         Zone effectiveZone = new Zone(new Shape.Rectangle(
             ZoneConstants.fieldZone.getCenterPose2d().getTranslation(), // center
@@ -209,17 +210,17 @@ public class DrivingProfiles extends SubsystemBase {
             ZoneConstants.fieldZone.getShape().getHeight() - 2*(effectiveLength/2.0 + Settings.safetyDistanceFromWall) // height
             )); 
 
-        double top = (effectiveZone.getCenterPose2d().getY() + effectiveZone.getShape().getHeight()/2.0) - RobotPose.getY();
-        double bottom = (effectiveZone.getCenterPose2d().getY() - effectiveZone.getShape().getHeight()/2.0) - RobotPose.getY();
-        double right = (effectiveZone.getCenterPose2d().getX() + effectiveZone.getShape().getWidth()/2.0) - RobotPose.getX();
-        double left = (effectiveZone.getCenterPose2d().getX() - effectiveZone.getShape().getWidth()/2.0) - RobotPose.getX();
+        double top = (effectiveZone.getCenterPose2d().getY() + effectiveZone.getShape().getHeight()/2.0) - CenterOfRobotMech.getY();
+        double bottom = (effectiveZone.getCenterPose2d().getY() - effectiveZone.getShape().getHeight()/2.0) - CenterOfRobotMech.getY();
+        double right = (effectiveZone.getCenterPose2d().getX() + effectiveZone.getShape().getWidth()/2.0) - CenterOfRobotMech.getX();
+        double left = (effectiveZone.getCenterPose2d().getX() - effectiveZone.getShape().getWidth()/2.0) - CenterOfRobotMech.getX();
 
-        if (effectiveZone.inZone(RobotPose)) {
+        if (effectiveZone.inZone(CenterOfRobotMech)) {
             forwardOutput = Functions.minMaxValue(Settings.translationPIDConstants.kP * left, Settings.translationPIDConstants.kP * right, forwardOutput);
             strafeOutput = Functions.minMaxValue(Settings.translationPIDConstants.kP * bottom, Settings.translationPIDConstants.kP * top, strafeOutput);
         } else {
-            forwardOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromX(RobotPose.getTranslation());
-            strafeOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromY(RobotPose.getTranslation());
+            forwardOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromX(CenterOfRobotMech.getTranslation());
+            strafeOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromY(CenterOfRobotMech.getTranslation());
         }
         
     }

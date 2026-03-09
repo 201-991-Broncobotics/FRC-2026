@@ -24,8 +24,9 @@ import frc.robot.utility.Zoning.Zoning;
  */
 public final class Constants {
 
-    public static double RobotWidth = 37.319575 / 39.37; // including bumpers and at max extension of storage in meters
-    public static double RobotLength = 40.446198 / 39.37;
+    public static double RobotWidth = 0.947917; // including bumpers and at max extension of storage in meters
+    public static double RobotLength = 0.824083 + 0.203250;
+    public static double ForwardCenterDist = 0.203250/2.0;
   
     public static class MotorConstants{
     
