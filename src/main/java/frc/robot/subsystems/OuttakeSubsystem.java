@@ -748,15 +748,20 @@ public class OuttakeSubsystem extends SubsystemBase {
         return (-4.954998 * Math.sin(launchAngle - Math.toRadians(25.140344)) + 1.71) / 39.37;
     }
 
+    public Translation2d calculateTargetForHub(Translation2d c, Translation2d q, double tolerance) {
+        return calculateTargetForHub(c, q, tolerance, false);
+    }
+
      /**
      * Calculates the point L using Translation2D inputs.
      * Includes a safety check for points inside the radius.
      * * @param c The center point of the hub
      * @param q The shooting point
      * @param tolerance The tolerance of the circle
+     * @param alignWithHub Align the end point with the same X as the target
      * @return A new Translation2D representing point L, or null if Q is inside R
      */
-    public Translation2d calculateTargetForHub(Translation2d c, Translation2d q, double tolerance) {
+    public Translation2d calculateTargetForHub(Translation2d c, Translation2d q, double tolerance, boolean alignWithTarget) {
         double a; //Alliance 1 is Red, -1 is Blue
         if(ZoneConstants.alliance){
             a = -1;
@@ -766,30 +771,34 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         double r = 1.13383893709 + (tolerance);//Calculated in the desmos
 
-        double dx = q.getX() - c.getX();
-        double dy = q.getY() - c.getY();
-        double dist = Math.sqrt(dx * dx + dy * dy);
+        Translation2d relativeCoords = c.minus(q);
+        double dist = Math.sqrt(relativeCoords.getX() * relativeCoords.getX() + relativeCoords.getY() * relativeCoords.getY());
 
         // Safety Check: acos(x) is undefined if x > 1
         if (dist < r) {
-            return null; // Or handle as an error/default to q
+            dist = r + 0.1; // Or handle as an error/default to q
         }
 
-        // F(C, Q, R) components
-        double thetaX = Math.atan2(dy, dx);
+        // F(C, Q, R) componentsh
+        double thetaX = Math.atan2(relativeCoords.getY(), relativeCoords.getX());
         double thetaY = Math.acos(r / dist);
 
         // {C.y > 0 : 1, -1}
-        double sign = (dy > 0) ? -1.0 : 1.0;
+        double sign = (relativeCoords.getY() > 0) ? 1.0 : -1.0;
 
         // Combined Angle P(..., F(...))
         double phi = thetaX + (a * sign * thetaY);
 
         // Resulting Point L
-        //double lx = c.getX();
-        //double ly = c.getX() * (Math.tan(phi - Math.toRadians(90)));
-        double lx = c.getX() + r * Math.cos(phi);
-        double ly = c.getY() + r * Math.sin(phi);
+        double lx, ly;
+
+        if(alignWithTarget){
+            lx = c.getX();
+            ly = c.getX() * (Math.tan(phi - Math.toRadians(90)));
+        } else {
+            lx = c.getX() + r * Math.cos(phi);
+            ly = c.getY() + r * Math.sin(phi);
+        }
 
         return new Translation2d(lx, ly);
     }
@@ -803,7 +812,6 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d robotPose = drivetrain.getState().Pose;
         Pose2d turretPose = DrivingProfiles.getTurretPose();
 
-        try { // something broke over here too
 
             if(TurretSettings.autoLowerHood){
                 // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
@@ -828,9 +836,6 @@ public class OuttakeSubsystem extends SubsystemBase {
                 TARGET = ZoneConstants.allianceHub;
             }
 
-        } catch (NullPointerException e) {
-            // do nothing
-        }
 
         if (drivetrain != null) RobotState = drivetrain.getState();
 
