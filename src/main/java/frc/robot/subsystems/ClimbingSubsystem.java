@@ -32,6 +32,7 @@ public class ClimbingSubsystem extends SubsystemBase {
     private DoubleSupplier CurrentElevatorPosition;
     private double elevatorOffset = 0;
     private final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
+    private boolean reachedResetPosition = false;
 
 
 
@@ -104,7 +105,7 @@ public class ClimbingSubsystem extends SubsystemBase {
         //climberMotorStatus = climberMotor.getConfigurator().apply(climberMotorConfig);
         elevatorMotorStatus = elevatorMotor.getConfigurator().apply(elevatorMotorConfig); 
 
-        elevatorOffset = -elevatorMotor.getPosition().getValueAsDouble() + ClimbingConstants.startingPosition / (2*Math.PI);
+        elevatorOffset = -elevatorMotor.getPosition().getValueAsDouble() + ClimbingSettings.startingPosition / (2*Math.PI);
         CurrentElevatorPosition = () -> (elevatorMotor.getPosition().getValueAsDouble() + elevatorOffset) * 2*Math.PI;
 
 
@@ -125,6 +126,8 @@ public class ClimbingSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Elevator kD", ClimbingSettings.elevatorkD); 
         SmartDashboard.putNumber("Elevator kG", ClimbingSettings.elevatorkG); 
 
+        reachedResetPosition = false;
+
     }
 
     public void extend(){
@@ -142,23 +145,41 @@ public class ClimbingSubsystem extends SubsystemBase {
         //climberMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));
         //elevatorMotor.setControl(new MotionMagicVoltage(ClimbingSettings.startingDistance).withSlot(0));  
         if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) > 26.5) elevatorMotor.stopMotor();
-        else if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) < 26.5) elevatorMotor.setControl(m_request.withPosition(ClimbingConstants.startingPosition / (2 * Math.PI) + elevatorOffset).withFeedForward(-ClimbingSettings.elevatorkG));
+        
+        else if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) < 26.5) elevatorMotor.setControl(m_request.withPosition(ClimbingSettings.startingPosition / (2 * Math.PI) + elevatorOffset).withFeedForward(-ClimbingSettings.elevatorkG));
 
+    }
+
+    public void overrideRetract(){
+        justRetract();
+        if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) > 26.5) {
+            ClimbingSettings.startingPosition = elevatorMotor.getPosition().getValueAsDouble();
+            elevatorOffset = -elevatorMotor.getPosition().getValueAsDouble() + ClimbingSettings.startingPosition / (2*Math.PI); 
+            reachedResetPosition = true;
+        } 
+    }
+
+    public void start(){
+        overrideRetract();
+    }
+
+    public boolean getIfReachedResetPosition() {
+        return reachedResetPosition;
     }
 
     public void justExtend() {
         if (elevatorMotor.getStatorCurrent().getValueAsDouble() > 25) {
             elevatorMotor.stopMotor();
         }
-        elevatorMotor.set(1.0);
+        elevatorMotor.set(0.1);
          
     }
 
     public void justRetract() {
-        if (elevatorMotor.getStatorCurrent().getValueAsDouble() > 25) {
+        if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) > 26.5) {
             elevatorMotor.stopMotor();
         }
-        elevatorMotor.set(-1.0);
+        else if (Math.abs(elevatorMotor.getStatorCurrent().getValueAsDouble()) < 26.5) elevatorMotor.set(-0.1);
          
     }
 
@@ -285,10 +306,10 @@ public class ClimbingSubsystem extends SubsystemBase {
         try {
             //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
             //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.highLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
-            SmartDashboard.putNumber("Elevator Position", Math.toDegrees(CurrentElevatorPosition.getAsDouble()));
+            SmartDashboard.putNumber("Elevator Position again", Math.toDegrees(CurrentElevatorPosition.getAsDouble()));
             SmartDashboard.putNumber("Elevator Actual Position", elevatorMotor.getPosition().getValueAsDouble());
             SmartDashboard.putNumber("Elevator Power", elevatorMotor.getMotorVoltage().getValueAsDouble());
-            SmartDashboard.putNumber("Elevator low target", ClimbingConstants.startingPosition / (2*Math.PI) + elevatorOffset);
+            SmartDashboard.putNumber("Elevator low target", ClimbingSettings.startingPosition / (2*Math.PI) + elevatorOffset);
             SmartDashboard.putNumber("Elevator Stator Current", elevatorMotor.getStatorCurrent().getValueAsDouble());
 
         } catch (NullPointerException e) {

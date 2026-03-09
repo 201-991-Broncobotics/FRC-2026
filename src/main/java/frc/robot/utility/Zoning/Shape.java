@@ -100,8 +100,8 @@ public abstract class Shape {
         (topLeftPoint.getX() + bottomRightPoint.getX()) / 2.0, 
         (topLeftPoint.getY() + bottomRightPoint.getY()) / 2.0
     );
-            this._height = topLeftPoint.getY() - bottomRightPoint.getY();
-            this._width = bottomRightPoint.getX()-topLeftPoint.getX();
+            this._height = Math.abs(topLeftPoint.getY() - bottomRightPoint.getY());
+            this._width = Math.abs(bottomRightPoint.getX()-topLeftPoint.getX());
 
             this._shapeType = ShapeType.RECTANGLE;
         }

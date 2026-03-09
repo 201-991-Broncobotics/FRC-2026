@@ -112,6 +112,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         intakeMotor.getConfigurator().apply(intakeMotorConfig); 
         rightPivotMotor.getConfigurator().apply(pivotMotorConfig); 
+        pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         leftPivotMotor.getConfigurator().apply(pivotMotorConfig);
 
         intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfig);
@@ -124,7 +125,7 @@ public class IntakeSubsystem extends SubsystemBase {
         lastkP = IntakeSettings.pivotkD; 
         lastkG = IntakeSettings.pivotkG; 
 
-        pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI);
+        pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
         CurrentPivotPosition = () -> (rightPivotMotor.getPosition().getValueAsDouble() + pivotOffset) * 2*Math.PI;
 
         if (!intakeMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Roller motor with ID " + MotorConstants.intakeID + " is broken!");
@@ -141,13 +142,14 @@ public class IntakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); 
         }
 
+        /* 
         if(IntakeConstants.highLimitAngle > IntakeConstants.lowLimitAngle){
             IntakeConstants.maxPivotAngle = IntakeConstants.highLimitAngle;
             IntakeConstants.minPivotAngle = IntakeConstants.lowLimitAngle;
         } else {
             IntakeConstants.minPivotAngle = IntakeConstants.highLimitAngle;
             IntakeConstants.maxPivotAngle = IntakeConstants.lowLimitAngle;
-        }
+        }   */
 
         TargetIntakePower = 0;
       
@@ -171,8 +173,8 @@ public class IntakeSubsystem extends SubsystemBase {
     public void stopRollers(){ TargetIntakePower = 0; }
     public void reverseFeed(){ TargetIntakePower = IntakeSettings.reversePower; }
 
-    public void lift(){ setPivotAngle(IntakeConstants.highLimitAngle); states = States.Up;}
-    public void drop(){ setPivotAngle(IntakeConstants.lowLimitAngle); states = States.DownAndOn;}
+    public void lift(){ setPivotAngle(IntakeConstants.upIntakePosition); states = States.Up;}
+    public void drop(){ setPivotAngle(IntakeConstants.outIntakePosition); states = States.DownAndOn;}
     // public void aidFly(){ setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle); }
 
     public void agitate() { agitateIntake = true; }
@@ -180,24 +182,24 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void setPivotAngle(double angle){
         targetPivotAngle = angle;
-        angle = Functions.minMaxValue(IntakeConstants.minPivotAngle, IntakeConstants.maxPivotAngle, angle);
+        // angle = Functions.minMaxValue(IntakeConstants.maxPivotAngle, IntakeConstants.minPivotAngle, angle);
         
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
-        //rightPivotMotor.setControl(new MotionMagicVoltage(highTargetPosition / (2*Math.PI) + pivotOffset).withSlot(0)); 
-        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
+        // leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
     public void setPivotAngle(double angle, double baseAngle){ // wtf
         double angleToSet = baseAngle + angle;
 
+        /* 
         if(angleToSet > IntakeConstants.maxPivotAngle || angleToSet < IntakeConstants.minPivotAngle){
             angleToSet = baseAngle - angle;
 
             if(angleToSet < IntakeConstants.maxPivotAngle || angleToSet > IntakeConstants.minPivotAngle){
                 angleToSet = baseAngle + angle;
             }
-        }
+        }*/
 
         setPivotAngle(baseAngle+angle);
     }
@@ -262,6 +264,8 @@ public class IntakeSubsystem extends SubsystemBase {
         double currentUsage = rightPivotMotor.getStatorCurrent().getValueAsDouble();
         double currentVelocity = rightPivotMotor.getVelocity().getValueAsDouble();
 
+        /* 
+
         // If current is high and we aren't moving, we've hit a physical stop
         if (Math.abs(currentUsage) > IntakeSettings.STALL_CURRENT_THRESHOLD && 
             Math.abs(currentVelocity) < IntakeSettings.STALL_VELOCITY_THRESHOLD) {
@@ -275,7 +279,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 // We were trying to go DOWN, so we are at the Low Limit
                 rightPivotMotor.setPosition(IntakeConstants.lowLimitAngle / (2*Math.PI));
             }
-        }
+        }   */
     }
 
     @Override
@@ -299,7 +303,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
             // Ramp Zone Logic
             if (enteredRampZone) {
-                setPivotAngle(Math.toRadians(10), IntakeConstants.lowLimitAngle);
+                //setPivotAngle(Math.toRadians(10), IntakeConstants.lowLimitAngle);
             } else if (leftRampZone) {
                 drop();
             }

@@ -61,11 +61,11 @@ public final class Constants {
         public static final double pivotStatorCurrent = 30; 
 
         public static final double x60ShaftRadius = 4/25.4; //inches
-        public static final double lowLimitAngle = Math.toRadians(95.2); //radians, also I hate this cause I can't switch these without the motion profile breaking
-        public static final double highLimitAngle = 0; //radians
-        public static double maxPivotAngle = lowLimitAngle; //radians
-        public static double minPivotAngle = highLimitAngle; //radians
-        public static final double startingPosition = highLimitAngle; //radians
+        public static final double outIntakePosition = Math.toRadians(95.2); //radians, also I hate this cause I can't switch these without the motion profile breaking
+        public static final double upIntakePosition = 0; //radians
+        //public static double maxPivotAngle = lowLimitAngle; //radians
+        //public static double minPivotAngle = highLimitAngle; //radians
+        //public static final double startingPosition = highLimitAngle; //radians
         public static final double gearRatio = (1.0/25.0); 
 
     }
@@ -95,7 +95,6 @@ public final class Constants {
         public static final double gearRatio = (1.0/15.0); 
         public static final double ticksPerRev = 2048; 
 
-        public static final double startingPosition = 0; 
         public static final double maxLimitPosition = Math.toRadians(10848.515625); 
 
         public static final double elavatorActualPositionOffset = 46.760744;
@@ -169,7 +168,7 @@ public final class Constants {
         public static Translation3d allianceHub = blueHub;
         public static Zoning allianceZone = new Zoning(blueZone);
 
-        public static Zone fieldZone = new Zone(new Shape.Rectangle(new Translation2d(0, 0), new Translation2d(16.54, 8)));
+        public static Zone fieldZone = new Zone(new Shape.Rectangle(new Translation2d(0, 8), new Translation2d(16.54, 0)));
     }
 
     

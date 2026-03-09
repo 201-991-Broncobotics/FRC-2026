@@ -16,8 +16,8 @@ public class Settings {
 
     public static boolean tuningTelemetryEnabled = true;
 
-    public static PIDConstants translationPIDConstants = new PIDConstants(10.0, 0.0, 0.0);
-    public static PIDConstants rotationPIDConstants = new PIDConstants(7.0, 0.0, 0.0);
+    public static PIDConstants translationPIDConstants = new PIDConstants(0.5, 0.0, 0.0);
+    public static PIDConstants rotationPIDConstants = new PIDConstants(1.0, 0.0, 0.0);
 
     public static PPHolonomicDriveController PathFollowerController = new PPHolonomicDriveController( // PPHolonomicController is the built-in path following controller for holonomic drive trains
         translationPIDConstants, // Translation PID constants
@@ -30,8 +30,9 @@ public class Settings {
                     Units.degreesToRadians(540), Units.degreesToRadians(720));
 
 
-    public static double safetyDistanceFromWall = (5) / 39.37; // the closest distance the robot will let the drive go to the wall in meters (inches)
+    public static double safetyDistanceFromWall = (2.5) / 39.37; // the closest distance the robot will let the drive go to the wall in meters (inches)
     public static boolean keepWithinPerimeter = false;
+    public static double TranslationKP = 0.5;
 
     public static class IntakeSettings {
 
@@ -74,6 +75,8 @@ public class Settings {
 
         public static double runningClimbingVoltage = 12; 
         public static double runningElevatorVoltage = 12; 
+
+        public static double startingPosition = 0; 
 
         public static double climberMotorVelocity = 0.4; 
         public static double climberMotorAcceleration = 1.2; 

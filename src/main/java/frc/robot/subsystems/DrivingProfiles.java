@@ -15,6 +15,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -122,7 +124,8 @@ public class DrivingProfiles extends SubsystemBase {
         //if (useAutoDrivingThrottle) autoDriving = (AutoDrivingThrottle.getAsDouble() > AutoThrottleDeadband);
         if (autoDriving) updateAutoDriving();
 
-        if (Settings.keepWithinPerimeter) keepRobotInPerimeter();
+        keepRobotInPerimeter();
+        //if (Settings.keepWithinPerimeter) 
 
     }
 
@@ -195,7 +198,7 @@ public class DrivingProfiles extends SubsystemBase {
     }
 
     public void keepRobotInPerimeter() {
-        Pose2d CenterOfRobotMech = RobotPose.plus(new Transform2d(Constants.ForwardCenterDist * Math.cos(RobotPose.getRotation().getRadians()), Constants.ForwardCenterDist * Math.sin(RobotPose.getRotation().getRadians()), new Rotation2d(0)));
+        Pose2d CenterOfRobotMech = RobotPose; //.plus(new Transform2d(Constants.ForwardCenterDist * Math.cos(RobotPose.getRotation().getRadians()), Constants.ForwardCenterDist * Math.sin(RobotPose.getRotation().getRadians()), new Rotation2d(0)));
 
         double effectiveWidth = 2 * Math.max(
             Math.hypot(Constants.RobotWidth/2.0, Constants.RobotLength/2.0) * Math.cos(CenterOfRobotMech.getRotation().getRadians() + Math.atan2(Constants.RobotLength, Constants.RobotWidth)),
@@ -206,8 +209,8 @@ public class DrivingProfiles extends SubsystemBase {
 
         Zone effectiveZone = new Zone(new Shape.Rectangle(
             ZoneConstants.fieldZone.getCenterPose2d().getTranslation(), // center
-            ZoneConstants.fieldZone.getShape().getWidth() - 2*(effectiveWidth/2.0 + Settings.safetyDistanceFromWall), // width
-            ZoneConstants.fieldZone.getShape().getHeight() - 2*(effectiveLength/2.0 + Settings.safetyDistanceFromWall) // height
+            ZoneConstants.fieldZone.getShape().getWidth() - 2*(effectiveLength/2.0 + Settings.safetyDistanceFromWall), // width
+            ZoneConstants.fieldZone.getShape().getHeight() - 2*(effectiveWidth/2.0 + Settings.safetyDistanceFromWall) // height
             )); 
 
         double top = (effectiveZone.getCenterPose2d().getY() + effectiveZone.getShape().getHeight()/2.0) - CenterOfRobotMech.getY();
@@ -215,13 +218,31 @@ public class DrivingProfiles extends SubsystemBase {
         double right = (effectiveZone.getCenterPose2d().getX() + effectiveZone.getShape().getWidth()/2.0) - CenterOfRobotMech.getX();
         double left = (effectiveZone.getCenterPose2d().getX() - effectiveZone.getShape().getWidth()/2.0) - CenterOfRobotMech.getX();
 
-        if (effectiveZone.inZone(CenterOfRobotMech)) {
-            forwardOutput = Functions.minMaxValue(Settings.translationPIDConstants.kP * left, Settings.translationPIDConstants.kP * right, forwardOutput);
-            strafeOutput = Functions.minMaxValue(Settings.translationPIDConstants.kP * bottom, Settings.translationPIDConstants.kP * top, strafeOutput);
+        boolean withinWidth = (Math.abs(CenterOfRobotMech.getX() - effectiveZone.getCenterPose2d().getX())) <= effectiveZone.getShape().getWidth()/2.0;
+        boolean withinLength = (Math.abs(CenterOfRobotMech.getY() - effectiveZone.getCenterPose2d().getY())) <= effectiveZone.getShape().getHeight()/2.0;
+
+        if (Settings.keepWithinPerimeter) {
+
+            if (withinWidth) forwardOutput = (DriverStation.getAlliance().get() == Alliance.Red ? -1 : 1) * Functions.minMaxValue(Settings.TranslationKP * left, Settings.TranslationKP * right, (DriverStation.getAlliance().get() == Alliance.Red ? -1 : 1) * forwardOutput);
+            else forwardOutput = (DriverStation.getAlliance().get() == Alliance.Red ? -1 : 1) * Settings.TranslationKP * Functions.closestToZero(right, left);
+
+            if (withinLength) strafeOutput = Functions.minMaxValue(Settings.TranslationKP * bottom, Settings.TranslationKP * top, strafeOutput);
+            else strafeOutput = Settings.TranslationKP * Functions.closestToZero(top, bottom);
+
         } else {
-            forwardOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromX(CenterOfRobotMech.getTranslation());
-            strafeOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromY(CenterOfRobotMech.getTranslation());
+            if (withinWidth) SmartDashboard.putNumber("Driving Perms forward", (DriverStation.getAlliance().get() == Alliance.Red ? -1 : 1) * Functions.minMaxValue(Settings.TranslationKP * left, Settings.TranslationKP * right, (DriverStation.getAlliance().get() == Alliance.Red ? -1 : 1) * forwardOutput));
+            else SmartDashboard.putNumber("Driving Perms forward", (DriverStation.getAlliance().get() == Alliance.Red ? -1 : 1) * Settings.TranslationKP * effectiveZone.getShape().getDistanceFromX(CenterOfRobotMech.getTranslation()));
+            
+            if (withinLength) SmartDashboard.putNumber("Driving Perms strafe", Functions.minMaxValue(Settings.TranslationKP * bottom, Settings.TranslationKP * top, strafeOutput));
+            else SmartDashboard.putNumber("Driving Perms strafe", Settings.TranslationKP * effectiveZone.getShape().getDistanceFromY(CenterOfRobotMech.getTranslation()));
+            
+
+            SmartDashboard.putNumber("Driving Perms forward output", forwardOutput);
+            SmartDashboard.putNumber("Driving Perms strafe output", strafeOutput);
+            SmartDashboard.putBoolean("Driving Perms within length", withinLength);
+            SmartDashboard.putBoolean("Driving Perms within the width", withinWidth);
         }
+        
         
     }
 
@@ -273,19 +294,20 @@ public class DrivingProfiles extends SubsystemBase {
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
             }*/
+            
 
             PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
             if (LimelightPoseEstimate2 != null) {
                 SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
 
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) drivetrain.addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.1, 0.1, 4.0));
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) drivetrain.addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.25, 0.25, 6.0));
             }
 
             PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
             if (LimelightPoseEstimate3 != null) {
                 SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
 
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) drivetrain.addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.1, 0.1, 4.0));
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) drivetrain.addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.25, 0.25, 6.0));
             }
             
 
@@ -314,10 +336,10 @@ public class DrivingProfiles extends SubsystemBase {
             SmartDashboard.putNumber("BATTERY VOLTAGE:", BatteryVoltage);
 
             // I still don't think it needs to go back up since almost everything is running constantly anyways
-            if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 1 && CurrentLimitTimer.time() > 1) {
+            if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 10 && CurrentLimitTimer.time() > 1) {
                 CurrentLimitTimer.reset();
                 currentDriveSupplyCurrentLimit -= 20;
-                if (currentDriveSupplyCurrentLimit < 1) currentDriveSupplyCurrentLimit = 1;
+                if (currentDriveSupplyCurrentLimit < 10) currentDriveSupplyCurrentLimit = 10;
                 drivetrain.setDriveMotorCurrentLimit(currentDriveSupplyCurrentLimit);
             }
             SmartDashboard.putNumber("Drive Motors Supply Current Limit:", currentDriveSupplyCurrentLimit);

@@ -7,6 +7,7 @@ package frc.robot;
 import frc.robot.auton.Autos;
 import frc.robot.commands.StartIntakingCommand;
 import frc.robot.commands.EnableTurretCommand;
+import frc.robot.commands.ResetElevatorCommand;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings.RobotSettings;
@@ -31,6 +32,7 @@ import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -84,6 +86,7 @@ public class RobotContainer {
 
     private final StartIntakingCommand startIntakingCommand = new StartIntakingCommand(intakeSubsystem, traverseSubsystem);
     private final EnableTurretCommand enableTurretCommand = new EnableTurretCommand(outtakeSubsystem);
+    private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -130,136 +133,147 @@ public class RobotContainer {
     private void configureBindings() {
 
         if(!RobotSettings.overrideMode){
-        //DRIVER CONTROLS
-        drivingProfile.setUpControllerInputs(
-            () -> -driver.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
-            () -> driver.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
-            () -> -driver.getRightX(), 
-            () -> 0.3 + 0.7 * driver.getLeftTriggerAxis(), 
-            2, 2
-        );
+            //DRIVER CONTROLS
+            drivingProfile.setUpControllerInputs(
+                () -> -driver.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
+                () -> driver.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
+                () -> -driver.getRightX(), 
+                () -> 0.3 + 0.7 * driver.getLeftTriggerAxis(), 
+                2, 2
+            );
 
-        drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
-        drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(drivingProfile.getRotationOutput() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
-        ); 
+            drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
+            drivetrain.setDefaultCommand(
+                // Drivetrain will execute this command periodically
+                drivetrain.applyRequest(() ->
+                    drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
+                        .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
+                        .withRotationalRate(drivingProfile.getRotationOutput() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                )
+            ); 
 
-        driver.x().whileTrue(drivetrain.applyRequest(() -> brake));
-        driver.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())); // resets heading (but gets overridden by limelight)
-        // driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
+            driver.x().whileTrue(drivetrain.applyRequest(() -> brake));
+            driver.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())); // resets heading (but gets overridden by limelight)
+            // driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
-        //Driver should probably do climbing
-        //driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
-        //driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
-        driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
-        driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+            //Driver should probably do climbing
+            //driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
+            //driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
+            driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+            driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
 
-        
+            
 
-        //OPERATOR CONTROLS 
-        operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
-        operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+            //OPERATOR CONTROLS 
+            operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+            operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
 
-        operator.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
-        operator.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
-        driver.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
-        driver.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
-        //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
-        operator.rightBumper().and(operator.rightTrigger(0.05))
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
-            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+            operator.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+            operator.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+            driver.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+            driver.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+            //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
+            operator.rightBumper().and(operator.rightTrigger(0.05))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
+                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
 
-        operator.rightBumper()
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-            .onTrue(new InstantCommand(traverseSubsystem::transfer))
-            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-            .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        driver.rightBumper()
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-            .onTrue(new InstantCommand(traverseSubsystem::transfer))
-            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-            .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        driver.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
+            operator.rightBumper()
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+                .onTrue(new InstantCommand(traverseSubsystem::transfer))
+                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+            driver.rightBumper()
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+                .onTrue(new InstantCommand(traverseSubsystem::transfer))
+                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+            driver.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
 
 
 
-        driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
-        // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting))
-        //temporary
-        operator.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));//, new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
-        operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
+            driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+            // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting))
+            //temporary
+            operator.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));//, new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
+            operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
 
-        driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
-
-        outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
-        intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));
+            driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
 
         } else {
-        //Override Version 
-        //DRIVE CONTROLS
-        drivingProfile.setUpControllerInputs(
-            () -> -override.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
-            () -> override.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
-            () -> -override.getRightX(), 
-            () -> 0.3 + 0.7 * override.getLeftTriggerAxis(), 
-            2, 2
-        );
+            //Override Version 
+            //DRIVE CONTROLS
+            drivingProfile.setUpControllerInputs(
+                () -> -override.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
+                () -> override.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
+                () -> -override.getRightX(), 
+                () -> 0.3 + 0.7 * override.getRightTriggerAxis(), 
+                2, 2
+            );
 
-        drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
-        drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(drivingProfile.getRotationOutput() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
-        ); 
+            drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
+            drivetrain.setDefaultCommand(
+                // Drivetrain will execute this command periodically
+                drivetrain.applyRequest(() ->
+                    drive.withVelocityX(drivingProfile.getForwardOutput() * MaxSpeed) // Drive forward with negative Y (forward)
+                        .withVelocityY(-drivingProfile.getStrafeOutput() * MaxSpeed) // Drive left with negative X (left)
+                        .withRotationalRate(drivingProfile.getRotationOutput() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                )
+            ); 
 
-        //Brake (b)
-        override.y().whileTrue(drivetrain.applyRequest(() -> brake));
-        
-        //Reset Heading (Y)
-        override.rightTrigger(0.75).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+            //Brake (b)
+            override.b().whileTrue(drivetrain.applyRequest(() -> brake));
+            
+            //Reset Heading (Y)
+            override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        //Intake On
-        override.rightBumper()
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-            .onTrue(new InstantCommand(traverseSubsystem::transfer))
-            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-            .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-        
-        //Agitate
-        override.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
+            //Intake On
+            override.rightBumper()
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+                .onTrue(new InstantCommand(traverseSubsystem::transfer))
+                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+            
+            //Agitate
+            override.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
 
-        //Reverse Intake
-        override.rightBumper().and(override.leftBumper())
-            .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
-            .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+            //Reverse Intake
+            override.rightBumper().and(override.leftBumper())
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse))
+                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
 
-        //Pivot (POV Left + Right)
-        override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-        override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+            //Pivot (POV Left + Right)
+            //override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
+            //override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
 
-        //Flywheel (A)
-        override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
+            //Flywheel (A)
+            override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
 
-        //Climb (POV Up + Down (driver only if fly speed is not automated))
-        override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
-        override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
-        
-        //Scoop (RS)
-        override.rightStick().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
-        override.rightStick().and(override.leftBumper()).toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop, traverseSubsystem)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
+            //Climb (POV Up + Down (driver only if fly speed is not automated))
+            override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
+            override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem));
 
+            
+            //Scoop (RS)
+            override.leftTrigger(0.8)
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+                .onTrue(new InstantCommand(traverseSubsystem::transfer))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop, traverseSubsystem))
+                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem))
+                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+            override.leftTrigger(0.8).and(override.leftBumper())
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop, traverseSubsystem))
+                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
+            override.leftTrigger(0.8).and(override.rightBumper().negate())
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate, intakeSubsystem))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate, intakeSubsystem));
 
-        intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));
-        outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
         }
+
+        outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
+        intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -282,7 +296,7 @@ public class RobotContainer {
         else
             drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0)));
 
-        outtakeSubsystem.start();
+        CommandScheduler.getInstance().schedule(resetElevatorCommand);
     }
 
     /**

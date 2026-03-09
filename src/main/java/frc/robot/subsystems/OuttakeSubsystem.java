@@ -356,7 +356,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Average Hood Angle:", Math.toDegrees(averageData[2]));
 
 
-        if (Shooting) {
+        if (Shooting/*  && IntakeSubsystem.states != IntakeSubsystem.States.Up*/) {
             //DrivingProfiles.allowedToUseLimelight = false;
             if (TurretSettings.tuningMode) {
                 TargetFlywheelRPM = TurretSettings.setVelocities;
@@ -786,8 +786,10 @@ public class OuttakeSubsystem extends SubsystemBase {
         double phi = thetaX + (a * sign * thetaY);
 
         // Resulting Point L
-        double lx = c.getX();
-        double ly = c.getX() * (Math.tan(phi - Math.toRadians(90)));
+        //double lx = c.getX();
+        //double ly = c.getX() * (Math.tan(phi - Math.toRadians(90)));
+        double lx = c.getX() + r * Math.cos(phi);
+        double ly = c.getY() + r * Math.sin(phi);
 
         return new Translation2d(lx, ly);
     }
@@ -801,30 +803,34 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d robotPose = drivetrain.getState().Pose;
         Pose2d turretPose = DrivingProfiles.getTurretPose();
 
-        if(TurretSettings.autoLowerHood){
-            // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
-            if ((FlyZoning.ifLeftZones(turretPose) && Shooting && !ZoneConstants.allianceZone.inZones(turretPose)) || FlyZoning.ifEnteredZones(turretPose) && Shooting && ZoneConstants.allianceZone.inZones(turretPose)) {
-                Shooting = false;
-            } else if ((FlyZoning.ifEnteredZones(turretPose) && !Shooting && !ZoneConstants.allianceZone.inZones(turretPose))) {
-                Shooting = true; 
+        try { // something broke over here too
+
+            if(TurretSettings.autoLowerHood){
+                // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
+                if ((FlyZoning.ifLeftZones(turretPose) && Shooting && !ZoneConstants.allianceZone.inZones(turretPose)) || FlyZoning.ifEnteredZones(turretPose) && Shooting && ZoneConstants.allianceZone.inZones(turretPose)) {
+                    Shooting = false;
+                } else if ((FlyZoning.ifEnteredZones(turretPose) && !Shooting && !ZoneConstants.allianceZone.inZones(turretPose))) {
+                    Shooting = true; 
+                }
             }
 
             // 5. Update the Trench (FlyZoning) state
             FlyZoning.updateZones(turretPose);
             ZoneConstants.allianceZone.updateZones(robotPose);
-            autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
+            autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trenc
+
+            //Change targeting
+            if(!ZoneConstants.allianceZone.getZoningState()){  
+                Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15);
+                //Uses alliance hub as the regression already accounts for height
+                TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
+            } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
+                TARGET = ZoneConstants.allianceHub;
+            }
+
+        } catch (NullPointerException e) {
+            // do nothing
         }
-
-        //Change targeting
-        if(!ZoneConstants.allianceZone.getZoningState()){  
-            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15);
-            //Uses alliance hub as the regression already accounts for height
-            TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
-        } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
-            TARGET = ZoneConstants.allianceHub;
-        }
-
-
 
         if (drivetrain != null) RobotState = drivetrain.getState();
 
@@ -836,7 +842,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         
 
         if (Settings.tuningTelemetryEnabled) {
-            SmartDashboard.putString("Middle Aim", Functions.stringifyTrans(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15)));
+            
 
 
             //Auto Lower
@@ -863,6 +869,9 @@ public class OuttakeSubsystem extends SubsystemBase {
             checkForTuning();
 
             try { // prevents crashing
+
+                SmartDashboard.putString("Middle Aim", Functions.stringifyTrans(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15)));
+
                 SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
                 SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
                 SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
