@@ -829,7 +829,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         
 
         if (Settings.tuningTelemetryEnabled) {
-            SmartDashboard.putString("Middle Aim", Functions.stringifyPose(new Pose2d(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15), new Rotation2d(0))));
+            SmartDashboard.putString("Middle Aim", Functions.stringifyTrans(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15)));
 
 
             //Auto Lower

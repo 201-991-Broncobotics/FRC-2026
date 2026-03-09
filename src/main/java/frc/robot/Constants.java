@@ -138,7 +138,6 @@ public final class Constants {
 
         public static ArrayList<Zone> TrenchZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
-
         public static Zone blueLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,5.5), 2,2.25));
         public static Zone blueRightRamp = new Zone(new Shape.Rectangle(new Translation2d(4.6,2.5), 2, 2.25));
         public static Zone redLeftRamp = new Zone(new Shape.Rectangle(new Translation2d(11.9,5.5), 2, 2.25));
