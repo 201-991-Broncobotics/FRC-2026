@@ -38,7 +38,7 @@ public class Settings {
     public static class IntakeSettings {
 
         public static double runningPower = 0.75; 
-        public static double reversePower = -0.75; 
+        public static double reversePower = -0.5; 
 
         public static double pivotMotorVelocity = 5; //7
         public static double pivotMotorAcceleration = 5; //2 
@@ -55,7 +55,7 @@ public class Settings {
         
         public static double airShooterPivotAngle = Math.toRadians(20); // this is set to be correct where 90 is up and 0 is straight out
 
-        public static double shufflePulsePeriod = 0.5; // 
+        public static double agitatePulsePeriod = 0.5; // seconds
     }
 
     public static class TraverseSettings {
@@ -125,9 +125,9 @@ public class Settings {
 
         public static double TurretAbsoluteOffset = Math.toRadians(-246.5 + 19.6);
 
-        public static int numberOfIterations = 5;
-        public static double TurntableDeadband = Math.toRadians(1);
-        public static double FlywheelDeadband = 10; // rpm
+        public static int numberOfIterations = 5; // 1 frame = about 20ms
+        public static double TurntableDeadband = Math.toRadians(1.5);
+        public static double FlywheelDeadband = 20; // rpm
         public static double HoodDeadband = Math.toRadians(0.5);
 
         public static boolean tuningMode = false;

@@ -61,13 +61,13 @@ public class IntakeSubsystem extends SubsystemBase {
     private double targetPivotAngle;
 
     private double TargetIntakePower = 0;
-    private boolean shuffleIntake = false;
-    private ElapsedTime shuffleTimer; 
+    private boolean agitateIntake = false;
+    private ElapsedTime agitateTimer; 
 
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
 
-        shuffleTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+        agitateTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
         rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
@@ -153,13 +153,13 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void update() {
-        if (shuffleIntake) {
-            if (shuffleTimer.time() < 0.2 * IntakeSettings.shufflePulsePeriod) {
+        if (agitateIntake) {
+            if (agitateTimer.time() < 0.2 * IntakeSettings.agitatePulsePeriod) {
                 intakeMotor.set(IntakeSettings.reversePower); 
-            } else if (shuffleTimer.time() < IntakeSettings.shufflePulsePeriod) {
+            } else if (agitateTimer.time() < IntakeSettings.agitatePulsePeriod) {
                 intakeMotor.set(IntakeSettings.runningPower); 
             } else {
-                shuffleTimer.reset();
+                agitateTimer.reset();
             }
         } else {
             intakeMotor.set(TargetIntakePower); 
@@ -174,8 +174,8 @@ public class IntakeSubsystem extends SubsystemBase {
     public void drop(){ setPivotAngle(IntakeConstants.lowLimitAngle); }
     // public void aidFly(){ setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle); }
 
-    public void shuffle() { shuffleIntake = true; }
-    public void stopShuffle() { shuffleIntake = false; }
+    public void agitate() { agitateIntake = true; }
+    public void stopAgitate() { agitateIntake = false; }
 
     public void setPivotAngle(double angle){
         targetPivotAngle = angle;
