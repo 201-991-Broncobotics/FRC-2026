@@ -202,10 +202,10 @@ public class RobotContainer {
         ); 
 
         //Brake (b)
-        override.b().whileTrue(drivetrain.applyRequest(() -> brake));
+        override.y().whileTrue(drivetrain.applyRequest(() -> brake));
         
         //Reset Heading (Y)
-        override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        override.rightTrigger(0.75).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         //Intake On
         override.rightBumper()
@@ -213,6 +213,9 @@ public class RobotContainer {
             .onTrue(new InstantCommand(traverseSubsystem::transfer))
             .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
             .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+        
+        //Agitate
+        override.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
 
         //Reverse Intake
         override.rightBumper().and(override.leftBumper())
