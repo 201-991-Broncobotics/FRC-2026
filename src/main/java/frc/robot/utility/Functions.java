@@ -118,4 +118,21 @@ public class Functions {
     }
 
 
+    public static double min(double... value) {
+        double finalValue = value[0];
+        for (double nextValue : value) finalValue = Math.min(finalValue, nextValue);
+        return finalValue;
+    }
+
+    public static double max(double... value) {
+        double finalValue = value[0];
+        for (double nextValue : value) finalValue = Math.max(finalValue, nextValue);
+        return finalValue;
+    }
+
+    public static double closestToZero(double value1, double value2) {
+        if (Math.abs(value1) < Math.abs(value2)) return value1;
+        else return value2;
+    }
+
 }

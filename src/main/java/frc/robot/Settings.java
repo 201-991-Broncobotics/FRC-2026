@@ -1,19 +1,10 @@
 package frc.robot;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.Constants.ZoneConstants;
-import frc.robot.utility.Zoning.Zone;
-import frc.robot.Constants.TurretConstants;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -25,15 +16,22 @@ public class Settings {
 
     public static boolean tuningTelemetryEnabled = true;
 
-    public static PPHolonomicDriveController PathFollowerController = new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-        new PIDConstants(10.0, 0.0, 0.0), // Translation PID constants
-        new PIDConstants(7.0, 0.0, 0.0) // Rotation PID constants
+    public static PIDConstants translationPIDConstants = new PIDConstants(10.0, 0.0, 0.0);
+    public static PIDConstants rotationPIDConstants = new PIDConstants(7.0, 0.0, 0.0);
+
+    public static PPHolonomicDriveController PathFollowerController = new PPHolonomicDriveController( // PPHolonomicController is the built-in path following controller for holonomic drive trains
+        translationPIDConstants, // Translation PID constants
+        rotationPIDConstants // Rotation PID constants
     );
 
     // Auto PathFinding constraints
     public static PathConstraints FollowerConstraints = new PathConstraints(
                     3.0, 4.0,
                     Units.degreesToRadians(540), Units.degreesToRadians(720));
+
+
+    public static double safetyDistanceFromWall = (5) / 39.37; // the closest distance the robot will let the drive go to the wall in meters (inches)
+    public static boolean keepWithinPerimeter = false;
 
     public static class IntakeSettings {
 

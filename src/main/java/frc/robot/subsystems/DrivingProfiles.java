@@ -24,10 +24,12 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.Settings;
 import frc.robot.Constants.AutoDrivingConstants;
+import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain.gyroData;
 import frc.robot.utility.LimelightHelpers.PoseEstimate;
+import frc.robot.utility.Zoning.Shape;
 import frc.robot.utility.Zoning.Zone;
 import frc.robot.utility.ElapsedTime;
 import frc.robot.utility.Functions;
@@ -96,6 +98,7 @@ public class DrivingProfiles extends SubsystemBase {
             SmartDashboard.putNumber("Auto Driving Power", AutoTargetingSettings.AutoDrivingPower);
             SmartDashboard.putNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked); */
         }
+        SmartDashboard.putBoolean("Keep Robot Within Perimeter", Settings.keepWithinPerimeter);
 
         LimelightHelpers.setPipelineIndex("limelight", 0);
 
@@ -118,6 +121,8 @@ public class DrivingProfiles extends SubsystemBase {
 
         //if (useAutoDrivingThrottle) autoDriving = (AutoDrivingThrottle.getAsDouble() > AutoThrottleDeadband);
         if (autoDriving) updateAutoDriving();
+
+        if (Settings.keepWithinPerimeter) keepRobotInPerimeter();
 
     }
 
@@ -187,6 +192,36 @@ public class DrivingProfiles extends SubsystemBase {
 
     public double getAutoDriveTurnPower() {
         return autoRotationOutput;
+    }
+
+    public void keepRobotInPerimeter() {
+
+        double effectiveWidth = 2 * Math.max(
+            Math.hypot(Constants.RobotWidth/2.0, Constants.RobotLength/2.0) * Math.cos(RobotPose.getRotation().getRadians() + Math.atan2(Constants.RobotLength, Constants.RobotWidth)),
+            Math.hypot(Constants.RobotWidth/2.0, Constants.RobotLength/2.0) * Math.cos(RobotPose.getRotation().getRadians() - Math.atan2(Constants.RobotLength, Constants.RobotWidth)));
+        double effectiveLength = 2 * Math.max(
+            Math.hypot(Constants.RobotWidth, Constants.RobotLength) * Math.sin(RobotPose.getRotation().getRadians() + Math.atan2(Constants.RobotLength, Constants.RobotWidth)),
+            Math.hypot(Constants.RobotWidth, Constants.RobotLength) * Math.sin(RobotPose.getRotation().getRadians() - Math.atan2(Constants.RobotLength, Constants.RobotWidth)));
+
+        Zone effectiveZone = new Zone(new Shape.Rectangle(
+            ZoneConstants.fieldZone.getCenterPose2d().getTranslation(), // center
+            ZoneConstants.fieldZone.getShape().getWidth() - 2*(effectiveWidth/2.0 + Settings.safetyDistanceFromWall), // width
+            ZoneConstants.fieldZone.getShape().getHeight() - 2*(effectiveLength/2.0 + Settings.safetyDistanceFromWall) // height
+            )); 
+
+        double top = (effectiveZone.getCenterPose2d().getY() + effectiveZone.getShape().getHeight()/2.0) - RobotPose.getY();
+        double bottom = (effectiveZone.getCenterPose2d().getY() - effectiveZone.getShape().getHeight()/2.0) - RobotPose.getY();
+        double right = (effectiveZone.getCenterPose2d().getX() + effectiveZone.getShape().getWidth()/2.0) - RobotPose.getX();
+        double left = (effectiveZone.getCenterPose2d().getX() - effectiveZone.getShape().getWidth()/2.0) - RobotPose.getX();
+
+        if (effectiveZone.inZone(RobotPose)) {
+            forwardOutput = Functions.minMaxValue(Settings.translationPIDConstants.kP * left, Settings.translationPIDConstants.kP * right, forwardOutput);
+            strafeOutput = Functions.minMaxValue(Settings.translationPIDConstants.kP * bottom, Settings.translationPIDConstants.kP * top, strafeOutput);
+        } else {
+            forwardOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromX(RobotPose.getTranslation());
+            strafeOutput = Settings.translationPIDConstants.kP * effectiveZone.getShape().getDistanceFromY(RobotPose.getTranslation());
+        }
+        
     }
 
     public void stopDriving() {
@@ -277,19 +312,22 @@ public class DrivingProfiles extends SubsystemBase {
             BatteryVoltage = RobotController.getBatteryVoltage();
             SmartDashboard.putNumber("BATTERY VOLTAGE:", BatteryVoltage);
 
-            /* 
-            if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 20 && CurrentLimitTimer.time() > 1) {
+            // I still don't think it needs to go back up since almost everything is running constantly anyways
+            if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 1 && CurrentLimitTimer.time() > 1) {
                 CurrentLimitTimer.reset();
                 currentDriveSupplyCurrentLimit -= 20;
+                if (currentDriveSupplyCurrentLimit < 1) currentDriveSupplyCurrentLimit = 1;
                 drivetrain.setDriveMotorCurrentLimit(currentDriveSupplyCurrentLimit);
             }
-            SmartDashboard.putNumber("Drive Motors Supply Current Limit:", currentDriveSupplyCurrentLimit);*/
+            SmartDashboard.putNumber("Drive Motors Supply Current Limit:", currentDriveSupplyCurrentLimit);
 
         } catch (NullPointerException e) {
             // do nothing
         }
-        
 
+
+        Settings.keepWithinPerimeter = SmartDashboard.getBoolean("Keep Robot Within Perimeter", Settings.keepWithinPerimeter);
+        
         //update settings
         if (Settings.tuningTelemetryEnabled) {
 

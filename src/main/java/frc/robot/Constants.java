@@ -23,8 +23,11 @@ import frc.robot.utility.Zoning.Zoning;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+
+    public static double RobotWidth = 37.319575 / 39.37; // including bumpers and at max extension of storage in meters
+    public static double RobotLength = 40.446198 / 39.37;
   
-   public static class MotorConstants{
+    public static class MotorConstants{
     
         public static final int intakeID = 14; 
         public static final int rightIntakePivotID = 16; 
@@ -164,6 +167,8 @@ public final class Constants {
         public static boolean alliance = true; //True is blue
         public static Translation3d allianceHub = blueHub;
         public static Zoning allianceZone = new Zoning(blueZone);
+
+        public static Zone fieldZone = new Zone(new Shape.Rectangle(new Translation2d(0, 0), new Translation2d(16.54, 8)));
     }
 
     

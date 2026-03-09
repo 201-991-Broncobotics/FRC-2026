@@ -2,12 +2,8 @@ package frc.robot.utility.Zoning;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 
-/**
- * This is to normalize driving and make it easier for Mael to not drive into people. 
- * It also determines which driver controller/joystick should take priority and allows them to be used interchangeably
- */
+
 public class Zone {
     private Shape _shape;
 
@@ -33,7 +29,9 @@ public class Zone {
         return _shape.inArea(Pose.getTranslation());
     }
 
-    public Pose2d getPose2d(){
+    public Pose2d getCenterPose2d(){
         return new Pose2d(_shape.getCenterPoint(), new Rotation2d(0));
     }
+
+    public Shape getShape() { return _shape; }
 }

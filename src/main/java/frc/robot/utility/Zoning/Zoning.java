@@ -96,8 +96,8 @@ public class Zoning {
         this.Zones.add(zone);
     }
 
-    public Pose2d getPose2d(){
-        return Zones.get(0).getPose2d();
+    public Pose2d getCenterPose2d(){
+        return Zones.get(0).getCenterPose2d();
     }
 
     public static boolean inZones(Pose2d pose, ArrayList<Zone> zones){
