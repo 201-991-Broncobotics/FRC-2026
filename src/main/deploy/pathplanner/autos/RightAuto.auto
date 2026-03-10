@@ -7,19 +7,55 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightAuto1"
+            "pathName": "RightPath1"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 1.1
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "DropIntake"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
           }
         },
         {
           "type": "named",
           "data": {
             "name": "StartIntaking"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.15
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "EnableTurret"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LaunchBalls"
           }
         }
       ]

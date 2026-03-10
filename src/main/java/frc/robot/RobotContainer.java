@@ -100,8 +100,8 @@ public class RobotContainer {
 
         // "http://limelight.local:5800/stream.mjpg");
 
-        NamedCommands.registerCommand("LowerPivot", dropIntakeCommand);
-        NamedCommands.registerCommand("RaisePivot", liftIntakeCommand);
+        NamedCommands.registerCommand("DropIntake", dropIntakeCommand);
+        NamedCommands.registerCommand("LiftIntake", liftIntakeCommand);
         NamedCommands.registerCommand("StartIntaking", startIntakingCommand);
         NamedCommands.registerCommand("LaunchBalls", new ParallelCommandGroup(
             new InstantCommand(intakeSubsystem::agitate), 
