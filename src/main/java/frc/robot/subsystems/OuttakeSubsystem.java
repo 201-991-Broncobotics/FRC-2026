@@ -800,7 +800,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         double thetaY = Math.acos(r / dist);
 
         // {C.y > 0 : 1, -1}
-        double sign = (relativeCoords.getY() > 0) ? 1.0 : -1.0;
+        double sign = (relativeCoords.getY() > 0) ? -1.0 : 1.0;
 
         // Combined Angle P(..., F(...))
         double phi = thetaX + (a * sign * thetaY);
