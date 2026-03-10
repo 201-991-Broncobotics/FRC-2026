@@ -63,6 +63,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private double TargetIntakePower = 0;
     private boolean agitateIntake = false;
+    private boolean runPivotCustom = false;
     private ElapsedTime agitateTimer; 
 
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
@@ -112,7 +113,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         intakeMotor.getConfigurator().apply(intakeMotorConfig); 
         rightPivotMotor.getConfigurator().apply(pivotMotorConfig); 
-        pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        //pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         leftPivotMotor.getConfigurator().apply(pivotMotorConfig);
 
         intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfig);
@@ -132,15 +133,18 @@ public class IntakeSubsystem extends SubsystemBase {
         if (!pivotMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motors are broken!");
    
         if (Settings.tuningTelemetryEnabled) {
-            SmartDashboard.putNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
+            /*SmartDashboard.putNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
             SmartDashboard.putNumber("Roller Intake Running Power", IntakeSettings.runningPower);
             SmartDashboard.putNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
             SmartDashboard.putNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
             SmartDashboard.putNumber("Pivot kP", IntakeSettings.pivotkP);
             SmartDashboard.putNumber("Pivot kI", IntakeSettings.pivotkI); 
             SmartDashboard.putNumber("Pivot kD", IntakeSettings.pivotkD);  
-            SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); 
+            SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); */
         }
+
+        SmartDashboard.putNumber("PIVOT custom KP", IntakeSettings.customKP);
+        SmartDashboard.putNumber("PIVOT custom KG", IntakeSettings.customKG);
 
         /* 
         if(IntakeConstants.highLimitAngle > IntakeConstants.lowLimitAngle){
@@ -167,15 +171,38 @@ public class IntakeSubsystem extends SubsystemBase {
         } else {
             intakeMotor.set(TargetIntakePower); 
         }
+
+        if (runPivotCustom) {
+            double power = (targetPivotAngle - CurrentPivotPosition.getAsDouble()) * IntakeSettings.customKP;
+            rightPivotMotor.set(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * IntakeSettings.customKG);
+            leftPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * (0.75 * IntakeSettings.customKG)));
+        } else {
+            stopPivotCustom();
+        }
     }
 
     public void feed(){ TargetIntakePower = IntakeSettings.runningPower; }
     public void stopRollers(){ TargetIntakePower = 0; }
     public void reverseFeed(){ TargetIntakePower = IntakeSettings.reversePower; }
 
-    public void lift(){ setPivotAngle(IntakeConstants.upIntakePosition); states = States.Up;}
-    public void drop(){ setPivotAngle(IntakeConstants.outIntakePosition); states = States.DownAndOn;}
-    // public void aidFly(){ setPivotAngle(IntakeConstants.lowLimitAngle - IntakeSettings.airShooterPivotAngle); }
+    public void lift() { 
+        setPivotCustom(IntakeConstants.upIntakePosition); 
+        states = States.Up;
+    }
+    public void drop() { 
+        setPivotCustom(IntakeConstants.outIntakePosition); 
+        states = States.DownAndOn;
+    }
+
+    public void justDrop() {
+        rightPivotMotor.set(0.25);
+        leftPivotMotor.set(-0.25);
+    }
+
+    public void justLift() {
+        rightPivotMotor.set(-0.25);
+        leftPivotMotor.set(0.25);
+    }
 
     public void agitate() { agitateIntake = true; }
     public void stopAgitate() { agitateIntake = false; }
@@ -186,7 +213,7 @@ public class IntakeSubsystem extends SubsystemBase {
         
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
-        // leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
+        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
     public void setPivotAngle(double angle, double baseAngle){ // wtf
@@ -202,6 +229,21 @@ public class IntakeSubsystem extends SubsystemBase {
         }*/
 
         setPivotAngle(baseAngle+angle);
+    }
+
+    public void setPivotCustom(double angle) {
+        targetPivotAngle = angle;
+        runPivotCustom = true;
+    }
+
+    public void stopPivotCustom() {
+        runPivotCustom = false;
+        rightPivotMotor.stopMotor();
+        leftPivotMotor.stopMotor();
+    }
+
+    public double getIntakePivotPosition() {
+        return CurrentPivotPosition.getAsDouble();
     }
 
     private double getGravityFeedForward() {
@@ -318,7 +360,7 @@ public class IntakeSubsystem extends SubsystemBase {
         rampZoneing.updateZones(RobotPose);
 
         if (Settings.tuningTelemetryEnabled) {
-            //IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
+            /*//IntakeSettings.reversePower = SmartDashboard.getNumber("Roller Intake Reverse Power", IntakeSettings.reversePower);
             //IntakeSettings.runningPower = SmartDashboard.getNumber("Roller Intake Running Power", IntakeSettings.runningPower); 
             IntakeSettings.pivotMotorVelocity = SmartDashboard.getNumber("Pivot Cruise Velocity", IntakeSettings.pivotMotorVelocity); 
             IntakeSettings.pivotMotorAcceleration = SmartDashboard.getNumber("Pivot Acceleration", IntakeSettings.pivotMotorAcceleration); 
@@ -326,7 +368,7 @@ public class IntakeSubsystem extends SubsystemBase {
             IntakeSettings.pivotkI = SmartDashboard.getNumber("Pivot kI", IntakeSettings.pivotkI); 
             IntakeSettings.pivotkD = SmartDashboard.getNumber("Pivot kD", IntakeSettings.pivotkD);  
             IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot kG", IntakeSettings.pivotkG); 
-            IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot Error", Math.toDegrees(targetPivotAngle - CurrentPivotPosition.getAsDouble())); 
+            IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot Error", Math.toDegrees(targetPivotAngle - CurrentPivotPosition.getAsDouble())); */
         }
         
         SmartDashboard.putBoolean("Balls Zone", ballZoning.getZoningState());
@@ -337,11 +379,14 @@ public class IntakeSubsystem extends SubsystemBase {
             //if (CurrentPivotPosition.getAsDouble() < 0) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
             //if (CurrentPivotPosition.getAsDouble() > IntakeConstants.lowLimitAngle) pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.startingPosition / (2*Math.PI) / IntakeConstants.gearRatio;
             SmartDashboard.putNumber("Intake Pivot Position", Math.toDegrees(CurrentPivotPosition.getAsDouble()));
-            SmartDashboard.putNumber("Intake Exact Pivot Position", rightPivotMotor.getPosition().getValueAsDouble());
+            //SmartDashboard.putNumber("Intake Exact Pivot Position", rightPivotMotor.getPosition().getValueAsDouble());
             SmartDashboard.putNumber("Intake Pivot Power", rightPivotMotor.get());
             SmartDashboard.putNumber("Intake Pivot target", Math.toDegrees(targetPivotAngle));
-            SmartDashboard.putNumber("Intake Pivot offset", (pivotOffset / (2*Math.PI)));
-            SmartDashboard.putNumber("Intake Exact Pivot target", targetPivotAngle / (2*Math.PI) + pivotOffset);
+            //SmartDashboard.putNumber("Intake Pivot offset", (pivotOffset / (2*Math.PI)));
+            //SmartDashboard.putNumber("Intake Exact Pivot target", targetPivotAngle / (2*Math.PI) + pivotOffset);
+
+            IntakeSettings.customKP = SmartDashboard.getNumber("PIVOT custom KP", IntakeSettings.customKP);
+            IntakeSettings.customKG = SmartDashboard.getNumber("PIVOT custom KG", IntakeSettings.customKG);
 
 
             SmartDashboard.putNumber("Intake Motor Temperature", intakeMotor.getDeviceTemp().getValueAsDouble());

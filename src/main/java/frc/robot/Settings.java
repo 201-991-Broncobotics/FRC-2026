@@ -55,6 +55,9 @@ public class Settings {
         public static double airShooterPivotAngle = Math.toRadians(20); // this is set to be correct where 90 is up and 0 is straight out
 
         public static double agitatePulsePeriod = 0.5; // seconds
+
+        public static double customKP = 0.1;
+        public static double customKG = 0.1;
     }
 
     public static class TraverseSettings {

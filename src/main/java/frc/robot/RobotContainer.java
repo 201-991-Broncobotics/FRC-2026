@@ -6,7 +6,9 @@ package frc.robot;
 
 import frc.robot.auton.Autos;
 import frc.robot.commands.StartIntakingCommand;
+import frc.robot.commands.DropIntakeCommand;
 import frc.robot.commands.EnableTurretCommand;
+import frc.robot.commands.LiftIntakeCommand;
 import frc.robot.commands.ResetElevatorCommand;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ZoneConstants;
@@ -85,6 +87,8 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
     private final StartIntakingCommand startIntakingCommand = new StartIntakingCommand(intakeSubsystem, traverseSubsystem);
+    private final DropIntakeCommand dropIntakeCommand = new DropIntakeCommand(intakeSubsystem);
+    private final LiftIntakeCommand liftIntakeCommand = new LiftIntakeCommand(intakeSubsystem);
     private final EnableTurretCommand enableTurretCommand = new EnableTurretCommand(outtakeSubsystem);
     private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
 
@@ -94,22 +98,21 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the trigger bindings
 
-        // CameraServer.startAutomaticCapture("Limelight",
         // "http://limelight.local:5800/stream.mjpg");
 
-        drivetrain.configureAutoBuilder();
-
-        NamedCommands.registerCommand("LowerPivot", new InstantCommand(intakeSubsystem::drop));
-        NamedCommands.registerCommand("RaisePivot", new InstantCommand(intakeSubsystem::lift));
+        NamedCommands.registerCommand("LowerPivot", dropIntakeCommand);
+        NamedCommands.registerCommand("RaisePivot", liftIntakeCommand);
         NamedCommands.registerCommand("StartIntaking", startIntakingCommand);
         NamedCommands.registerCommand("LaunchBalls", new ParallelCommandGroup(
             new InstantCommand(intakeSubsystem::agitate), 
             new InstantCommand(traverseSubsystem::scoop)));
         NamedCommands.registerCommand("StopIntaking", new ParallelCommandGroup(
             new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem), 
-            new InstantCommand(traverseSubsystem::stopRoller, traverseSubsystem))); // just by requiring these subsystems it will run the end part of the intaking command
+            new InstantCommand(traverseSubsystem::stopRoller, traverseSubsystem))); // just by requiring these subsystems it should run the end part of the intaking command
         NamedCommands.registerCommand("EnableTurret", enableTurretCommand);
         NamedCommands.registerCommand("DisableTurret", new InstantCommand(outtakeSubsystem::stopShooting, outtakeSubsystem));
+
+        drivetrain.configureAutoBuilder(); // THIS HAS TO GO AFTER NAMED COMMANDS OMG
 
         autoChooser = AutoBuilder.buildAutoChooser("Example Path");
         SmartDashboard.putData("Auto Mode:", autoChooser);
