@@ -775,8 +775,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         double dist = Math.sqrt(relativeCoords.getX() * relativeCoords.getX() + relativeCoords.getY() * relativeCoords.getY());
 
         // Safety Check: acos(x) is undefined if x > 1
-        if (dist < r) {
-            dist = r + 0.1; // Or handle as an error/default to q
+        if (dist < r + 0.15) {
+            dist = r + 0.15; // Or handle as an error/default to q
         }
 
         // F(C, Q, R) componentsh
