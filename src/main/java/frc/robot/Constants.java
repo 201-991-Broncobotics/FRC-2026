@@ -55,8 +55,8 @@ public final class Constants {
         public static final double maxReverseVoltage = -12; 
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double supplyCurrent = 25; // helps prevent brownouts
-        public static final double statorCurrent = 30; // helps prevent motor overheating
+        public static final double supplyCurrent = 10; // helps prevent brownouts
+        public static final double statorCurrent = 20; // helps prevent motor overheating
         public static final double pivotSupplyCurrent = 30;
         public static final double pivotStatorCurrent = 30; 
 
@@ -76,10 +76,10 @@ public final class Constants {
         public static final double maxReverseVoltage = -12; 
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double rollerSupplyCurrent = 30; 
-        public static final double rollerStatorCurrent = 40; 
-        public static final double scoopSupplyCurrent = 30; 
-        public static final double scoopStatorCurrent = 40; 
+        public static final double rollerSupplyCurrent = 15; 
+        public static final double rollerStatorCurrent = 25; 
+        public static final double scoopSupplyCurrent = 15; 
+        public static final double scoopStatorCurrent = 25; 
     }
 
     public static class ClimbingConstants {
@@ -88,8 +88,8 @@ public final class Constants {
         public static final double maxReverseVoltage = -12;
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double supplyCurrent = 60; 
-        public static final double statorCurrent = 80; 
+        public static final double supplyCurrent = 40; 
+        public static final double statorCurrent = 60; 
 
         public static final double x60ShaftRadius = 4/25.4; //inches
         public static final double gearRatio = (1.0/15.0); 
@@ -108,9 +108,11 @@ public final class Constants {
         public static final double x44MaxRPM = 7750; 
 
         public static final boolean currentLimitsEnabled = true; 
-        public static final double supplyCurrent = 40; 
+        public static final double supplyCurrent = 35; 
         public static final double statorCurrent = 50; 
         public static final int hoodMotorCurrent = 15;
+        public static final double turretSupplyCurrent = 15;
+        public static final double turretStatorCurrent = 20;
 
         public static final double gravityInches = 386.0885826; // in inches per second
 

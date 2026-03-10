@@ -229,22 +229,20 @@ public class RobotContainer {
             //Reset Heading (Y)
             override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-            //Intake On
-            override.rightBumper()
+            //Intake
+            override.rightBumper().and(override.leftBumper().negate()) // just intake
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-                .onTrue(new InstantCommand(traverseSubsystem::transfer))
-                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-            
-            //Agitate
-            override.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::transfer));
 
             //Reverse Intake
             override.rightBumper().and(override.leftBumper())
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
-                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse))
-                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse));
+
+            // Stop Intake
+            override.rightBumper().negate()
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::stopRoller));
 
             //Pivot (POV Left + Right)
             //override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
@@ -257,21 +255,26 @@ public class RobotContainer {
             override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
             override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem));
 
+            override.x().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleDumbShooter));
             
             //Scoop (RS)
-            override.leftTrigger(0.8)
+            override.leftTrigger(0.8).or(override.rightBumper()).and(override.leftBumper().negate()) // either shoot or intake
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-                .onTrue(new InstantCommand(traverseSubsystem::transfer))
-                .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop, traverseSubsystem))
-                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem))
-                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-            override.leftTrigger(0.8).and(override.leftBumper())
-                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop, traverseSubsystem))
-                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop, traverseSubsystem));
-            override.leftTrigger(0.8).and(override.rightBumper().negate())
-                .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate, intakeSubsystem))
-                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate, intakeSubsystem));
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::transfer))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop));
+            override.leftTrigger(0.8).or(override.rightBumper()).and(override.leftBumper()) // either shoot or intake but with reverse
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop));
+            override.leftTrigger(0.8).and(override.rightBumper().negate()) // if just shoot
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate));
+            override.rightBumper() // if intake is pressed at all
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate));
+            override.leftTrigger(0.8).negate().and(override.rightBumper().negate()) // nothing
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::stopScoop))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::stopRoller))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate));
 
         }
 

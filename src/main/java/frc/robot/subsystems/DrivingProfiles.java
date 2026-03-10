@@ -72,7 +72,7 @@ public class DrivingProfiles extends SubsystemBase {
     public static boolean allowedToUseLimelight = true;
 
     private double BatteryVoltage = 14;
-    private int currentDriveSupplyCurrentLimit = 120;
+    private int currentDriveSupplyCurrentLimit = 100;
     private ElapsedTime CurrentLimitTimer;
 
 

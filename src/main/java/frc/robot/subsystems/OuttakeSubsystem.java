@@ -77,7 +77,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private SparkFlexConfig hoodConfig;
     private SparkClosedLoopController hoodClosedLoopController;
     private StatusCode flywheelStatus, turntableStatus, hoodStatus; 
-    private CurrentLimitsConfigs currentLimits; 
+    private CurrentLimitsConfigs currentLimits, turntableCurrentLimits; 
     private double lastkP, lastkI, lastkD, lastkS, lastkV, lastkA, 
                    lastTkP, lastTkI, lastTkD, lastTkS, lastTkV, lastPkP, lastPkI, lastPkD;
     private Vector2d distanceVector;  
@@ -118,6 +118,8 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
+
+    private boolean dumbShooterMode = false;
 
     
     private ArrayList<Double> averageTurntableAngle = new ArrayList(), averageFlywheelRPM = new ArrayList(), averageHoodAngle = new ArrayList();
@@ -205,8 +207,14 @@ public class OuttakeSubsystem extends SubsystemBase {
         currentLimits.StatorCurrentLimitEnable = TurretConstants.currentLimitsEnabled;
         currentLimits.StatorCurrentLimit = TurretConstants.statorCurrent;
 
+        turntableCurrentLimits = new CurrentLimitsConfigs();
+        turntableCurrentLimits.SupplyCurrentLimitEnable = TurretConstants.currentLimitsEnabled;
+        turntableCurrentLimits.SupplyCurrentLimit = TurretConstants.turretSupplyCurrent;
+        turntableCurrentLimits.StatorCurrentLimitEnable = TurretConstants.currentLimitsEnabled;
+        turntableCurrentLimits.StatorCurrentLimit = TurretConstants.turretStatorCurrent;
+
         flywheelConfig.CurrentLimits = currentLimits; 
-        turntableConfig.CurrentLimits = currentLimits; 
+        turntableConfig.CurrentLimits = turntableCurrentLimits; 
 
         leftFlyMotor.getConfigurator().apply(flywheelConfig); 
         rightFlyMotor.getConfigurator().apply(flywheelConfig); 
@@ -298,6 +306,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
     public void update(){
+        /* 
         double hoodControl = -controller.getRightY();
         double turretControl = controller.getLeftX();
 
@@ -331,8 +340,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         TargetTurretAngle += MathUtil.applyDeadband(turretControl, 0.05) * Math.toRadians(TurretConstants.incrementAngle);
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-    
-
+        */
         
         lastTargettingData = getTargettingData(TARGET, 0, 0); // turret, flywheel, hood, air time
 
@@ -357,9 +365,14 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
         if (Shooting/*  && IntakeSubsystem.states != IntakeSubsystem.States.Up*/) {
+
             //DrivingProfiles.allowedToUseLimelight = false;
             if (TurretSettings.tuningMode) {
                 TargetFlywheelRPM = TurretSettings.setVelocities;
+            } else if (dumbShooterMode) {
+                TargetTurretAngle = Math.toRadians(180);
+                TargetFlywheelRPM = 2532;
+                TargetHoodAngle = 33.4;
             } else {
 
                 // TURNTABLE
@@ -599,6 +612,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void enableAutoLower(){ TurretSettings.autoLowerHood = true; }
     public void disableAutoLower(){ TurretSettings.autoLowerHood = false; }
 
+    public void toggleDumbShooter() { dumbShooterMode = !dumbShooterMode; }
 
     public void setController(CommandXboxController newController){ controller = newController; }
 
