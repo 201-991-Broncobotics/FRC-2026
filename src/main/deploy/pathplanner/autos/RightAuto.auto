@@ -19,51 +19,53 @@
                 "data": {
                   "commands": [
                     {
-                      "type": "wait",
+                      "type": "deadline",
                       "data": {
-                        "waitTime": 0.9
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "DropIntake"
-                      }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.25
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "StartIntaking"
+                        "commands": [
+                          {
+                            "type": "wait",
+                            "data": {
+                              "waitTime": 4.0
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "StartIntaking"
+                            }
+                          }
+                        ]
                       }
                     },
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 3.35
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "EnableTurret"
-                      }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 1.0
+                        "waitTime": 0.6
                       }
                     },
                     {
                       "type": "named",
                       "data": {
                         "name": "LaunchBalls"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 4.5
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "EnableTurret"
                       }
                     }
                   ]

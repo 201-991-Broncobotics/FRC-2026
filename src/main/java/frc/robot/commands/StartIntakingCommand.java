@@ -17,6 +17,7 @@ public class StartIntakingCommand extends Command {
 
     @Override
     public void initialize() {
+        intake.drop();
         intake.feed();
         intake.update();
         traverse.transfer();
