@@ -296,6 +296,7 @@ public class DrivingProfiles extends SubsystemBase {
             }*/
             
 
+            // right side limelight: 0.377043m up, -0.050800m forward, -0.355600m left
             PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
             if (LimelightPoseEstimate2 != null) {
                 SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
@@ -303,11 +304,12 @@ public class DrivingProfiles extends SubsystemBase {
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) drivetrain.addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.25, 0.25, 6.0));
             }
 
+            // left side limelight: 0.332161m up, 0.063500m forward, 0.355600m left
             PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
             if (LimelightPoseEstimate3 != null) {
                 SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
 
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) drivetrain.addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.25, 0.25, 6.0));
+                // if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) drivetrain.addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.25, 0.25, 6.0));
             }
             
 
@@ -349,7 +351,7 @@ public class DrivingProfiles extends SubsystemBase {
         }
 
 
-        Settings.keepWithinPerimeter = SmartDashboard.getBoolean("Keep Robot Within Perimeter", Settings.keepWithinPerimeter);
+        Settings.keepWithinPerimeter = SmartDashboard.getBoolean("Keep Robot Within Perimeter:", Settings.keepWithinPerimeter);
         
         //update settings
         if (Settings.tuningTelemetryEnabled) {
