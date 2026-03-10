@@ -5,57 +5,71 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "RightPath1"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.1
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "DropIntake"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StartIntaking"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.15
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "EnableTurret"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "LaunchBalls"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "TestPath"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 0.9
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "DropIntake"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 0.25
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "StartIntaking"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 3.35
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "EnableTurret"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "LaunchBalls"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       ]

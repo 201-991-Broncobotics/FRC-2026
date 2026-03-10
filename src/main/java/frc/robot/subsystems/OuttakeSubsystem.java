@@ -364,7 +364,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Average Hood Angle:", Math.toDegrees(averageData[2]));
 
 
-        if (Shooting/*  && IntakeSubsystem.states != IntakeSubsystem.States.Up*/) {
+        if (Shooting && IntakeSubsystem.states != IntakeSubsystem.States.Up) {
 
             //DrivingProfiles.allowedToUseLimelight = false;
             if (TurretSettings.tuningMode) {
@@ -466,6 +466,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         double Distance = Math.hypot(RelativeTarget.getX(), RelativeTarget.getY());
         double LaunchHeight = 22.3; // INCHES sorry, can also be made to change based on hood angle  
         double finalTargetRPM = Traj.k1 * ((39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * RelativeTarget.getZ()) + LaunchHeight + Traj.k3));
+
+        if (Double.isNaN(finalTargetRPM)) finalTargetRPM = 0;
 
         double currentFlywheelRPM = finalTargetRPM;//CurrentFlywheelRPM.getAsDouble();
 
@@ -737,9 +739,9 @@ public class OuttakeSubsystem extends SubsystemBase {
     public int getBallsCounted(){ return ballsCounted; }
 
     public static double getAbsoluteTurretAngle() {
-        double R = (throughBore19.getAbsoluteRaw() - throughBore21.getAbsoluteRaw()) * 2*Math.PI;
+        double R = (-throughBore19.getAbsoluteRaw() - -throughBore21.getAbsoluteRaw()) * 2*Math.PI;
         if (R < 0) R += 2* Math.PI;
-        return -0.9975 * R - TurretSettings.TurretAbsoluteOffset; // fixes angle being slightly off, also means the turret can't keep rotating
+        return Functions.wrapAngleAround(-0.9975 * R - TurretSettings.TurretAbsoluteOffset, Math.toRadians(-90)); // fixes angle being slightly off, also means the turret can't keep rotating
     }
 
     /**

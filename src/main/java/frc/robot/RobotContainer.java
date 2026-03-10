@@ -8,6 +8,7 @@ import frc.robot.auton.Autos;
 import frc.robot.commands.StartIntakingCommand;
 import frc.robot.commands.DropIntakeCommand;
 import frc.robot.commands.EnableTurretCommand;
+import frc.robot.commands.LaunchBallsCommand;
 import frc.robot.commands.LiftIntakeCommand;
 import frc.robot.commands.ResetElevatorCommand;
 import frc.robot.Constants.OperatorConstants;
@@ -91,6 +92,7 @@ public class RobotContainer {
     private final LiftIntakeCommand liftIntakeCommand = new LiftIntakeCommand(intakeSubsystem);
     private final EnableTurretCommand enableTurretCommand = new EnableTurretCommand(outtakeSubsystem);
     private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
+    private final LaunchBallsCommand launchBallsCommand = new LaunchBallsCommand(intakeSubsystem, traverseSubsystem);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -103,9 +105,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("DropIntake", dropIntakeCommand);
         NamedCommands.registerCommand("LiftIntake", liftIntakeCommand);
         NamedCommands.registerCommand("StartIntaking", startIntakingCommand);
-        NamedCommands.registerCommand("LaunchBalls", new ParallelCommandGroup(
-            new InstantCommand(intakeSubsystem::agitate), 
-            new InstantCommand(traverseSubsystem::scoop)));
+        NamedCommands.registerCommand("LaunchBalls", launchBallsCommand);
         NamedCommands.registerCommand("StopIntaking", new ParallelCommandGroup(
             new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem), 
             new InstantCommand(traverseSubsystem::stopRoller, traverseSubsystem))); // just by requiring these subsystems it should run the end part of the intaking command
@@ -245,8 +245,8 @@ public class RobotContainer {
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::stopRoller));
 
             //Pivot (POV Left + Right)
-            //override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-            //override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+            override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
+            override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
 
             //Flywheel (A)
             override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
@@ -260,13 +260,14 @@ public class RobotContainer {
             //Scoop (RS)
             override.leftTrigger(0.8).or(override.rightBumper()).and(override.leftBumper().negate()) // either shoot or intake
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-                .toggleOnTrue(new InstantCommand(traverseSubsystem::transfer))
-                .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop));
-            override.leftTrigger(0.8).or(override.rightBumper()).and(override.leftBumper()) // either shoot or intake but with reverse
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::transfer));
+            override.rightBumper().and(override.leftBumper()) //  intake but with reverse
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
-                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse));
+            override.leftTrigger(0.8).and(override.leftBumper()) // shoot but with reverse
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop));
             override.leftTrigger(0.8).and(override.rightBumper().negate()) // if just shoot
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop))
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate));
             override.rightBumper() // if intake is pressed at all
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate));

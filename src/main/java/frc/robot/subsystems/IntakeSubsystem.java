@@ -64,6 +64,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private double TargetIntakePower = 0;
     private boolean agitateIntake = false;
     private boolean runPivotCustom = false;
+    private boolean currentlySetUp = true;
     private ElapsedTime agitateTimer; 
 
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
@@ -129,6 +130,8 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
         CurrentPivotPosition = () -> (rightPivotMotor.getPosition().getValueAsDouble() + pivotOffset) * 2*Math.PI;
 
+        currentlySetUp = true;
+
         if (!intakeMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Roller motor with ID " + MotorConstants.intakeID + " is broken!");
         if (!pivotMotorStatus.isOK()) SmartDashboard.putString(getSubsystem(), "Pivot motors are broken!");
    
@@ -172,10 +175,11 @@ public class IntakeSubsystem extends SubsystemBase {
             intakeMotor.set(TargetIntakePower); 
         }
 
+        if (!currentlySetUp && states == States.DownAndOn) stopPivotCustom();
         if (runPivotCustom) {
             double power = (targetPivotAngle - CurrentPivotPosition.getAsDouble()) * IntakeSettings.customKP;
             rightPivotMotor.set(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * IntakeSettings.customKG);
-            leftPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * (0.75 * IntakeSettings.customKG)));
+            leftPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * (0.7 * IntakeSettings.customKG)));
         } else {
             stopPivotCustom();
         }
@@ -186,17 +190,18 @@ public class IntakeSubsystem extends SubsystemBase {
     public void reverseFeed(){ TargetIntakePower = IntakeSettings.reversePower; }
 
     public void lift() { 
+        currentlySetUp = true;
         setPivotCustom(IntakeConstants.upIntakePosition); 
-        states = States.Up;
     }
     public void drop() { 
+        currentlySetUp = false;
         setPivotCustom(IntakeConstants.outIntakePosition); 
-        states = States.DownAndOn;
     }
 
     public void justDrop() {
-        rightPivotMotor.set(0.25);
-        leftPivotMotor.set(-0.25);
+        rightPivotMotor.set(0.5);
+        leftPivotMotor.set(-0.5);
+        currentlySetUp = false;
     }
 
     public void justLift() {
@@ -327,6 +332,12 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
         // resetStoragePosition(); // didn't work
+
+        if (CurrentPivotPosition.getAsDouble() > IntakeConstants.outIntakePosition - Math.toRadians(15)) states = States.DownAndOn;
+        else states = States.Up;
+
+        if (states == States.Up) SmartDashboard.putString("Intake State", "Up");
+        else SmartDashboard.putString("Intake State", "Down");
 
         // 1. Get the current pose once
         RobotPose = drivetrain.getState().Pose;

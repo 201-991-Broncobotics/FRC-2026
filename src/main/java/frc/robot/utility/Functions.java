@@ -135,4 +135,9 @@ public class Functions {
         else return value2;
     }
 
+    public static double wrapAngleAround(double input, double wrapAngle) {
+        wrapAngle = normalizeAnglePositive(wrapAngle);
+        return normalizeAnglePositive(input + wrapAngle) - wrapAngle;
+    }
+
 }
