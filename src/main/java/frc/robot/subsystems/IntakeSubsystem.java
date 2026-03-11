@@ -66,11 +66,13 @@ public class IntakeSubsystem extends SubsystemBase {
     private boolean runPivotCustom = false;
     private boolean currentlySetUp = true;
     private ElapsedTime agitateTimer; 
+    private ElapsedTime resetPivotTimer;
 
     public IntakeSubsystem(CommandSwerveDrivetrain Drivetrain){
         this.drivetrain = Drivetrain;
 
         agitateTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+        resetPivotTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
         rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
@@ -94,7 +96,7 @@ public class IntakeSubsystem extends SubsystemBase {
         currentLimits = new CurrentLimitsConfigs();
         currentLimits.SupplyCurrentLimitEnable = IntakeConstants.currentLimitsEnabled; 
         currentLimits.SupplyCurrentLimit = IntakeConstants.supplyCurrent;
-        currentLimits.StatorCurrentLimitEnable = IntakeConstants.currentLimitsEnabled; 
+        currentLimits.StatorCurrentLimitEnable = false; //IntakeConstants.currentLimitsEnabled; 
         currentLimits.StatorCurrentLimit = IntakeConstants.statorCurrent; 
         
         intakeMotorConfig.CurrentLimits = currentLimits;
@@ -146,8 +148,8 @@ public class IntakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Pivot kG", IntakeSettings.pivotkG); */
         }
 
-        SmartDashboard.putNumber("PIVOT custom KP", IntakeSettings.customKP);
-        SmartDashboard.putNumber("PIVOT custom KG", IntakeSettings.customKG);
+        //SmartDashboard.putNumber("PIVOT custom KP", IntakeSettings.customKP);
+        //SmartDashboard.putNumber("PIVOT custom KG", IntakeSettings.customKG);
 
         /* 
         if(IntakeConstants.highLimitAngle > IntakeConstants.lowLimitAngle){
@@ -339,6 +341,15 @@ public class IntakeSubsystem extends SubsystemBase {
         if (states == States.Up) SmartDashboard.putString("Intake State", "Up");
         else SmartDashboard.putString("Intake State", "Down");
 
+        if (states == States.Up && !currentlySetUp && rightPivotMotor.getStatorCurrent().getValueAsDouble() > 20) {
+            if (resetPivotTimer.time() > 2) {
+                pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.outIntakePosition / (2*Math.PI);
+                states = States.DownAndOn;
+            }
+        } else {
+            resetPivotTimer.reset();
+        }
+
         // 1. Get the current pose once
         RobotPose = drivetrain.getState().Pose;
 
@@ -382,8 +393,8 @@ public class IntakeSubsystem extends SubsystemBase {
             IntakeSettings.pivotkG = SmartDashboard.getNumber("Pivot Error", Math.toDegrees(targetPivotAngle - CurrentPivotPosition.getAsDouble())); */
         }
         
-        SmartDashboard.putBoolean("Balls Zone", ballZoning.getZoningState());
-        SmartDashboard.putBoolean("Ramp Zone", rampZoneing.getZoningState());
+        //SmartDashboard.putBoolean("Balls Zone", ballZoning.getZoningState());
+        //SmartDashboard.putBoolean("Ramp Zone", rampZoneing.getZoningState());
 
 
         try {
@@ -396,12 +407,13 @@ public class IntakeSubsystem extends SubsystemBase {
             //SmartDashboard.putNumber("Intake Pivot offset", (pivotOffset / (2*Math.PI)));
             //SmartDashboard.putNumber("Intake Exact Pivot target", targetPivotAngle / (2*Math.PI) + pivotOffset);
 
-            IntakeSettings.customKP = SmartDashboard.getNumber("PIVOT custom KP", IntakeSettings.customKP);
-            IntakeSettings.customKG = SmartDashboard.getNumber("PIVOT custom KG", IntakeSettings.customKG);
+            //IntakeSettings.customKP = SmartDashboard.getNumber("PIVOT custom KP", IntakeSettings.customKP);
+            //IntakeSettings.customKG = SmartDashboard.getNumber("PIVOT custom KG", IntakeSettings.customKG);
 
 
-            SmartDashboard.putNumber("Intake Motor Temperature", intakeMotor.getDeviceTemp().getValueAsDouble());
+            //SmartDashboard.putNumber("Intake Motor Temperature", intakeMotor.getDeviceTemp().getValueAsDouble());
             SmartDashboard.putNumber("Intake Motor RPM", intakeMotor.getVelocity().getValueAsDouble() * 60);
+            SmartDashboard.putNumber("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
 
         } catch (NullPointerException e) {
             // do nothing

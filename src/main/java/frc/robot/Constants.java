@@ -76,10 +76,10 @@ public final class Constants {
         public static final double maxReverseVoltage = -12; 
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double rollerSupplyCurrent = 15; 
-        public static final double rollerStatorCurrent = 25; 
-        public static final double scoopSupplyCurrent = 20; 
-        public static final double scoopStatorCurrent = 35; 
+        public static final double rollerSupplyCurrent = 25; 
+        public static final double rollerStatorCurrent = 40; // disabled
+        public static final double scoopSupplyCurrent = 25; 
+        public static final double scoopStatorCurrent = 40; // disabled
     }
 
     public static class ClimbingConstants {
@@ -89,7 +89,7 @@ public final class Constants {
 
         public static final boolean currentLimitsEnabled = true;  
         public static final double supplyCurrent = 40; 
-        public static final double statorCurrent = 60; 
+        public static final double statorCurrent = 60; // disabled
 
         public static final double x60ShaftRadius = 4/25.4; //inches
         public static final double gearRatio = (1.0/15.0); 
@@ -108,9 +108,9 @@ public final class Constants {
         public static final double x44MaxRPM = 7750; 
 
         public static final boolean currentLimitsEnabled = true; 
-        public static final double supplyCurrent = 35; 
-        public static final double statorCurrent = 50; 
-        public static final int hoodMotorCurrent = 15;
+        public static final double supplyCurrent = 40; 
+        public static final double statorCurrent = 60; // disabled
+        public static final int hoodMotorCurrent = 25;
         public static final double turretSupplyCurrent = 40;
         public static final double turretStatorCurrent = 60;
 

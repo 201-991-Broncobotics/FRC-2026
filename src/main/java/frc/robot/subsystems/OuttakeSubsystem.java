@@ -81,7 +81,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private double lastkP, lastkI, lastkD, lastkS, lastkV, lastkA, 
                    lastTkP, lastTkI, lastTkD, lastTkS, lastTkV, lastPkP, lastPkI, lastPkD;
     private Vector2d distanceVector;  
-    private LimelightResults results; 
+    //private LimelightResults results; 
     private SwerveDriveState RobotState;
     private CommandSwerveDrivetrain drivetrain;
     private double FrameTime = 0.1;
@@ -204,7 +204,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         currentLimits = new CurrentLimitsConfigs();
         currentLimits.SupplyCurrentLimitEnable = TurretConstants.currentLimitsEnabled;
         currentLimits.SupplyCurrentLimit = TurretConstants.supplyCurrent;
-        currentLimits.StatorCurrentLimitEnable = TurretConstants.currentLimitsEnabled;
+        currentLimits.StatorCurrentLimitEnable = false; //TurretConstants.currentLimitsEnabled;
         currentLimits.StatorCurrentLimit = TurretConstants.statorCurrent;
 
         turntableCurrentLimits = new CurrentLimitsConfigs();
@@ -263,7 +263,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Flywheel kD", TurretSettings.kD);
             SmartDashboard.putNumber("Flywheel kS", TurretSettings.kS);
             SmartDashboard.putNumber("Flywheel kV", TurretSettings.kV);
-            SmartDashboard.putNumber("Flywheel kA", TurretSettings.kA);*/
+            SmartDashboard.putNumber("Flywheel kA", TurretSettings.kA);
             SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
             SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
             SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
@@ -272,7 +272,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
             SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
             SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
-            SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
+            SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); */
         }
         
 
@@ -287,7 +287,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void start(){
         alliance = DriverStation.getAlliance();
 
-        results = LimelightHelpers.getLatestResults("limelight"); // the limelight name is always limelight unless other cameras which there aren't any
+        // results = LimelightHelpers.getLatestResults("limelight");
         if (alliance.get() == Alliance.Red) {
             LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         } else if (alliance.get() == Alliance.Blue) {
@@ -359,9 +359,9 @@ public class OuttakeSubsystem extends SubsystemBase {
             averageHoodAngle.stream().mapToDouble(Double::doubleValue).average().orElse(0.0),
         };
 
-        SmartDashboard.putNumber("Average Turntable Angle:", Math.toDegrees(averageData[0]));
-        SmartDashboard.putNumber("Average Flywheel RPM:", averageData[1]);
-        SmartDashboard.putNumber("Average Hood Angle:", Math.toDegrees(averageData[2]));
+        //SmartDashboard.putNumber("Average Turntable Angle:", Math.toDegrees(averageData[0]));
+        //SmartDashboard.putNumber("Average Flywheel RPM:", averageData[1]);
+        //SmartDashboard.putNumber("Average Hood Angle:", Math.toDegrees(averageData[2]));
 
 
         if (Shooting && IntakeSubsystem.states != IntakeSubsystem.States.Up) {
@@ -426,6 +426,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             
             stopFlywheels();
             setHood(TurretConstants.minHoodAngle);
+            hoodCalibrationPhase = 0;
             
             //setTurntable(Math.toDegrees(180)); - AIDAN TS IS FOR THE TURNTABLE TO ALIGN WHEN THE PIVOT IS UP
             //DrivingProfiles.allowedToUseLimelight = true;
@@ -518,7 +519,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         Translation2d offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose().getTranslation());
         Translation3d relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
         
-        SmartDashboard.putString("relative Goal Pose", Functions.stringifyTrans(relativeGoalPose));
+        //SmartDashboard.putString("Relative Goal Pose", Functions.stringifyTrans(relativeGoalPose));
 
         double[] finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
         double airTime = finalRegression[3];
@@ -541,7 +542,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
 
         SmartDashboard.putNumber("TargettingData final airtime", airTime);
-        SmartDashboard.putString("TargettingData final target pose", Functions.stringifyTrans(relativeGoalPose));
+        SmartDashboard.putString("Relative Goal Pose", Functions.stringifyTrans(relativeGoalPose));
         
         return finalRegression; // Target Turret Angle, Target Flywheel rpm (rough estimate), Target hood angle (based on current flywheel rpm), Estimated Air time
     }
@@ -570,6 +571,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         Angle = Functions.minMaxValue(TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, Angle);
 
         double motorRot = Functions.map(Angle, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle, lowestHoodMotorRev, highestHoodMotorRev);
+        SmartDashboard.putNumber("Hood set target angle", Angle);
+        SmartDashboard.putNumber("Hood set target Motor Rot", motorRot);
         hoodClosedLoopController.setSetpoint(motorRot, ControlType.kPosition);
     }
 
@@ -867,10 +870,10 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
             //Auto Lower
-            SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(DrivingProfiles.getTurretPose()));
-            SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(DrivingProfiles.getTurretPose()));
-            SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(DrivingProfiles.getTurretPose()));
-            SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(DrivingProfiles.getTurretPose()));
+            //SmartDashboard.putBoolean("BLT Zone", ZoneConstants.blueLeftTrench.inZone(DrivingProfiles.getTurretPose()));
+            //SmartDashboard.putBoolean("BRT Zone", ZoneConstants.blueRightTrench.inZone(DrivingProfiles.getTurretPose()));
+            //SmartDashboard.putBoolean("RLT Zone", ZoneConstants.redLeftTrench.inZone(DrivingProfiles.getTurretPose()));
+            //SmartDashboard.putBoolean("RRT Zone", ZoneConstants.redRightTrench.inZone(DrivingProfiles.getTurretPose()));
             
 
             /*TurretSettings.kP = SmartDashboard.getNumber("Flywheel kP", TurretSettings.kP);
@@ -878,7 +881,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             TurretSettings.kD = SmartDashboard.getNumber("Flywheel kD", TurretSettings.kD);
             TurretSettings.kS = SmartDashboard.getNumber("Flywheel kS", TurretSettings.kS);
             TurretSettings.kV = SmartDashboard.getNumber("Flywheel kV", TurretSettings.kV);
-            TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);*/
+            TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);
             TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
             TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
             TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
@@ -886,27 +889,8 @@ public class OuttakeSubsystem extends SubsystemBase {
             TurretSettings.tkV = SmartDashboard.getNumber("Turntable kV", TurretSettings.tkV);
             TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
             TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
-            TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
+            TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);*/
             checkForTuning();
-
-            try { // prevents crashing
-
-                SmartDashboard.putString("Middle Aim", Functions.stringifyTrans(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15)));
-
-                SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
-                SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
-                SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
-
-                SmartDashboard.putNumber("Turntable Error (Deg)", Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
-                SmartDashboard.putString("TARGET", Functions.stringifyTrans(TARGET));
-
-                SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
-                SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
- 
-            } catch (NullPointerException e) {
-                // do nothing
-            }
-
 
         }
 
@@ -918,11 +902,23 @@ public class OuttakeSubsystem extends SubsystemBase {
             if (hoodMotor.getEncoder().getPosition() > highestHoodMotorRev) highestHoodMotorRev = hoodMotor.getEncoder().getPosition();
 
             SmartDashboard.putNumber("Current Hood Angle (Deg)",  Math.toDegrees(CurrentHoodAngle.getAsDouble()));
+            SmartDashboard.putNumber("Hood Error (Deg)", Math.toDegrees(TargetHoodAngle - CurrentHoodAngle.getAsDouble()));
+            SmartDashboard.putNumber("Hood Target Angle (Deg)", Math.toDegrees(TargetHoodAngle));
+            SmartDashboard.putNumber("Hood Motor Angle (Rev)", hoodMotor.getEncoder().getPosition());
+
+            // SmartDashboard.putNumber("Turntable Error (Deg)", Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
+            SmartDashboard.putString("Shooter TARGET", Functions.stringifyTrans(TARGET));
+
+            SmartDashboard.putString("Middle Aim", Functions.stringifyTrans(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15)));
+
+            SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
+            SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
+            
 
             SmartDashboard.putNumber("Flywheel Current RPM", Functions.round(CurrentFlywheelRPM.getAsDouble(), 1));
             SmartDashboard.putNumber("Flywheel Target RPM", TargetFlywheelRPM);
-            SmartDashboard.putNumber("Flywheel Error", Functions.round(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble(), 1));
-            SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
+            // SmartDashboard.putNumber("Flywheel Error", Functions.round(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble(), 1));
+            // SmartDashboard.putNumber("Flywheel Motor Temperature", (leftFlyMotor.getDeviceTemp().getValueAsDouble() + rightFlyMotor.getDeviceTemp().getValueAsDouble()) * 0.5);
 
             SmartDashboard.putNumber("Turret Relative Position", Functions.round(Math.toDegrees(getTurretAngle()), 2));
             SmartDashboard.putNumber("Turret Absolute Position", Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));

@@ -121,7 +121,7 @@ public class Settings {
 
         public static double hoodCalibrationDownTime = 0.1; // time spent going to down position (which should be short since it already is in the down position)
         public static double hoodCalibrationUpTime = 0.25; // time spent going up after it has reached its underestimate for max height
-        public static double hoodCalibrationPower = 0.2;
+        public static double hoodCalibrationPower = 0.4;
 
         public static double defaultTurretPosition = Math.toRadians(170); // position at slight angle to allow intake to go up
         public static double minTurretAngle = Math.toRadians(-45);
@@ -131,7 +131,7 @@ public class Settings {
 
         public static int numberOfIterations = 5; // 1 frame = about 20ms
         public static double TurntableDeadband = Math.toRadians(1.5);
-        public static double FlywheelDeadband = 20; // rpm
+        public static double FlywheelDeadband = 30; // rpm
         public static double HoodDeadband = Math.toRadians(0.5);
 
         public static boolean tuningMode = false;

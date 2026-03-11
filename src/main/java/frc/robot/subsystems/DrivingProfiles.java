@@ -100,7 +100,7 @@ public class DrivingProfiles extends SubsystemBase {
             SmartDashboard.putNumber("Auto Driving Power", AutoTargetingSettings.AutoDrivingPower);
             SmartDashboard.putNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked); */
         }
-        SmartDashboard.putBoolean("Keep Robot Within Perimeter", Settings.keepWithinPerimeter);
+        // SmartDashboard.putBoolean("Keep Robot Within Perimeter", Settings.keepWithinPerimeter);
 
         LimelightHelpers.setPipelineIndex("limelight", 0);
 
@@ -124,7 +124,7 @@ public class DrivingProfiles extends SubsystemBase {
         //if (useAutoDrivingThrottle) autoDriving = (AutoDrivingThrottle.getAsDouble() > AutoThrottleDeadband);
         if (autoDriving) updateAutoDriving();
 
-        keepRobotInPerimeter();
+        //keepRobotInPerimeter();
         //if (Settings.keepWithinPerimeter) 
 
     }
@@ -334,7 +334,7 @@ public class DrivingProfiles extends SubsystemBase {
         }
 
 
-        Settings.keepWithinPerimeter = SmartDashboard.getBoolean("Keep Robot Within Perimeter:", Settings.keepWithinPerimeter);
+        // Settings.keepWithinPerimeter = SmartDashboard.getBoolean("Keep Robot Within Perimeter:", Settings.keepWithinPerimeter);
         
         //update settings
         if (Settings.tuningTelemetryEnabled) {
@@ -352,12 +352,12 @@ public class DrivingProfiles extends SubsystemBase {
             AutoTargetingSettings.AutoDrivingPower = SmartDashboard.getNumber("Auto Driving Power", AutoTargetingSettings.AutoDrivingPower);
             // AutoTargetingSettings.targetPercentageOfVisionBlocked = SmartDashboard.getNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked); */
 
-            
-            SmartDashboard.putString("Pigeon accel", Functions.stringifyTrans(new Translation3d(gyroData.accelX, gyroData.accelY, gyroData.accelZ)));
+             
+            /*SmartDashboard.putString("Pigeon accel", Functions.stringifyTrans(new Translation3d(gyroData.accelX, gyroData.accelY, gyroData.accelZ)));
             SmartDashboard.putString("Pigeon angVel", Functions.stringifyTrans(new Translation3d(gyroData.angVelX, gyroData.angVelY, gyroData.angVelZ)));
             SmartDashboard.putNumber("Pigeon pitch", Functions.round(Math.toDegrees(gyroData.pitch), 2));
             SmartDashboard.putNumber("Pigeon roll", Functions.round(Math.toDegrees(gyroData.roll), 2));
-            SmartDashboard.putNumber("Pigeon yaw", Functions.round(Math.toDegrees(gyroData.yaw), 2));
+            SmartDashboard.putNumber("Pigeon yaw", Functions.round(Math.toDegrees(gyroData.yaw), 2));*/
             
         }
     }

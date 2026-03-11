@@ -228,8 +228,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 (speeds, feedforwards) -> {
 
                     ChassisSpeeds field = ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getState().Pose.getRotation());
-                    SmartDashboard.putNumber("AUTODriving Field VX", field.vxMetersPerSecond);
-                    SmartDashboard.putNumber("AUTODriving Field VY", field.vyMetersPerSecond);
+                    //SmartDashboard.putNumber("AUTODriving Field VX", field.vxMetersPerSecond);
+                    //SmartDashboard.putNumber("AUTODriving Field VY", field.vyMetersPerSecond);
                     
                     setControl(m_pathApplyRobotSpeeds.withSpeeds(ChassisSpeeds.discretize(speeds, 0.020))
                         .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
@@ -373,7 +373,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.25, 0.25, 3.0));
-            }
+            } else SmartDashboard.putString("Right Limelight Pose:", "NO POSE");
 
             // left side limelight: 0.332161m up, 0.063500m forward, -0.355600m right
             PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
@@ -381,11 +381,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.25, 0.25, 3.0));
-            }
+            } else SmartDashboard.putString("Left Limelight Pose:", "NO POSE");
         } catch (NullPointerException e) {
             // do nothing
-            SmartDashboard.putString("Right Limelight Pose:", "No Pose");
-            SmartDashboard.putString("Left Limelight Pose:", "No Pose");
         }
     }
 

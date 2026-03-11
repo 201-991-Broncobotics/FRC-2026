@@ -21,19 +21,13 @@
                 }
               },
               {
-                "type": "named",
-                "data": {
-                  "name": "UpdateLimelights"
-                }
-              },
-              {
                 "type": "sequential",
                 "data": {
                   "commands": [
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 0.8
+                        "waitTime": 0.9
                       }
                     },
                     {
@@ -43,7 +37,7 @@
                           {
                             "type": "wait",
                             "data": {
-                              "waitTime": 4.7
+                              "waitTime": 3.6
                             }
                           },
                           {
@@ -58,7 +52,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 1.2
+                        "waitTime": 2.0
                       }
                     },
                     {
@@ -77,7 +71,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 6.0
+                        "waitTime": 5.0
                       }
                     },
                     {

@@ -42,14 +42,14 @@ public class TraverseSubsystem extends SubsystemBase {
         rollerCurrentLimits = new CurrentLimitsConfigs();
         rollerCurrentLimits.SupplyCurrentLimitEnable = TraverseConstants.currentLimitsEnabled; 
         rollerCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent; 
-        rollerCurrentLimits.StatorCurrentLimitEnable = TraverseConstants.currentLimitsEnabled; 
+        rollerCurrentLimits.StatorCurrentLimitEnable = false; //TraverseConstants.currentLimitsEnabled; 
         rollerCurrentLimits.StatorCurrentLimit = TraverseConstants.rollerStatorCurrent; 
         rollerMotorConfig.CurrentLimits = rollerCurrentLimits; 
 
         scoopCurrentLimits = new CurrentLimitsConfigs();
         scoopCurrentLimits.SupplyCurrentLimitEnable = TraverseConstants.currentLimitsEnabled; 
         scoopCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent; 
-        scoopCurrentLimits.StatorCurrentLimitEnable = TraverseConstants.currentLimitsEnabled; 
+        scoopCurrentLimits.StatorCurrentLimitEnable = false; //TraverseConstants.currentLimitsEnabled; 
         scoopCurrentLimits.StatorCurrentLimit = TraverseConstants.rollerStatorCurrent; 
         scoopMotorConfig.CurrentLimits = scoopCurrentLimits; 
 
@@ -64,9 +64,7 @@ public class TraverseSubsystem extends SubsystemBase {
 
     }
 
-    public void transfer(){ 
-        rollerMotor.set(-TraverseSettings.rollerMotorPower); 
-    }
+    public void transfer() { rollerMotor.set(-TraverseSettings.rollerMotorPower); }
     public void scoop() { scoopMotor.set(TraverseSettings.scoopMotorPower); }
 
     public void emergencyReverse(){ rollerMotor.set(TraverseSettings.rollerMotorPower); }
@@ -79,10 +77,10 @@ public class TraverseSubsystem extends SubsystemBase {
     public void periodic(){
 
         try {
-            SmartDashboard.putNumber("Traverse Roller Motor Temperature", rollerMotor.getDeviceTemp().getValueAsDouble());
+            //SmartDashboard.putNumber("Traverse Roller Motor Temperature", rollerMotor.getDeviceTemp().getValueAsDouble());
             SmartDashboard.putNumber("Traverse Roller Motor RPM", rollerMotor.getVelocity().getValueAsDouble() * 60);
             SmartDashboard.putNumber("Traverse Roller Motor Current", rollerMotor.getTorqueCurrent().getValueAsDouble());
-            SmartDashboard.putNumber("Traverse Scoop Motor Temperature", scoopMotor.getDeviceTemp().getValueAsDouble());
+            //SmartDashboard.putNumber("Traverse Scoop Motor Temperature", scoopMotor.getDeviceTemp().getValueAsDouble());
             SmartDashboard.putNumber("Traverse Scoop Motor RPM", scoopMotor.getVelocity().getValueAsDouble() * 60);
             SmartDashboard.putNumber("Traverse Scoop Motor Current", scoopMotor.getTorqueCurrent().getValueAsDouble());
         } catch (NullPointerException e) {

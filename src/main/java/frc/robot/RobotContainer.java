@@ -83,7 +83,7 @@ public class RobotContainer {
     private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem(drivetrain);
     private final TraverseSubsystem traverseSubsystem = new TraverseSubsystem();
     private final OuttakeSubsystem outtakeSubsystem = new OuttakeSubsystem(drivetrain, operator);
-    private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem();
+    //private final ClimbingSubsystem climbingSubsystem = new ClimbingSubsystem();
     private final DrivingProfiles drivingProfile = new DrivingProfiles(drivetrain);
 
     private final SendableChooser<Command> autoChooser;
@@ -92,7 +92,7 @@ public class RobotContainer {
     private final DropIntakeCommand dropIntakeCommand = new DropIntakeCommand(intakeSubsystem);
     private final LiftIntakeCommand liftIntakeCommand = new LiftIntakeCommand(intakeSubsystem);
     private final EnableTurretCommand enableTurretCommand = new EnableTurretCommand(outtakeSubsystem);
-    private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
+    //private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
     private final LaunchBallsCommand launchBallsCommand = new LaunchBallsCommand(intakeSubsystem, traverseSubsystem);
 
     /**
@@ -166,8 +166,8 @@ public class RobotContainer {
             //Driver should probably do climbing
             //driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
             //driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
-            driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
-            driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+            //driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
+            //driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
 
             
 
@@ -256,8 +256,8 @@ public class RobotContainer {
             override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
 
             //Climb (POV Up + Down (driver only if fly speed is not automated))
-            override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
-            override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem));
+            //override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
+            //override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem));
 
             override.x().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleDumbShooter));
             
@@ -270,7 +270,7 @@ public class RobotContainer {
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse));
             override.leftTrigger(0.8).and(override.leftBumper()) // shoot but with reverse
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop));
-            override.leftTrigger(0.8).and(override.rightBumper().negate()) // if just shoot
+            override.leftTrigger(0.8).and(override.rightBumper().negate()).and(override.leftBumper().negate()) // if just shoot
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop))
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate));
             override.rightBumper() // if intake is pressed at all
@@ -307,7 +307,7 @@ public class RobotContainer {
         else
             drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0)));
 
-        CommandScheduler.getInstance().schedule(resetElevatorCommand);
+        //CommandScheduler.getInstance().schedule(resetElevatorCommand);
     }
 
     /**
