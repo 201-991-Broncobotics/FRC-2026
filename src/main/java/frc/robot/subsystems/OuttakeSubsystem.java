@@ -287,12 +287,12 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void start(){
         alliance = DriverStation.getAlliance();
 
-        // results = LimelightHelpers.getLatestResults("limelight");
+        /*// results = LimelightHelpers.getLatestResults("limelight"); 
         if (alliance.get() == Alliance.Red) {
             LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
         } else if (alliance.get() == Alliance.Blue) {
             LimelightHelpers.setPipelineIndex(TurretConstants.limelightName, 0);
-        }
+        }*/ // limelights are only used for localization 
 
         if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.redHub;
         } else TARGET = ZoneConstants.blueHub;
@@ -854,7 +854,14 @@ public class OuttakeSubsystem extends SubsystemBase {
             autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trenc
 
             //Change targeting
-            if(!ZoneConstants.allianceZone.getZoningState()){  
+            if(!ZoneConstants.allianceZone.getZoningState()){ // if not in alliance zone
+
+                if (antiAirMode && (ZoneConstants.blueZone.inZone(robotPose) || ZoneConstants.redZone.inZone(robotPose))) { // if still in an alliance zone after checking if not in our alliance zone
+                    alliance = DriverStation.getAlliance();
+                    if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.blueHub; // Target other hub
+                    } else TARGET = ZoneConstants.redHub;
+                }
+
                 Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.15);
                 //Uses alliance hub as the regression already accounts for height
                 TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());

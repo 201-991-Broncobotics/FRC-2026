@@ -255,6 +255,8 @@ public class RobotContainer {
             //Flywheel (A)
             override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
 
+            override.back().toggleOnTrue(new InstantCommand(outtakeSubsystem::enableAntiAir)).toggleOnFalse(new InstantCommand(outtakeSubsystem::disableAntiAir));
+
             //Climb (POV Up + Down (driver only if fly speed is not automated))
             //override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
             //override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem));
