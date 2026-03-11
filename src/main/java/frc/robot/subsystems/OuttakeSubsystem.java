@@ -119,7 +119,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
 
-    private boolean dumbShooterMode = false;
+    private boolean dumbShooterMode = false, antiAirMode = false;
 
     
     private ArrayList<Double> averageTurntableAngle = new ArrayList(), averageFlywheelRPM = new ArrayList(), averageHoodAngle = new ArrayList();
@@ -373,6 +373,10 @@ public class OuttakeSubsystem extends SubsystemBase {
                 TargetTurretAngle = Math.toRadians(180);
                 TargetFlywheelRPM = 2532;
                 TargetHoodAngle = 33.4;
+            } else if (antiAirMode) {
+                if (Math.abs(CurrentTurretAngle.getAsDouble() - averageData[0]) > TurretSettings.TurntableDeadband) TargetTurretAngle = averageData[0];
+                TargetFlywheelRPM = 5000;
+                TargetHoodAngle = 40;
             } else {
 
                 // TURNTABLE
@@ -618,6 +622,9 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void disableAutoLower(){ TurretSettings.autoLowerHood = false; }
 
     public void toggleDumbShooter() { dumbShooterMode = !dumbShooterMode; }
+
+    public void enableAntiAir() { antiAirMode = true; }
+    public void disableAntiAir() { antiAirMode = false; }
 
     public void setController(CommandXboxController newController){ controller = newController; }
 
