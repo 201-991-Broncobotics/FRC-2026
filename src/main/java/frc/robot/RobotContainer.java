@@ -21,6 +21,7 @@ import frc.robot.subsystems.DrivingProfiles;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TraverseSubsystem;
 import frc.robot.subsystems.OuttakeSubsystem;
+import frc.robot.utility.LimelightHelpers;
 import frc.robot.utility.OverrideController;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -120,6 +121,9 @@ public class RobotContainer {
         if(RobotSettings.overrideMode){
             outtakeSubsystem.setController(override);
         }
+
+        LimelightHelpers.setupPortForwardingUSB(0);
+        LimelightHelpers.setupPortForwardingUSB(1);
 
         configureBindings();
     }

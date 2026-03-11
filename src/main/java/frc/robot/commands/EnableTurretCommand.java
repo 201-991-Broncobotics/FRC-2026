@@ -20,6 +20,7 @@ public class EnableTurretCommand extends Command {
 
     @Override
     public void execute() {
+        outtake.startShooting();
         outtake.update();
     }
 

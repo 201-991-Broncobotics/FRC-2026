@@ -276,7 +276,7 @@ public class DrivingProfiles extends SubsystemBase {
         }
         
         try {
-            PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+            // PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
             // this limelight sucks too much
             /* 
@@ -294,24 +294,7 @@ public class DrivingProfiles extends SubsystemBase {
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
             }*/
-            
 
-            // right side limelight: 0.361803m up, -0.050800m forward, 0.355600m right
-            PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
-            if (LimelightPoseEstimate2 != null) {
-                SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
-
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) drivetrain.addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.15, 0.15, 2.0));
-            }
-
-            // left side limelight: 0.332161m up, 0.063500m forward, -0.355600m right
-            PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
-            if (LimelightPoseEstimate3 != null) {
-                SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
-
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) drivetrain.addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.15, 0.15, 2.0));
-            }
-            
 
             RobotPose = drivetrain.getState().Pose;
             SmartDashboard.putString("ROBOT POSE:", "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3));
@@ -395,7 +378,7 @@ public class DrivingProfiles extends SubsystemBase {
         Translation2d rotationalVelocity = new Translation2d(-angVel * turretTranslation.getY(), angVel * turretTranslation.getX());
 
         return robotVelocity.plus(rotationalVelocity.rotateBy(drivetrain.getState().Pose.getRotation()));
-}
+    }
 
     public static Translation3d getTurretAcceleration() { // Field Centric
         Translation3d robotAccel = drivetrain.getFieldCentricAcceleration();
@@ -410,4 +393,5 @@ public class DrivingProfiles extends SubsystemBase {
 
         return robotAccel.plus(new Translation3d(ax, ay, 0));
     }
+
 }

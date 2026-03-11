@@ -22,6 +22,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -44,6 +45,9 @@ import frc.robot.Settings;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.utility.ElapsedTime;
+import frc.robot.utility.Functions;
+import frc.robot.utility.LimelightHelpers;
+import frc.robot.utility.LimelightHelpers.PoseEstimate;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -361,6 +365,28 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         gyroData.angAccelX = (lastAngVelX - gyroData.angVelX) * FrameTime;
         gyroData.angAccelY = (lastAngVelY - gyroData.angVelY) * FrameTime;
         gyroData.angAccelZ = (lastAngVelZ - gyroData.angVelZ) * FrameTime;
+
+        try {
+            // right side limelight: 0.361803m up, -0.050800m forward, 0.355600m right
+            PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
+            if (LimelightPoseEstimate2 != null) {
+                SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
+
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.25, 0.25, 3.0));
+            }
+
+            // left side limelight: 0.332161m up, 0.063500m forward, -0.355600m right
+            PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
+            if (LimelightPoseEstimate3 != null) {
+                SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
+
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.25, 0.25, 3.0));
+            }
+        } catch (NullPointerException e) {
+            // do nothing
+            SmartDashboard.putString("Right Limelight Pose:", "No Pose");
+            SmartDashboard.putString("Left Limelight Pose:", "No Pose");
+        }
     }
 
     private void startSimThread() {

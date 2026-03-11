@@ -36,7 +36,7 @@ public class Settings {
 
     public static class IntakeSettings {
 
-        public static double runningPower = 0.75; 
+        public static double runningPower = 1; 
         public static double reversePower = -0.75; 
 
         public static double pivotMotorVelocity = 5; //7
