@@ -856,8 +856,9 @@ public class OuttakeSubsystem extends SubsystemBase {
             //Change targeting
             if(!ZoneConstants.allianceZone.getZoningState()){ // if not in alliance zone
 
+                alliance = DriverStation.getAlliance();
                 if (antiAirMode && (ZoneConstants.blueZone.inZone(robotPose) || ZoneConstants.redZone.inZone(robotPose))) { // if still in an alliance zone after checking if not in our alliance zone
-                    alliance = DriverStation.getAlliance();
+                    SmartDashboard.putString("Successfully Activated Anti-Air", "yes");
                     if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.blueHub; // Target other hub
                     } else TARGET = ZoneConstants.redHub;
                 }
@@ -877,6 +878,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         SmartDashboard.putBoolean("Alliance Zone", ZoneConstants.allianceZone.getZoningState());
 
         SmartDashboard.putBoolean("Auto Lowered?", autoLowered);
+        SmartDashboard.putBoolean("Anti air?", antiAirMode);
         
 
         if (Settings.tuningTelemetryEnabled) {

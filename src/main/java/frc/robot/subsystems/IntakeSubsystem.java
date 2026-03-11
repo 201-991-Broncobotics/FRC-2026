@@ -343,7 +343,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         if (states == States.Up && !currentlySetUp && rightPivotMotor.getStatorCurrent().getValueAsDouble() > 20) {
             if (resetPivotTimer.time() > 2) {
-                pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.outIntakePosition / (2*Math.PI);
+                pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + (IntakeConstants.outIntakePosition + Math.toRadians(8)) / (2*Math.PI);
                 states = States.DownAndOn;
             }
         } else {
