@@ -99,7 +99,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.5
+                  "waitTime": 4.0
                 }
               },
               {
@@ -109,9 +109,22 @@
                 }
               },
               {
-                "type": "named",
+                "type": "sequential",
                 "data": {
-                  "name": "DisableTurret"
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.5
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "DisableTurret"
+                      }
+                    }
+                  ]
                 }
               },
               {
@@ -130,7 +143,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 5.5
+                  "waitTime": 5.0
                 }
               },
               {
@@ -152,7 +165,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 1.5
+                        "waitTime": 1.0
                       }
                     },
                     {
