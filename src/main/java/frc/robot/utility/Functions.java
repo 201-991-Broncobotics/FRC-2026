@@ -1,5 +1,6 @@
 package frc.robot.utility;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -138,6 +139,21 @@ public class Functions {
     public static double wrapAngleAround(double input, double wrapAngle) {
         wrapAngle = normalizeAnglePositive(wrapAngle);
         return normalizeAnglePositive(input + wrapAngle) - wrapAngle;
+    }
+
+    public static double standardDeviation(ArrayList<Double> values, int minimumNumberOfItems) {
+        if (values != null) values.removeIf(element -> element.equals(0.0));
+        if (values == null || values.size() < minimumNumberOfItems) {
+            return 999999; // return a number that basically makes the returned pose from limelight useless
+        }
+        
+        double mean = values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        double sumSquaredDiffs = 0.0;
+        for (double v : values) {
+            double diff = v - mean;
+            sumSquaredDiffs += diff * diff;
+        }
+        return Math.sqrt(sumSquaredDiffs / (values.size() - 1));
     }
 
 }

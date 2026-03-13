@@ -21,6 +21,7 @@ public class Settings {
 
     public static boolean useRLimelight = true;
     public static boolean useLLimelight = true;
+    public static double stddevFrames = 25;
 
     public static PPHolonomicDriveController PathFollowerController = new PPHolonomicDriveController( // PPHolonomicController is the built-in path following controller for holonomic drive trains
         translationPIDConstants, // Translation PID constants
