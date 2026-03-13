@@ -19,6 +19,9 @@ public class Settings {
     public static PIDConstants translationPIDConstants = new PIDConstants(0.5, 0.0, 0.0);
     public static PIDConstants rotationPIDConstants = new PIDConstants(1.0, 0.0, 0.0);
 
+    public static boolean useRLimelight = true;
+    public static boolean useLLimelight = true;
+
     public static PPHolonomicDriveController PathFollowerController = new PPHolonomicDriveController( // PPHolonomicController is the built-in path following controller for holonomic drive trains
         translationPIDConstants, // Translation PID constants
         rotationPIDConstants // Rotation PID constants

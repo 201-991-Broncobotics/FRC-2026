@@ -267,6 +267,17 @@ public class DrivingProfiles extends SubsystemBase {
         //AutoDrivingThrottle = AutoThrottle;
     }
 
+    public static void DisableRightLimelight() {
+        Settings.useRLimelight = false;
+    }
+    public static void DisableLeftLimelight() {
+        Settings.useLLimelight = false;
+    }
+    public static void DisableLimelights() {
+        Settings.useRLimelight = false;
+        Settings.useLLimelight = false;
+    }
+
 
     @Override
     public void periodic() {

@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DisableLeftLimelight"
+          }
+        },
+        {
           "type": "deadline",
           "data": {
             "commands": [

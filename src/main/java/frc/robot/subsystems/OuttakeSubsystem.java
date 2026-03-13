@@ -276,7 +276,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         }
         
 
-        turretStartingOffset = getAbsoluteTurretAngle() - (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0;
+        turretStartingOffset = Math.toRadians(180)/*getAbsoluteTurretAngle()*/ - (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0;
         CurrentTurretAngle = () -> (-turntableMotor.getPosition().getValueAsDouble()) * (2 * Math.PI) / 10.0 + turretStartingOffset;
         CurrentHoodAngle = () -> Functions.map(hoodMotor.getEncoder().getPosition(), lowestHoodMotorRev, highestHoodMotorRev, TurretConstants.minHoodAngle, TurretConstants.maxHoodAngle);
         CurrentFlywheelRPM = () -> rightFlyMotor.getVelocity().getValueAsDouble() * 60;
@@ -372,7 +372,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             } else if (dumbShooterMode) {
                 TargetTurretAngle = Math.toRadians(180);
                 TargetFlywheelRPM = 2532;
-                TargetHoodAngle = 33.4;
+                TargetHoodAngle = lastTargettingData[2];
             } else if (antiAirMode) {
                 if (Math.abs(CurrentTurretAngle.getAsDouble() - averageData[0]) > TurretSettings.TurntableDeadband) TargetTurretAngle = averageData[0];
                 TargetFlywheelRPM = 5000;
@@ -405,7 +405,7 @@ public class OuttakeSubsystem extends SubsystemBase {
                         break;
                     case 2: // go up to roughly where the top is at pid speed
                         setHood(TurretConstants.maxHoodAngle); // should be underestimate at the moment
-                        if (CurrentHoodAngle.getAsDouble() + Math.toRadians(5) > TurretConstants.maxHoodAngle) hoodCalibrationPhase++;
+                        if (CurrentHoodAngle.getAsDouble() + Math.toRadians(10) > TurretConstants.maxHoodAngle) hoodCalibrationPhase++;
                         hoodCalibrationTimer.reset();
                         break;
                     case 3: // keep going up until it hits the top mechanical stop
@@ -600,7 +600,11 @@ public class OuttakeSubsystem extends SubsystemBase {
     public void changeRPMFast() { rpmAdjustment = 500; }
     public void changeRPMSlow() { rpmAdjustment = 50; }
 
-    public void startShooting() { Shooting = true; }
+    public void startShooting() { 
+        Shooting = true; 
+        Settings.useRLimelight = true;
+        Settings.useLLimelight = true;
+    }
     public void stopShooting() { Shooting = false; }
     public void toggleShooting(){
         Shooting = !Shooting;

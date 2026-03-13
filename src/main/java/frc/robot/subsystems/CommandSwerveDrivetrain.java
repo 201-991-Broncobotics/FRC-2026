@@ -367,21 +367,25 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         gyroData.angAccelZ = (lastAngVelZ - gyroData.angVelZ) * FrameTime;
 
         try {
-            // right side limelight: 0.361803m up, -0.050800m forward, 0.355600m right
-            PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
-            if (LimelightPoseEstimate2 != null) {
-                SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
+            if (Settings.useRLimelight) {
+                // right side limelight: 0.361803m up, -0.050800m forward, 0.355600m right
+                PoseEstimate LimelightPoseEstimate2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
+                if (LimelightPoseEstimate2 != null) {
+                    SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate2.pose));
 
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.25, 0.25, 3.0));
-            } else SmartDashboard.putString("Right Limelight Pose:", "NO POSE");
+                    if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate2)) addVisionMeasurement(LimelightPoseEstimate2.pose, LimelightPoseEstimate2.timestampSeconds, VecBuilder.fill(0.7, 0.7, 8.0));
+                } else SmartDashboard.putString("Right Limelight Pose:", "NO POSE");
+            }
+            if (Settings.useLLimelight) {
+                // left side limelight: 0.332161m up, 0.063500m forward, -0.355600m right
+                PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
+                if (LimelightPoseEstimate3 != null) {
+                    SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
 
-            // left side limelight: 0.332161m up, 0.063500m forward, -0.355600m right
-            PoseEstimate LimelightPoseEstimate3 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
-            if (LimelightPoseEstimate3 != null) {
-                SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(LimelightPoseEstimate3.pose));
-
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.25, 0.25, 3.0));
-            } else SmartDashboard.putString("Left Limelight Pose:", "NO POSE");
+                    if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate3)) addVisionMeasurement(LimelightPoseEstimate3.pose, LimelightPoseEstimate3.timestampSeconds, VecBuilder.fill(0.7, 0.7, 8.0));
+                } else SmartDashboard.putString("Left Limelight Pose:", "NO POSE");
+            }
+            
         } catch (NullPointerException e) {
             // do nothing
         }

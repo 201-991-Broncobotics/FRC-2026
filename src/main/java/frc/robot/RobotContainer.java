@@ -6,6 +6,8 @@ package frc.robot;
 
 import frc.robot.auton.Autos;
 import frc.robot.commands.StartIntakingCommand;
+import frc.robot.commands.DisableLeftLimelightCommand;
+import frc.robot.commands.DisableRightLimelightCommand;
 import frc.robot.commands.DropIntakeCommand;
 import frc.robot.commands.EnableTurretCommand;
 import frc.robot.commands.LaunchBallsCommand;
@@ -94,6 +96,8 @@ public class RobotContainer {
     private final EnableTurretCommand enableTurretCommand = new EnableTurretCommand(outtakeSubsystem);
     //private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
     private final LaunchBallsCommand launchBallsCommand = new LaunchBallsCommand(intakeSubsystem, traverseSubsystem);
+    private final DisableRightLimelightCommand disableRLimelightCommand = new DisableRightLimelightCommand();
+    private final DisableLeftLimelightCommand disableLLimelightCommand = new DisableLeftLimelightCommand();
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -112,6 +116,8 @@ public class RobotContainer {
             new InstantCommand(traverseSubsystem::stopRoller, traverseSubsystem))); // just by requiring these subsystems it should run the end part of the intaking command
         NamedCommands.registerCommand("EnableTurret", enableTurretCommand);
         NamedCommands.registerCommand("DisableTurret", new InstantCommand(outtakeSubsystem::stopShooting, outtakeSubsystem));
+        NamedCommands.registerCommand("DisableRightLimelight", disableRLimelightCommand);
+        NamedCommands.registerCommand("DisableLeftLimelight", disableLLimelightCommand);
 
         drivetrain.configureAutoBuilder(); // THIS HAS TO GO AFTER NAMED COMMANDS OMG
 
