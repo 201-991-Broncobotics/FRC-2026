@@ -168,8 +168,10 @@ public class IntakeSubsystem extends SubsystemBase {
         if (agitateIntake) {
             if (agitateTimer.time() < 0.2 * IntakeSettings.agitatePulsePeriod) {
                 intakeMotor.set(IntakeSettings.reversePower); 
+                TraverseSubsystem.intakeAgitating = true;
             } else if (agitateTimer.time() < IntakeSettings.agitatePulsePeriod) {
                 intakeMotor.set(IntakeSettings.runningPower); 
+                TraverseSubsystem.intakeAgitating = false;
             } else {
                 agitateTimer.reset();
             }
@@ -198,6 +200,11 @@ public class IntakeSubsystem extends SubsystemBase {
     public void drop() { 
         currentlySetUp = false;
         setPivotCustom(IntakeConstants.outIntakePosition); 
+    }
+
+    public void slightlyRaise() {
+        currentlySetUp = true;
+        setPivotCustom(IntakeConstants.outIntakePosition - IntakeSettings.airShooterPivotAngle); 
     }
 
     public void justDrop() {
@@ -336,10 +343,10 @@ public class IntakeSubsystem extends SubsystemBase {
         // resetStoragePosition(); // didn't work
 
         if (CurrentPivotPosition.getAsDouble() > IntakeConstants.outIntakePosition - Math.toRadians(15)) states = States.DownAndOn;
-        else states = States.Up;
+        else if (CurrentPivotPosition.getAsDouble() < IntakeConstants.upIntakePosition + Math.toRadians(15)) states = States.Up;
+        else states = States.SemiUp;
 
-        if (states == States.Up) SmartDashboard.putString("Intake State", "Up");
-        else SmartDashboard.putString("Intake State", "Down");
+        SmartDashboard.putString("Intake State", states.toString());
 
         if (states == States.Up && !currentlySetUp && rightPivotMotor.getStatorCurrent().getValueAsDouble() > 20) {
             if (resetPivotTimer.time() > 2) {

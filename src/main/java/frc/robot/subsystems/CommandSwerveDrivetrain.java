@@ -369,8 +369,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         gyroData.angAccelY = (lastAngVelY - gyroData.angVelY) * FrameTime;
         gyroData.angAccelZ = (lastAngVelZ - gyroData.angVelZ) * FrameTime;
 
-        LimelightHelpers.SetRobotOrientation("limelight-a", getState().Pose.getRotation().getDegrees(), Math.toRadians(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
-        LimelightHelpers.SetRobotOrientation("limelight-b", getState().Pose.getRotation().getDegrees(), Math.toRadians(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        
+        LimelightHelpers.SetRobotOrientation("limelight-a", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("limelight-b", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
 
 
         try {
@@ -391,12 +392,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         SmartDashboard.putNumber("LLA xVar", xVarA);
                         SmartDashboard.putNumber("LLA yVar", yVarA);
                         
-                        addVisionMeasurement(limelightPoseEstimateA.pose, limelightPoseEstimateA.timestampSeconds, VecBuilder.fill(xVarA, yVarA, Math.toRadians(10.0)));
-                    } else {
-                        limelightAX.add(0.0);
-                        limelightAY.add(0.0);
-                    }
+                        addVisionMeasurement(limelightPoseEstimateA.pose, limelightPoseEstimateA.timestampSeconds, VecBuilder.fill(1.5 * xVarA, 1.5 * yVarA, 15));
+                    } 
                 }
+
+                SmartDashboard.putNumber("Right LimeLight Heartbeat", LimelightHelpers.getHeartbeat("limelight-a"));
             }
 
             if (Settings.useLLimelight) {
@@ -406,8 +406,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(limelightPoseEstimateB.pose));
                     
                     if (LimelightHelpers.validPoseEstimate(limelightPoseEstimateB)) {
-                        limelightBX.add(limelightPoseEstimateB.pose.getX());
-                        limelightBY.add(limelightPoseEstimateB.pose.getY());
                         double distVarB = 0.00329999 * Math.pow(limelightPoseEstimateB.avgTagDist, 2.2061);
                         double sideVarB = 0.00177127 * Math.pow(limelightPoseEstimateB.avgTagDist, 3.50671);
                         double roughTagAngle = Math.toRadians(getState().Pose.getRotation().getDegrees() + 90);
@@ -418,14 +416,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         SmartDashboard.putNumber("LLB xVar", xVarB);
                         SmartDashboard.putNumber("LLB yVar", yVarB);
                         
-                        addVisionMeasurement(limelightPoseEstimateB.pose, limelightPoseEstimateB.timestampSeconds, VecBuilder.fill(xVarB, yVarB, Math.toRadians(10.0)));
-                    } else {
-                        limelightBX.add(0.0);
-                        limelightBY.add(0.0);
-                    }
+                        addVisionMeasurement(limelightPoseEstimateB.pose, limelightPoseEstimateB.timestampSeconds, VecBuilder.fill(1.5 * xVarB, 1.5 * yVarB, 15));
+                    } 
                 }
+
+                SmartDashboard.putNumber("Left LimeLight Heartbeat", LimelightHelpers.getHeartbeat("limelight-b"));
             }
 
+            /* 
             if (limelightAX.size() > Settings.stddevFrames) limelightAX.remove(0);
             if (limelightAY.size() > Settings.stddevFrames) limelightAY.remove(0);
             if (limelightBX.size() > Settings.stddevFrames) limelightBX.remove(0);
@@ -434,11 +432,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             SmartDashboard.putNumber("LLA stddev X", Functions.standardDeviation(limelightAX, 5));
             SmartDashboard.putNumber("LLA stddev Y", Functions.standardDeviation(limelightAY, 5));
             SmartDashboard.putNumber("LLB stddev X", Functions.standardDeviation(limelightBX, 5));
-            SmartDashboard.putNumber("LLB stddev Y", Functions.standardDeviation(limelightBY, 5));
+            SmartDashboard.putNumber("LLB stddev Y", Functions.standardDeviation(limelightBY, 5));*/
             
         } catch (NullPointerException e) {
             // do nothing
         }
+
+        
     }
 
     private void startSimThread() {

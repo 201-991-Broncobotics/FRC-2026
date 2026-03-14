@@ -11,6 +11,7 @@ import frc.robot.commands.DisableRightLimelightCommand;
 import frc.robot.commands.DropIntakeCommand;
 import frc.robot.commands.EnableTurretCommand;
 import frc.robot.commands.LaunchBallsCommand;
+import frc.robot.commands.LaunchBallsFasterCommand;
 import frc.robot.commands.LiftIntakeCommand;
 import frc.robot.commands.ResetElevatorCommand;
 import frc.robot.Constants.OperatorConstants;
@@ -96,6 +97,7 @@ public class RobotContainer {
     private final EnableTurretCommand enableTurretCommand = new EnableTurretCommand(outtakeSubsystem);
     //private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
     private final LaunchBallsCommand launchBallsCommand = new LaunchBallsCommand(intakeSubsystem, traverseSubsystem);
+    private final LaunchBallsFasterCommand launchBallsFasterCommand = new LaunchBallsFasterCommand(intakeSubsystem, traverseSubsystem);
     private final DisableRightLimelightCommand disableRLimelightCommand = new DisableRightLimelightCommand();
     private final DisableLeftLimelightCommand disableLLimelightCommand = new DisableLeftLimelightCommand();
 
@@ -111,6 +113,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("LiftIntake", liftIntakeCommand);
         NamedCommands.registerCommand("StartIntaking", startIntakingCommand);
         NamedCommands.registerCommand("LaunchBalls", launchBallsCommand);
+        NamedCommands.registerCommand("LaunchBallsFaster", launchBallsFasterCommand);
         NamedCommands.registerCommand("StopIntaking", new ParallelCommandGroup(
             new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem), 
             new InstantCommand(traverseSubsystem::stopRoller, traverseSubsystem))); // just by requiring these subsystems it should run the end part of the intaking command
@@ -118,6 +121,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("DisableTurret", new InstantCommand(outtakeSubsystem::stopShooting, outtakeSubsystem));
         NamedCommands.registerCommand("DisableRightLimelight", disableRLimelightCommand);
         NamedCommands.registerCommand("DisableLeftLimelight", disableLLimelightCommand);
+        
 
         drivetrain.configureAutoBuilder(); // THIS HAS TO GO AFTER NAMED COMMANDS OMG
 
@@ -237,7 +241,7 @@ public class RobotContainer {
             override.b().whileTrue(drivetrain.applyRequest(() -> brake));
             
             //Reset Heading (Y)
-            override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+            override.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
             //Intake
             override.rightBumper().and(override.leftBumper().negate()) // just intake
@@ -255,13 +259,13 @@ public class RobotContainer {
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::stopRoller));
 
             //Pivot (POV Left + Right)
-            override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift, intakeSubsystem));
-            override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop, intakeSubsystem));
+            override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+            override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
 
             //Flywheel (A)
             override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
 
-            override.back().toggleOnTrue(new InstantCommand(outtakeSubsystem::enableAntiAir)).toggleOnFalse(new InstantCommand(outtakeSubsystem::disableAntiAir));
+            override.y().toggleOnTrue(new InstantCommand(intakeSubsystem::slightlyRaise)).toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
 
             //Climb (POV Up + Down (driver only if fly speed is not automated))
             //override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
@@ -281,8 +285,10 @@ public class RobotContainer {
             override.leftTrigger(0.8).and(override.rightBumper().negate()).and(override.leftBumper().negate()) // if just shoot
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop))
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate));
+                //.toggleOnTrue(new InstantCommand(intakeSubsystem::slightlyRaise));
             override.rightBumper() // if intake is pressed at all
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate));
+                //.toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
             override.leftTrigger(0.8).negate().and(override.rightBumper().negate()) // nothing
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::stopScoop))
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::stopRollers))

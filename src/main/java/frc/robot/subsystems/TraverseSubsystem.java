@@ -20,6 +20,11 @@ public class TraverseSubsystem extends SubsystemBase {
     private StatusCode rollerMotorStatus, scoopMotorStatus;
     private CurrentLimitsConfigs rollerCurrentLimits, scoopCurrentLimits; 
 
+    public boolean agitateTraverse = false;
+    public static boolean intakeAgitating = false;
+    public boolean runningTransfer = false;
+    public boolean runningScoop = false;
+
     public TraverseSubsystem(){
 
         rollerMotor = new TalonFX(MotorConstants.traverseRollerID);
@@ -64,14 +69,39 @@ public class TraverseSubsystem extends SubsystemBase {
 
     }
 
-    public void transfer() { rollerMotor.set(-TraverseSettings.rollerMotorPower); }
-    public void scoop() { scoopMotor.set(TraverseSettings.scoopMotorPower); }
+    public void update() { // UNTESTED
+        if (agitateTraverse) {
+            if (runningTransfer && intakeAgitating) rollerMotor.set(TraverseSettings.rollerMotorPower); 
+            else if (runningTransfer && !intakeAgitating) rollerMotor.set(-TraverseSettings.rollerMotorPower); 
+
+            if (runningScoop && intakeAgitating) scoopMotor.set(-TraverseSettings.scoopMotorPower); 
+            else if (runningScoop && !intakeAgitating) scoopMotor.set(TraverseSettings.scoopMotorPower); 
+        }
+    }
+
+    public void enableAgitate() { agitateTraverse = true; }
+    public void disableAgitate() { agitateTraverse = false; }
+
+    public void transfer() { 
+        runningTransfer = true;
+        rollerMotor.set(-TraverseSettings.rollerMotorPower); 
+    }
+    public void scoop() { 
+        runningScoop = true;
+        scoopMotor.set(TraverseSettings.scoopMotorPower); 
+    }
 
     public void emergencyReverse(){ rollerMotor.set(TraverseSettings.rollerMotorPower); }
     public void emergencyReverseScoop(){ scoopMotor.set(-TraverseSettings.scoopMotorPower); }
 
-    public void stopRoller(){ rollerMotor.stopMotor(); }
-    public void stopScoop() { scoopMotor.stopMotor(); }
+    public void stopRoller(){ 
+        runningTransfer = false;
+        rollerMotor.stopMotor(); 
+    }
+    public void stopScoop() { 
+        runningScoop = false;
+        scoopMotor.stopMotor(); 
+    }
 
     @Override
     public void periodic(){
