@@ -348,8 +348,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
         SmartDashboard.putString("Intake State", states.toString());
 
-        if (states == States.Up && !currentlySetUp && rightPivotMotor.getStatorCurrent().getValueAsDouble() > 20) {
-            if (resetPivotTimer.time() > 2) {
+        if ((states == States.Up || states == States.SemiUp) && !currentlySetUp && rightPivotMotor.getStatorCurrent().getValueAsDouble() > 10) {
+            if (resetPivotTimer.time() > 2.5) {
                 pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + (IntakeConstants.outIntakePosition + Math.toRadians(8)) / (2*Math.PI);
                 states = States.DownAndOn;
             }

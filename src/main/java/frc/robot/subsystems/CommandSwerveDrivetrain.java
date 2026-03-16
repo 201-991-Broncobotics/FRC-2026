@@ -377,7 +377,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         try {
             if (Settings.useRLimelight) {
                 // right side limelight: 0.361803m up, -0.050800m forward, 0.355600m right
-                PoseEstimate limelightPoseEstimateA = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-a");
+                PoseEstimate limelightPoseEstimateA = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
                 if (limelightPoseEstimateA != null) {
                     SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(limelightPoseEstimateA.pose));
                     
@@ -401,7 +401,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             if (Settings.useLLimelight) {
                 // left side limelight: 0.332161m up, 0.063500m forward, -0.355600m right
-                PoseEstimate limelightPoseEstimateB = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-b");
+                PoseEstimate limelightPoseEstimateB = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
                 if (limelightPoseEstimateB != null) {
                     SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(limelightPoseEstimateB.pose));
                     

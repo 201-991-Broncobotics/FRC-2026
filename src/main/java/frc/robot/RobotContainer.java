@@ -241,7 +241,7 @@ public class RobotContainer {
             override.b().whileTrue(drivetrain.applyRequest(() -> brake));
             
             //Reset Heading (Y)
-            override.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+            override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
             //Intake
             override.rightBumper().and(override.leftBumper().negate()) // just intake
@@ -265,7 +265,7 @@ public class RobotContainer {
             //Flywheel (A)
             override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
 
-            override.y().toggleOnTrue(new InstantCommand(intakeSubsystem::slightlyRaise)).toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
+            override.back().toggleOnTrue(new InstantCommand(intakeSubsystem::slightlyRaise)).toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
 
             //Climb (POV Up + Down (driver only if fly speed is not automated))
             //override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
@@ -287,8 +287,8 @@ public class RobotContainer {
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate));
                 //.toggleOnTrue(new InstantCommand(intakeSubsystem::slightlyRaise));
             override.rightBumper() // if intake is pressed at all
-                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate));
-                //.toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
             override.leftTrigger(0.8).negate().and(override.rightBumper().negate()) // nothing
                 .toggleOnTrue(new InstantCommand(traverseSubsystem::stopScoop))
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::stopRollers))

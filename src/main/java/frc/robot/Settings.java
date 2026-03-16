@@ -56,7 +56,7 @@ public class Settings {
         public static final double STALL_CURRENT_THRESHOLD = 20.0; // Amps
         public static final double STALL_VELOCITY_THRESHOLD = 0.1; // Rotations per second
         
-        public static double airShooterPivotAngle = Math.toRadians(25); // this is set to be correct where 90 is up and 0 is straight out
+        public static double airShooterPivotAngle = Math.toRadians(35); // this is set to be correct where 90 is up and 0 is straight out
 
         public static double agitatePulsePeriod = 0.6; // seconds
 
