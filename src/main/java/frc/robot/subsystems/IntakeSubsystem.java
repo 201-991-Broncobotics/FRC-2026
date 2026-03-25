@@ -41,7 +41,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public static States states = States.Up;
 
 
-    private TalonFX intakeMotor, rightPivotMotor, leftPivotMotor; 
+    private TalonFX intakeMotor, rightPivotMotor; 
     private TalonFXConfiguration intakeMotorConfig, pivotMotorConfig;
     private StatusCode intakeMotorStatus, pivotMotorStatus;
     private double highTargetPosition, lastVelo, lastAcc, lastkP, lastkI, lastkD, lastkG; 
@@ -76,7 +76,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
         intakeMotor = new TalonFX(MotorConstants.intakeID); 
         rightPivotMotor = new TalonFX(MotorConstants.rightIntakePivotID); 
-        leftPivotMotor = new TalonFX(MotorConstants.leftIntakePivotID); 
 
         intakeMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig = new TalonFXConfiguration();
@@ -117,7 +116,6 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotor.getConfigurator().apply(intakeMotorConfig); 
         rightPivotMotor.getConfigurator().apply(pivotMotorConfig); 
         //pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        leftPivotMotor.getConfigurator().apply(pivotMotorConfig);
 
         intakeMotorStatus = intakeMotor.getConfigurator().apply(intakeMotorConfig);
         pivotMotorStatus = rightPivotMotor.getConfigurator().apply(pivotMotorConfig);
@@ -183,7 +181,7 @@ public class IntakeSubsystem extends SubsystemBase {
         if (runPivotCustom) {
             double power = (targetPivotAngle - CurrentPivotPosition.getAsDouble()) * IntakeSettings.customKP;
             rightPivotMotor.set(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * IntakeSettings.customKG);
-            leftPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * (0.7 * IntakeSettings.customKG)));
+            //leftPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * (0.7 * IntakeSettings.customKG)));
         } else {
             stopPivotCustom();
         }
@@ -209,13 +207,13 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void justDrop() {
         rightPivotMotor.set(0.5);
-        leftPivotMotor.set(-0.5);
+        //leftPivotMotor.set(-0.5);
         currentlySetUp = false;
     }
 
     public void justLift() {
         rightPivotMotor.set(-0.25);
-        leftPivotMotor.set(0.25);
+        //leftPivotMotor.set(0.25);
     }
 
     public void agitate() { agitateIntake = true; }
@@ -227,7 +225,7 @@ public class IntakeSubsystem extends SubsystemBase {
         
         double feedforward = getGravityFeedForward();
         rightPivotMotor.setControl(m_request.withPosition(angle / (2*Math.PI) + pivotOffset).withFeedForward(feedforward)); 
-        leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
+        //leftPivotMotor.setControl(new Follower(MotorConstants.rightIntakePivotID, MotorAlignmentValue.Opposed));
     }
 
     public void setPivotAngle(double angle, double baseAngle){ // wtf
@@ -253,7 +251,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public void stopPivotCustom() {
         runPivotCustom = false;
         rightPivotMotor.stopMotor();
-        leftPivotMotor.stopMotor();
+        //leftPivotMotor.stopMotor();
     }
 
     public double getIntakePivotPosition() {

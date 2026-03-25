@@ -15,7 +15,7 @@ import frc.robot.utility.ElapsedTime;
 
 public class TraverseSubsystem extends SubsystemBase {
 
-    private TalonFX rollerMotor, scoopMotor; 
+    private TalonFX rollerMotor, rollerMotor2, scoopMotor; 
     private TalonFXConfiguration rollerMotorConfig, scoopMotorConfig; 
     private StatusCode rollerMotorStatus, scoopMotorStatus;
     private CurrentLimitsConfigs rollerCurrentLimits, scoopCurrentLimits; 
@@ -28,6 +28,7 @@ public class TraverseSubsystem extends SubsystemBase {
     public TraverseSubsystem(){
 
         rollerMotor = new TalonFX(MotorConstants.traverseRollerID);
+        rollerMotor2 = new TalonFX(MotorConstants.traverseRoller2ID);
         scoopMotor = new TalonFX(MotorConstants.traverseScoopID);
 
         rollerMotorConfig = new TalonFXConfiguration();
@@ -59,6 +60,7 @@ public class TraverseSubsystem extends SubsystemBase {
         scoopMotorConfig.CurrentLimits = scoopCurrentLimits; 
 
         rollerMotor.getConfigurator().apply(rollerMotorConfig);
+        rollerMotor2.getConfigurator().apply(rollerMotorConfig);
         scoopMotor.getConfigurator().apply(scoopMotorConfig);
 
         rollerMotorStatus = rollerMotor.getConfigurator().apply(rollerMotorConfig);
@@ -71,8 +73,14 @@ public class TraverseSubsystem extends SubsystemBase {
 
     public void update() { // UNTESTED
         if (agitateTraverse) {
-            if (runningTransfer && intakeAgitating) rollerMotor.set(TraverseSettings.rollerMotorPower); 
-            else if (runningTransfer && !intakeAgitating) rollerMotor.set(-TraverseSettings.rollerMotorPower); 
+            if (runningTransfer && intakeAgitating) {
+                rollerMotor.set(TraverseSettings.rollerMotorPower); 
+                rollerMotor2.set(-TraverseSettings.rollerMotorPower); 
+            }
+            else if (runningTransfer && !intakeAgitating) {
+                rollerMotor.set(-TraverseSettings.rollerMotorPower); 
+                rollerMotor2.set(TraverseSettings.rollerMotorPower); 
+            }
 
             if (runningScoop && intakeAgitating) scoopMotor.set(-TraverseSettings.scoopMotorPower); 
             else if (runningScoop && !intakeAgitating) scoopMotor.set(TraverseSettings.scoopMotorPower); 
@@ -85,18 +93,23 @@ public class TraverseSubsystem extends SubsystemBase {
     public void transfer() { 
         runningTransfer = true;
         rollerMotor.set(-TraverseSettings.rollerMotorPower); 
+        rollerMotor2.set(TraverseSettings.rollerMotorPower); 
     }
     public void scoop() { 
         runningScoop = true;
         scoopMotor.set(TraverseSettings.scoopMotorPower); 
     }
 
-    public void emergencyReverse(){ rollerMotor.set(TraverseSettings.rollerMotorPower); }
+    public void emergencyReverse(){ 
+        rollerMotor.set(TraverseSettings.rollerMotorPower); 
+        rollerMotor2.set(-TraverseSettings.rollerMotorPower); 
+    }
     public void emergencyReverseScoop(){ scoopMotor.set(-TraverseSettings.scoopMotorPower); }
 
     public void stopRoller(){ 
         runningTransfer = false;
         rollerMotor.stopMotor(); 
+        rollerMotor2.stopMotor();
     }
     public void stopScoop() { 
         runningScoop = false;

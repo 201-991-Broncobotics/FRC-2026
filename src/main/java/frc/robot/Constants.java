@@ -31,9 +31,9 @@ public final class Constants {
     public static class MotorConstants{
     
         public static final int intakeID = 14; 
-        public static final int rightIntakePivotID = 16; 
-        public static final int leftIntakePivotID = 17; 
-        public static final int traverseRollerID = 18; 
+        public static final int traverseRollerID = 16; 
+        public static final int traverseRoller2ID = 17; 
+        public static final int rightIntakePivotID = 18; 
         public static final int traverseScoopID = 15; 
         public static final int leftFlyID = 11; 
         public static final int rightFlyID = 12;
