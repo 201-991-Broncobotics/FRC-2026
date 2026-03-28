@@ -89,7 +89,7 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotorConfig.Voltage.PeakReverseVoltage = IntakeConstants.maxReverseVoltage; 
 
         intakeMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     
         //Set currents if needed 
         currentLimits = new CurrentLimitsConfigs();
@@ -180,7 +180,7 @@ public class IntakeSubsystem extends SubsystemBase {
         if (!currentlySetUp && states == States.DownAndOn) stopPivotCustom();
         if (runPivotCustom) {
             double power = (targetPivotAngle - CurrentPivotPosition.getAsDouble()) * IntakeSettings.customKP;
-            rightPivotMotor.set(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * IntakeSettings.customKG);
+            rightPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * IntakeSettings.customKG));
             //leftPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * (0.7 * IntakeSettings.customKG)));
         } else {
             stopPivotCustom();

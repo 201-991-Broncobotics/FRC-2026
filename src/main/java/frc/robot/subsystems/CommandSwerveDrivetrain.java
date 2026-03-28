@@ -370,11 +370,31 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         gyroData.angAccelZ = (lastAngVelZ - gyroData.angVelZ) * FrameTime;
 
         
-        LimelightHelpers.SetRobotOrientation("limelight-a", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
-        LimelightHelpers.SetRobotOrientation("limelight-b", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        // LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        //LimelightHelpers.SetRobotOrientation("limelight-b", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        LimelightHelpers.SetIMUMode("limelight", 3);
 
 
         try {
+            PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            
+            if (LimelightPoseEstimate != null) {
+                double TurretAngle = OuttakeSubsystem.getTurretAngle();
+                // SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
+                Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));//.minus(new Rotation2d(Math.toRadians(180)));
+                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
+                    LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
+                    LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
+                    CorrectFacingDirection
+                );
+
+                SmartDashboard.putString("REAL TURRET POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
+
+                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate)) addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
+            }
+
+
+            /* 
             if (Settings.useRLimelight) {
                 // right side limelight: 0.361803m up, -0.050800m forward, 0.355600m right
                 PoseEstimate limelightPoseEstimateA = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
@@ -423,7 +443,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 SmartDashboard.putNumber("Left LimeLight Heartbeat", LimelightHelpers.getHeartbeat("limelight-b"));
             }
 
-            /* 
+            
             if (limelightAX.size() > Settings.stddevFrames) limelightAX.remove(0);
             if (limelightAY.size() > Settings.stddevFrames) limelightAY.remove(0);
             if (limelightBX.size() > Settings.stddevFrames) limelightBX.remove(0);
@@ -432,7 +452,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             SmartDashboard.putNumber("LLA stddev X", Functions.standardDeviation(limelightAX, 5));
             SmartDashboard.putNumber("LLA stddev Y", Functions.standardDeviation(limelightAY, 5));
             SmartDashboard.putNumber("LLB stddev X", Functions.standardDeviation(limelightBX, 5));
-            SmartDashboard.putNumber("LLB stddev Y", Functions.standardDeviation(limelightBY, 5));*/
+            SmartDashboard.putNumber("LLB stddev Y", Functions.standardDeviation(limelightBY, 5));
+            */
             
         } catch (NullPointerException e) {
             // do nothing

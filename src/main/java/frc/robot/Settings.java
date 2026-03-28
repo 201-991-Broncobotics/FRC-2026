@@ -46,7 +46,7 @@ public class Settings {
         public static double pivotMotorVelocity = 5; //7
         public static double pivotMotorAcceleration = 5; //2 
 
-        public static double pivotkP = 2.0; 
+        public static double pivotkP = 1.0; 
         public static double pivotkI = 0; 
         public static double pivotkD = 0; 
         public static double pivotkG = 0.0; // 0.35
@@ -60,13 +60,13 @@ public class Settings {
 
         public static double agitatePulsePeriod = 0.6; // seconds
 
-        public static double customKP = 0.2;
+        public static double customKP = 0.1;
         public static double customKG = -0.07;
     }
 
     public static class TraverseSettings {
 
-        public static double rollerMotorPower = 1.0; 
+        public static double rollerMotorPower = -0.75; 
         public static double scoopMotorPower = 1.0;
 
         
@@ -109,10 +109,10 @@ public class Settings {
         public static double kS = 0; 
         public static double kV = 0.12; 
         public static double kA = 0; 
-        public static double tkP = 25; // turntable
+        public static double tkP = 20; // turntable
         public static double tkI = 0; 
         public static double tkD = 0;  
-        public static double tkS = 2.0;
+        public static double tkS = 1.5;
         public static double tkV = 1;
         public static double hkP = 1; // hood
         public static double hkI = 0; 
