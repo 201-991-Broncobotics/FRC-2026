@@ -456,7 +456,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     // MATH AND TRAJECTORY CALCULATIONS
     // ==================================================================================================
 
-    public double[] regressTargettingData(Translation3d RelativeTarget, boolean aimHigh) {
+    public double[] regressTargettingData(Translation3d RelativeTarget, boolean aimHigh, double distanceOffset, double heightOffset) {
         Rotation2d targetRotation = new Rotation2d(RelativeTarget.getX(), RelativeTarget.getY());
         targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
         double finalTurretAngle = targetRotation.getRadians();
@@ -468,9 +468,10 @@ public class OuttakeSubsystem extends SubsystemBase {
 
 
         // TRAJECTORY MATH (Sorry my math was based on old stuff and the tests which are all in inches)
-        double Distance = Math.hypot(RelativeTarget.getX(), RelativeTarget.getY());
+        double Distance = Math.hypot(RelativeTarget.getX(), RelativeTarget.getY()) + distanceOffset;
+        double Height = RelativeTarget.getZ() + heightOffset;
         double LaunchHeight = 22.3; // INCHES sorry, can also be made to change based on hood angle  
-        double finalTargetRPM = Traj.k1 * ((39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * RelativeTarget.getZ()) + LaunchHeight + Traj.k3));
+        double finalTargetRPM = Traj.k1 * ((39.3701 * Distance) + Traj.k2) * Math.sqrt((386.088 * Math.pow(39.3701 * Distance, 2)) / ((39.3701 * Distance) - (39.3701 * Height) + LaunchHeight + Traj.k3));
 
         if (Double.isNaN(finalTargetRPM)) finalTargetRPM = 0;
 
@@ -478,7 +479,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         // assume minimum necessary flywheel rpm when no where close to the speed needed and end early
         SmartDashboard.putNumber("Traj1 Dist", 39.3701 * Distance);
-        SmartDashboard.putNumber("Traj2 Height", 39.3701 * RelativeTarget.getZ());
+        SmartDashboard.putNumber("Traj2 Height", 39.3701 * Height);
         SmartDashboard.putNumber("Traj3 RPM", finalTargetRPM);
         if (CurrentFlywheelRPM.getAsDouble() < 1000) {
             SmartDashboard.putNumber("Traj4 Hood Angle", 0); // clear data so I can tell when it ends early
@@ -492,8 +493,8 @@ public class OuttakeSubsystem extends SubsystemBase {
         double CurrentLaunchVelocity = Traj.a1 * currentFlywheelRPM + Traj.a2 * Math.pow(currentFlywheelRPM, 2);
         double EffectiveGravity = 386.088 - Traj.g1 * Math.pow(CurrentLaunchVelocity, 2);
         double CurrentLaunchAngle = 0;
-        if (aimHigh) CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) + Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) - EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * RelativeTarget.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
-        else CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) - Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) - EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * RelativeTarget.getZ() - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
+        if (aimHigh) CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) + Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) - EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * Height - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
+        else CurrentLaunchAngle = Math.atan((Math.pow(CurrentLaunchVelocity, 2) - Math.sqrt(Math.pow(CurrentLaunchVelocity, 4) - EffectiveGravity*(EffectiveGravity*Math.pow(39.3701 * Distance, 2) + 2*(39.3701 * Height - LaunchHeight)*Math.pow(CurrentLaunchVelocity, 2)))) / (EffectiveGravity * (39.3701 * Distance)));
 
         // double finalHoodAngle = Math.toRadians(((-Traj.b2 + Math.sqrt(Math.pow(Traj.b2, 2) - 4*Traj.b3*(Traj.b1-CurrentLaunchAngle))) / (2*Traj.b3)));
         
@@ -517,7 +518,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     }
     
-    public double[] getTargettingData(Translation3d Target, double TargetForwardOffset, double TargetVerticleOffset, boolean aimHigh) { // TargetForwardOffset is so we can make it always aim for the back half of the goal
+    public double[] getTargettingData(Translation3d Target, double TargetDistanceOffset, double TargetVerticleOffset, boolean aimHigh) { // TargetForwardOffset is so we can make it always aim for the back half of the goal
 
         //Get Starting Airtime
         Translation2d offsetTranslation2d = Target.toTranslation2d().minus(DrivingProfiles.getTurretPose().getTranslation());
@@ -525,10 +526,10 @@ public class OuttakeSubsystem extends SubsystemBase {
         
         //SmartDashboard.putString("Relative Goal Pose", Functions.stringifyTrans(relativeGoalPose));
 
-        double[] finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
+        double[] finalRegression = regressTargettingData(relativeGoalPose, aimHigh, TargetDistanceOffset, TargetVerticleOffset);
         double airTime = finalRegression[3];
         Translation3d newTarget = Target;
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 7; i++) {
             // code that moves relativeGoalPose based on airtime
             Translation2d velocity = DrivingProfiles.getTurretVelocity();
             Translation2d acceleration = DrivingProfiles.getTurretAcceleration().toTranslation2d();
@@ -541,7 +542,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             offsetTranslation2d = newTarget.toTranslation2d().minus(DrivingProfiles.getTurretPose().getTranslation());
             relativeGoalPose = new Translation3d(offsetTranslation2d.getX(), offsetTranslation2d.getY(), Target.getZ());
 
-            finalRegression = regressTargettingData(relativeGoalPose, aimHigh);
+            finalRegression = regressTargettingData(relativeGoalPose, aimHigh, TargetDistanceOffset, TargetVerticleOffset);
             airTime = finalRegression[3];
         }
 
