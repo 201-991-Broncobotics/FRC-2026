@@ -27,6 +27,8 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -370,9 +372,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         gyroData.angAccelZ = (lastAngVelZ - gyroData.angVelZ) * FrameTime;
 
         
-        // LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
         //LimelightHelpers.SetRobotOrientation("limelight-b", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
-        LimelightHelpers.SetIMUMode("limelight", 3);
+        // LimelightHelpers.SetIMUMode("limelight", 3);
 
 
         try {
@@ -382,13 +384,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 double TurretAngle = OuttakeSubsystem.getTurretAngle();
                 // SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
                 Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));//.minus(new Rotation2d(Math.toRadians(180)));
+
+                Pose2d OffsetLimelightPose2d = convertTurretPose(LimelightPoseEstimate.pose, TurretAngle);
+                /* 
                 Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
                     LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
                     LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
                     CorrectFacingDirection
-                );
+                );*/
 
-                SmartDashboard.putString("REAL TURRET POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
+                SmartDashboard.putString("LIMELIGHT POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
                 if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate)) addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
             }
@@ -523,6 +528,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
     }
 
+    public static Pose2d convertTurretPose(Pose2d pose, double TurretAngle) {
+        Translation2d turretTranslation = new Translation2d(-0.133349, 0.196850); 
+
+        Pose2d ActualRobotPose = new Pose2d(
+            pose.getTranslation().plus(turretTranslation.rotateBy(new Rotation2d(-TurretAngle))), 
+            pose.getRotation().minus(new Rotation2d(TurretAngle))
+        );
+        
+        return ActualRobotPose;
+    }
+
     public Translation3d getFieldCentricAcceleration() {
         // pigeon: +x is right, +y is down, +z is forward for current robot
         //robot relative is x is forward, y is left, and z is up
@@ -553,5 +569,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         public static double angAccelX = 0;
         public static double angAccelY = 0;
         public static double angAccelZ = 0;
+    }
+
+    public void seedLL4Imu() {
+        LimelightHelpers.SetIMUMode("limelight", 1);
+        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetIMUMode("limelight", 3);
+    }
+
+    public void defaultLL4ImuMode() {
+        LimelightHelpers.SetIMUMode("limelight", 1);
+    }
+
+    public void runningLL4ImuMode() {
+        LimelightHelpers.SetIMUMode("limelight", 3);
     }
 }

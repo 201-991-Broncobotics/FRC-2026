@@ -127,8 +127,7 @@ public class IntakeSubsystem extends SubsystemBase {
         lastkP = IntakeSettings.pivotkD; 
         lastkG = IntakeSettings.pivotkG; 
 
-        pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble();
-        CurrentPivotPosition = () -> (rightPivotMotor.getPosition().getValueAsDouble() + pivotOffset) * 2*Math.PI;
+        resetPivotPosition();
 
         currentlySetUp = true;
 
@@ -162,6 +161,11 @@ public class IntakeSubsystem extends SubsystemBase {
       
     }
 
+    public void resetPivotPosition() {
+        pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + IntakeConstants.upIntakePosition / (2*Math.PI);
+        CurrentPivotPosition = () -> (rightPivotMotor.getPosition().getValueAsDouble() + pivotOffset) * 2*Math.PI;
+    }
+
     public void update() {
         if (agitateIntake) {
             if (agitateTimer.time() < 0.2 * IntakeSettings.agitatePulsePeriod) {
@@ -177,10 +181,11 @@ public class IntakeSubsystem extends SubsystemBase {
             intakeMotor.set(TargetIntakePower); 
         }
 
+
         if (!currentlySetUp && states == States.DownAndOn) stopPivotCustom();
         if (runPivotCustom) {
             double power = (targetPivotAngle - CurrentPivotPosition.getAsDouble()) * IntakeSettings.customKP;
-            rightPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * IntakeSettings.customKG));
+            rightPivotMotor.set((power + Math.cos(CurrentPivotPosition.getAsDouble()) * IntakeSettings.customKG));
             //leftPivotMotor.set(-(power + Math.sin(CurrentPivotPosition.getAsDouble() - Math.toRadians(5.2)) * (0.7 * IntakeSettings.customKG)));
         } else {
             stopPivotCustom();
@@ -206,13 +211,13 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void justDrop() {
-        rightPivotMotor.set(0.5);
+        rightPivotMotor.set(-0.5);
         //leftPivotMotor.set(-0.5);
         currentlySetUp = false;
     }
 
     public void justLift() {
-        rightPivotMotor.set(-0.25);
+        rightPivotMotor.set(0.25);
         //leftPivotMotor.set(0.25);
     }
 
@@ -340,15 +345,15 @@ public class IntakeSubsystem extends SubsystemBase {
     public void periodic(){
         // resetStoragePosition(); // didn't work
 
-        if (CurrentPivotPosition.getAsDouble() > IntakeConstants.outIntakePosition - Math.toRadians(15)) states = States.DownAndOn;
-        else if (CurrentPivotPosition.getAsDouble() < IntakeConstants.upIntakePosition + Math.toRadians(15)) states = States.Up;
+        if (CurrentPivotPosition.getAsDouble() < IntakeConstants.outIntakePosition + Math.toRadians(15)) states = States.DownAndOn;
+        else if (CurrentPivotPosition.getAsDouble() > IntakeConstants.upIntakePosition - Math.toRadians(15)) states = States.Up;
         else states = States.SemiUp;
 
         SmartDashboard.putString("Intake State", states.toString());
 
-        if ((states == States.Up || states == States.SemiUp) && !currentlySetUp && rightPivotMotor.getStatorCurrent().getValueAsDouble() > 10) {
+        if ((states == States.Up || states == States.SemiUp) && !currentlySetUp && rightPivotMotor.getStatorCurrent().getValueAsDouble() > 5) {
             if (resetPivotTimer.time() > 2.5) {
-                pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + (IntakeConstants.outIntakePosition + Math.toRadians(8)) / (2*Math.PI);
+                pivotOffset = -rightPivotMotor.getPosition().getValueAsDouble() + (IntakeConstants.outIntakePosition + Math.toRadians(10)) / (2*Math.PI);
                 states = States.DownAndOn;
             }
         } else {

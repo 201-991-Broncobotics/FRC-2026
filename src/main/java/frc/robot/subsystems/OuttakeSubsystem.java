@@ -119,7 +119,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
 
-    private boolean dumbShooterMode = false, antiAirMode = false;
+    private boolean dumbShooterMode = false, antiAirMode = false, localizationMode = false;
 
     
     private ArrayList<Double> averageTurntableAngle = new ArrayList(), averageFlywheelRPM = new ArrayList(), averageHoodAngle = new ArrayList();
@@ -342,7 +342,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
         */
         
-        lastTargettingData = getTargettingData(TARGET, 0, 0); // turret, flywheel, hood, air time
+        lastTargettingData = getTargettingData(TARGET, 0.2, 0); // turret, flywheel, hood, air time
 
         averageTurntableAngle.add(lastTargettingData[0]);
         averageFlywheelRPM.add(lastTargettingData[1]);
@@ -373,6 +373,10 @@ public class OuttakeSubsystem extends SubsystemBase {
                 TargetTurretAngle = Math.toRadians(180);
                 TargetFlywheelRPM = 2532;
                 TargetHoodAngle = lastTargettingData[2];
+            } else if (localizationMode) { // only aim at april tags
+                if (Math.abs(CurrentTurretAngle.getAsDouble() - averageData[0]) > TurretSettings.TurntableDeadband) TargetTurretAngle = averageData[0];
+                stopFlywheels();
+                TargetHoodAngle = TurretConstants.minHoodAngle;
             } else if (antiAirMode) {
                 if (Math.abs(CurrentTurretAngle.getAsDouble() - averageData[0]) > TurretSettings.TurntableDeadband) TargetTurretAngle = averageData[0];
                 TargetFlywheelRPM = 5000;
@@ -401,9 +405,12 @@ public class OuttakeSubsystem extends SubsystemBase {
                         hoodCalibrationPhase++;
                     case 1: // make sure its hitting bottom mechanical stop
                         hoodMotor.set(-TurretSettings.hoodCalibrationPower);
-                        if (hoodCalibrationTimer.time() > TurretSettings.hoodCalibrationDownTime) hoodCalibrationPhase++;
+                        if (hoodCalibrationTimer.time() > TurretSettings.hoodCalibrationDownTime) hoodCalibrationPhase = 3;
                         break;
                     case 2: // go up to roughly where the top is at pid speed
+
+                        // Skip this cause its really slow for some reason
+
                         setHood(TurretConstants.maxHoodAngle); // should be underestimate at the moment
                         if (CurrentHoodAngle.getAsDouble() + Math.toRadians(10) > TurretConstants.maxHoodAngle) hoodCalibrationPhase++;
                         hoodCalibrationTimer.reset();
@@ -625,6 +632,9 @@ public class OuttakeSubsystem extends SubsystemBase {
             justToggledTuning = false;
         }*/
     }
+
+    public void enableFocusMode() { localizationMode = true; }
+    public void disableFocusMode() { localizationMode = false; }
 
     public void enableAutoLower(){ TurretSettings.autoLowerHood = true; }
     public void disableAutoLower(){ TurretSettings.autoLowerHood = false; }

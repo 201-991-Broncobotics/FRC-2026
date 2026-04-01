@@ -55,14 +55,14 @@ public final class Constants {
         public static final double maxReverseVoltage = -12; 
 
         public static final boolean currentLimitsEnabled = true;  
-        public static final double supplyCurrent = 20; // helps prevent brownouts
-        public static final double statorCurrent = 50; // helps prevent motor overheating
-        public static final double pivotSupplyCurrent = 30;
-        public static final double pivotStatorCurrent = 40; 
+        public static final double supplyCurrent = 15; // helps prevent brownouts
+        public static final double statorCurrent = 40; // helps prevent motor overheating
+        public static final double pivotSupplyCurrent = 20;
+        public static final double pivotStatorCurrent = 30; 
 
         public static final double x60ShaftRadius = 4/25.4; //inches
-        public static final double outIntakePosition = Math.toRadians(95); //radians, also I hate this cause I can't switch these without the motion profile breaking
-        public static final double upIntakePosition = 0; //radians
+        public static final double outIntakePosition = Math.toRadians(0); //radians, also I hate this cause I can't switch these without the motion profile breaking
+        public static final double upIntakePosition = Math.toRadians(95); //radians
         //public static double maxPivotAngle = lowLimitAngle; //radians
         //public static double minPivotAngle = highLimitAngle; //radians
         //public static final double startingPosition = highLimitAngle; //radians
@@ -162,8 +162,8 @@ public final class Constants {
         public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,8), new Translation2d(4.5,0)));
         public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,8), new Translation2d(16.5,0)));
 
-        public static Translation3d blueHub = new Translation3d(4.6,4, 1.83);
-        public static Translation3d redHub = new Translation3d(11.9,4, 1.83);
+        public static Translation3d blueHub = new Translation3d(4.6,4, 1.83); // new Translation3d(4.6,4, 1.83);
+        public static Translation3d redHub = new Translation3d(11.9,4, 1.83); // new Translation3d(11.9,4, 1.83);
         public static double hubWidth = 2;
 
         public static boolean alliance = true; //True is blue

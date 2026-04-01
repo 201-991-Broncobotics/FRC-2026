@@ -374,13 +374,20 @@ public class DrivingProfiles extends SubsystemBase {
     }
 
     public static Pose2d getTurretPose() {
-        Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
+        Translation2d turretTranslation = new Translation2d(0.133349, -0.196850); 
+        Pose2d robotPose = drivetrain.getState().Pose;
+        double turretAngle = OuttakeSubsystem.getTurretAngle();
+
+        Pose2d ActualTurretPose = new Pose2d(
+            robotPose.getTranslation().plus(turretTranslation.rotateBy(new Rotation2d(-turretAngle))), 
+            robotPose.getRotation().minus(new Rotation2d(turretAngle))
+        );
         
-        return (drivetrain.getState().Pose).transformBy(new Transform2d(turretTranslation, Rotation2d.fromDegrees(55.885527)));
+        return ActualTurretPose;
     }
 
     public static Translation2d getTurretVelocity() { // Field Centric
-        Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
+        Translation2d turretTranslation = new Translation2d(-0.133349, 0.196850); 
 
         double angVel = drivetrain.getState().Speeds.omegaRadiansPerSecond;
 
@@ -395,7 +402,7 @@ public class DrivingProfiles extends SubsystemBase {
         Translation3d robotAccel = drivetrain.getFieldCentricAcceleration();
         double angAccel = drivetrain.getAngAcceleration().getRadians(); 
 
-        Translation2d turretTranslation = new Translation2d(-0.163027, 0.237765);
+        Translation2d turretTranslation = new Translation2d(-0.133349, 0.196850); 
 
         double angVel = drivetrain.getState().Speeds.omegaRadiansPerSecond;
 

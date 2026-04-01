@@ -170,7 +170,8 @@ public class RobotContainer {
             ); 
 
             driver.x().whileTrue(drivetrain.applyRequest(() -> brake));
-            driver.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())); // resets heading (but gets overridden by limelight)
+            driver.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())); // resets heading
+            driver.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedLL4Imu()));
             // driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
             //Driver should probably do climbing
@@ -241,7 +242,8 @@ public class RobotContainer {
             override.b().whileTrue(drivetrain.applyRequest(() -> brake));
             
             //Reset Heading (Y)
-            override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+            override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()))
+                        .onTrue(drivetrain.runOnce(() -> drivetrain.seedLL4Imu()));
 
             //Intake
             override.rightBumper().and(override.leftBumper().negate()) // just intake
@@ -322,6 +324,17 @@ public class RobotContainer {
             drivetrain.setOperatorPerspectiveForward(new Rotation2d(Math.toRadians(0)));
 
         //CommandScheduler.getInstance().schedule(resetElevatorCommand);
+        
+    }
+
+    public void whileStopped() {
+        drivetrain.defaultLL4ImuMode();
+    }
+
+    public void whenStarted() {
+        drivetrain.seedLL4Imu();
+        drivetrain.runningLL4ImuMode();
+        intakeSubsystem.resetPivotPosition();
     }
 
     /**

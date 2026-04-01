@@ -40,8 +40,8 @@ public class Settings {
 
     public static class IntakeSettings {
 
-        public static double runningPower = 1; 
-        public static double reversePower = -0.75; 
+        public static double runningPower = 0.75; 
+        public static double reversePower = -0.5; 
 
         public static double pivotMotorVelocity = 5; //7
         public static double pivotMotorAcceleration = 5; //2 
@@ -61,12 +61,12 @@ public class Settings {
         public static double agitatePulsePeriod = 0.6; // seconds
 
         public static double customKP = 0.1;
-        public static double customKG = -0.07;
+        public static double customKG = 0.07;
     }
 
     public static class TraverseSettings {
 
-        public static double rollerMotorPower = -0.75; 
+        public static double rollerMotorPower = -1.0; 
         public static double scoopMotorPower = 1.0;
 
         
@@ -124,7 +124,7 @@ public class Settings {
         public static boolean reverseCounterDirection = false;
 
         public static double hoodCalibrationDownTime = 0.1; // time spent going to down position (which should be short since it already is in the down position)
-        public static double hoodCalibrationUpTime = 0.25; // time spent going up after it has reached its underestimate for max height
+        public static double hoodCalibrationUpTime = 0.5; // time spent going up after it has reached its underestimate for max height
         public static double hoodCalibrationPower = 0.4;
 
         public static double defaultTurretPosition = Math.toRadians(170); // position at slight angle to allow intake to go up

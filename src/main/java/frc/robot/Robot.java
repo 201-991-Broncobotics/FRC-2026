@@ -50,12 +50,15 @@ public class Robot extends TimedRobot {
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() { 
+    m_robotContainer.whileStopped();
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
     m_robotContainer.start();
+    m_robotContainer.whenStarted();
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -80,6 +83,7 @@ public class Robot extends TimedRobot {
     } else {
       m_robotContainer.start();
     }
+    m_robotContainer.whenStarted();
   }
 
   /** This function is called periodically during operator control. */
