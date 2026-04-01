@@ -59,6 +59,7 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     m_robotContainer.start();
     m_robotContainer.whenStarted();
+    m_robotContainer.autoStarted();
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -83,7 +84,8 @@ public class Robot extends TimedRobot {
     } else {
       m_robotContainer.start();
     }
-    m_robotContainer.whenStarted();
+    m_robotContainer.whenStarted(); // always runs when started
+    m_robotContainer.teleOpStarted();
   }
 
   /** This function is called periodically during operator control. */

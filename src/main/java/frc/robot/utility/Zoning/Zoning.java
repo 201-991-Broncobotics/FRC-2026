@@ -21,6 +21,10 @@ public class Zoning {
         this.Zones = zones;
     }
 
+    public Zoning(Zone... zones) { // the cool coder method
+        for (Zone z : zones) this.Zones.add(z);
+    }
+
     // Purely checks if a pose is in the zones, without modifying the state.
     public boolean inZones(Pose2d pose){
         for (Zone zone : Zones) {

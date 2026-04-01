@@ -80,6 +80,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private ElapsedTime gyroTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
     private ArrayList<Double> limelightAX = new ArrayList<Double>(), limelightAY = new ArrayList<Double>();
     private ArrayList<Double> limelightBX = new ArrayList<Double>(), limelightBY = new ArrayList<Double>();
+    private boolean visionLocalization = false, localizationTrustworthy = false;
+    private double DistanceSinceLastSeenAprilTag = 9999;
+    private int totalFramesWithAprilTags = 0;
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -371,98 +374,31 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         gyroData.angAccelY = (lastAngVelY - gyroData.angVelY) * FrameTime;
         gyroData.angAccelZ = (lastAngVelZ - gyroData.angVelZ) * FrameTime;
 
+        DistanceSinceLastSeenAprilTag += Math.hypot(getState().Speeds.vxMetersPerSecond, getState().Speeds.vyMetersPerSecond) * FrameTime;
         
-        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
-        //LimelightHelpers.SetRobotOrientation("limelight-b", getState().Pose.getRotation().getDegrees(), 0 * Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
-        // LimelightHelpers.SetIMUMode("limelight", 3);
+        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
 
+        if (visionLocalization) LimelightHelpers.SetIMUMode("limelight", 3); // use only limelight imu
+        else LimelightHelpers.SetIMUMode("limelight", 1); // seeding Mode
 
-        try {
-            PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
-            
-            if (LimelightPoseEstimate != null) {
-                double TurretAngle = OuttakeSubsystem.getTurretAngle();
-                // SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
-                Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));//.minus(new Rotation2d(Math.toRadians(180)));
+        
+        PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+        
+        if (LimelightPoseEstimate != null) {
+            double TurretAngle = OuttakeSubsystem.getTurretAngle();
 
-                Pose2d OffsetLimelightPose2d = convertTurretPose(LimelightPoseEstimate.pose, TurretAngle);
-                /* 
-                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
-                    LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
-                    LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
-                    CorrectFacingDirection
-                );*/
+            Pose2d OffsetLimelightPose2d = convertTurretPose(LimelightPoseEstimate.pose, TurretAngle);
 
-                SmartDashboard.putString("LIMELIGHT POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
+            SmartDashboard.putString("LIMELIGHT POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate)) addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
+            if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && visionLocalization) {
+                totalFramesWithAprilTags++;
+                DistanceSinceLastSeenAprilTag = 0;
+                addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.2, 0.2, 1)); // standard deviation of vision measurements in meters and degrees
             }
-
-
-            /* 
-            if (Settings.useRLimelight) {
-                // right side limelight: 0.361803m up, -0.050800m forward, 0.355600m right
-                PoseEstimate limelightPoseEstimateA = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-a");
-                if (limelightPoseEstimateA != null) {
-                    SmartDashboard.putString("Right Limelight Pose:", Functions.stringifyPose(limelightPoseEstimateA.pose));
-                    
-                    if (LimelightHelpers.validPoseEstimate(limelightPoseEstimateA)) { 
-                        double distVarA = 0.00329999 * Math.pow(limelightPoseEstimateA.avgTagDist, 2.2061);
-                        double sideVarA = 0.00177127 * Math.pow(limelightPoseEstimateA.avgTagDist, 3.50671);
-                        double roughTagAngle = Math.toRadians(getState().Pose.getRotation().getDegrees() - 90);
-                        double xVarA = Math.abs(Math.cos(roughTagAngle)) * distVarA + Math.abs(Math.sin(roughTagAngle)) * sideVarA;
-                        double yVarA = Math.abs(Math.sin(roughTagAngle)) * distVarA + Math.abs(Math.cos(roughTagAngle)) * sideVarA;
-
-                        SmartDashboard.putNumber("LLA avgDist", limelightPoseEstimateA.avgTagDist);
-                        SmartDashboard.putNumber("LLA xVar", xVarA);
-                        SmartDashboard.putNumber("LLA yVar", yVarA);
-                        
-                        addVisionMeasurement(limelightPoseEstimateA.pose, limelightPoseEstimateA.timestampSeconds, VecBuilder.fill(1.5 * xVarA, 1.5 * yVarA, 15));
-                    } 
-                }
-
-                SmartDashboard.putNumber("Right LimeLight Heartbeat", LimelightHelpers.getHeartbeat("limelight-a"));
-            }
-
-            if (Settings.useLLimelight) {
-                // left side limelight: 0.332161m up, 0.063500m forward, -0.355600m right
-                PoseEstimate limelightPoseEstimateB = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-b");
-                if (limelightPoseEstimateB != null) {
-                    SmartDashboard.putString("Left Limelight Pose:", Functions.stringifyPose(limelightPoseEstimateB.pose));
-                    
-                    if (LimelightHelpers.validPoseEstimate(limelightPoseEstimateB)) {
-                        double distVarB = 0.00329999 * Math.pow(limelightPoseEstimateB.avgTagDist, 2.2061);
-                        double sideVarB = 0.00177127 * Math.pow(limelightPoseEstimateB.avgTagDist, 3.50671);
-                        double roughTagAngle = Math.toRadians(getState().Pose.getRotation().getDegrees() + 90);
-                        double xVarB = Math.abs(Math.cos(roughTagAngle)) * distVarB + Math.abs(Math.sin(roughTagAngle)) * sideVarB;
-                        double yVarB = Math.abs(Math.sin(roughTagAngle)) * distVarB + Math.abs(Math.cos(roughTagAngle)) * sideVarB;
-
-                        SmartDashboard.putNumber("LLB avgDist", limelightPoseEstimateB.avgTagDist);
-                        SmartDashboard.putNumber("LLB xVar", xVarB);
-                        SmartDashboard.putNumber("LLB yVar", yVarB);
-                        
-                        addVisionMeasurement(limelightPoseEstimateB.pose, limelightPoseEstimateB.timestampSeconds, VecBuilder.fill(1.5 * xVarB, 1.5 * yVarB, 15));
-                    } 
-                }
-
-                SmartDashboard.putNumber("Left LimeLight Heartbeat", LimelightHelpers.getHeartbeat("limelight-b"));
-            }
-
-            
-            if (limelightAX.size() > Settings.stddevFrames) limelightAX.remove(0);
-            if (limelightAY.size() > Settings.stddevFrames) limelightAY.remove(0);
-            if (limelightBX.size() > Settings.stddevFrames) limelightBX.remove(0);
-            if (limelightBY.size() > Settings.stddevFrames) limelightBY.remove(0);
-
-            SmartDashboard.putNumber("LLA stddev X", Functions.standardDeviation(limelightAX, 5));
-            SmartDashboard.putNumber("LLA stddev Y", Functions.standardDeviation(limelightAY, 5));
-            SmartDashboard.putNumber("LLB stddev X", Functions.standardDeviation(limelightBX, 5));
-            SmartDashboard.putNumber("LLB stddev Y", Functions.standardDeviation(limelightBY, 5));
-            */
-            
-        } catch (NullPointerException e) {
-            // do nothing
         }
+        
+        if (totalFramesWithAprilTags > Settings.minimumFramesToTrustLocalization) localizationTrustworthy = true;
 
         
     }
@@ -555,6 +491,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return new Rotation2d(-gyroData.angAccelY);
     }
 
+    public boolean isLocalizationTrustworthy() { return localizationTrustworthy; }
+    public double distanceTraveledWithoutCorrection() { return DistanceSinceLastSeenAprilTag; }
 
     public static class gyroData { // accelerations are in Gs 
         public static double accelX = 0;
@@ -572,16 +510,21 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void seedLL4Imu() {
+        localizationTrustworthy = false;
+        DistanceSinceLastSeenAprilTag = 9999;
+        totalFramesWithAprilTags = 0;
         LimelightHelpers.SetIMUMode("limelight", 1);
+        LimelightHelpers.SetIMUAssistAlpha("limelight", 1.0);
         LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetIMUAssistAlpha("limelight", 0.001);
         LimelightHelpers.SetIMUMode("limelight", 3);
     }
 
     public void defaultLL4ImuMode() {
-        LimelightHelpers.SetIMUMode("limelight", 1);
+        visionLocalization = false;
     }
 
     public void runningLL4ImuMode() {
-        LimelightHelpers.SetIMUMode("limelight", 3);
+        visionLocalization = true;
     }
 }

@@ -108,8 +108,8 @@ public final class Constants {
         public static final double x44MaxRPM = 7750; 
 
         public static final boolean currentLimitsEnabled = true; 
-        public static final double supplyCurrent = 40; 
-        public static final double statorCurrent = 60; // disabled
+        public static final double supplyCurrent = 60; 
+        public static final double statorCurrent = 80; // disabled
         public static final int hoodMotorCurrent = 25;
         public static final double turretSupplyCurrent = 40;
         public static final double turretStatorCurrent = 60;
@@ -126,16 +126,10 @@ public final class Constants {
         public static final double incrementAngle = 1.5; //Degrees
     }
 
-    public static class AutoDrivingConstants {
-        public static double FieldLength = 17.5483;
-        public static double FieldWidth = 8.0519;
-
-        public static Vector2d RedReefCenter = new Vector2d(4.284788875 + FieldLength/2, -0.000099 + FieldWidth/2);
-        public static Vector2d BlueReefCenter = new Vector2d(-4.284788875 + FieldLength/2, -0.000099 + FieldWidth/2);
-
-    }
-
     public static class ZoneConstants {//Zones on the field from the POV of blue Human player
+        public static double FieldLength = 16.57; // these are the coords in Choreo I have no idea why are different then the pdf pages but I trust choreo more
+        public static double FieldWidth = 8.1;
+
         public static Zone blueLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,7.25), 2, 1.6));
         public static Zone blueRightTrench = new Zone(new Shape.Rectangle(new Translation2d(4.6,0.8), 2, 1.6));
         public static Zone redLeftTrench = new Zone(new Shape.Rectangle(new Translation2d(11.9,7.25), 2, 1.6));
@@ -152,25 +146,32 @@ public final class Constants {
 
 
         public static Zone blueClimb = new Zone(new Shape.Rectangle(new Translation2d(0,3.75), new Translation2d(1.5,3.5)));
-        public static Zone redClimb = new Zone(new Shape.Rectangle(new Translation2d(15,4.25), new Translation2d(16.5,3.5)));
+        public static Zone redClimb = new Zone(new Shape.Rectangle(new Translation2d(15,4.25), new Translation2d(FieldLength,3.5)));
 
         public static ArrayList<Zone> ClimbZones = new ArrayList<>(Arrays.asList(ZoneConstants.blueLeftTrench, ZoneConstants.blueRightTrench, ZoneConstants.redLeftTrench, ZoneConstants.redRightTrench));
 
-        public static Zone ballsZone = new Zone(new Shape.Rectangle(new Translation2d(8.25,4), 2,5));
+        public static Zone ballsZone = new Zone(new Shape.Rectangle(new Translation2d(FieldLength/2.0,FieldWidth/2.0), 2,5));
 
-        public static Zone middleZone = new Zone(new Shape.Rectangle(new Translation2d(4.75,8), new Translation2d(12,0)));
-        public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,8), new Translation2d(4.5,0)));
-        public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,8), new Translation2d(16.5,0)));
+        public static Zone middleZone = new Zone(new Shape.Rectangle(new Translation2d(4.75,FieldWidth), new Translation2d(12,0)));
+        public static Zone blueZone = new Zone(new Shape.Rectangle(new Translation2d(0,FieldWidth), new Translation2d(4.5,0)));
+        public static Zone redZone = new Zone(new Shape.Rectangle(new Translation2d(11.75,FieldWidth), new Translation2d(FieldLength,0)));
 
-        public static Translation3d blueHub = new Translation3d(4.6,4, 1.83); // new Translation3d(4.6,4, 1.83);
-        public static Translation3d redHub = new Translation3d(11.9,4, 1.83); // new Translation3d(11.9,4, 1.83);
+        public static Translation3d blueHub = new Translation3d(4.6,FieldWidth/2.0, 1.83); // new Translation3d(4.6,4, 1.83);
+        public static Translation3d redHub = new Translation3d(11.9,FieldWidth/2.0, 1.83); // new Translation3d(11.9,4, 1.83);
         public static double hubWidth = 2;
 
         public static boolean alliance = true; //True is blue
         public static Translation3d allianceHub = blueHub;
         public static Zoning allianceZone = new Zoning(blueZone);
 
-        public static Zone fieldZone = new Zone(new Shape.Rectangle(new Translation2d(0, 8), new Translation2d(16.54, 0)));
+        public static Zone fieldZone = new Zone(new Shape.Rectangle(new Translation2d(0, FieldWidth), new Translation2d(FieldLength, 0)));
+
+        public static Zoning CCWTurnAreas = new Zoning(
+            new Zone(new Shape.Rectangle(new Translation2d(0, 4), new Translation2d(4.6, 0))),
+            new Zone(new Shape.Rectangle(new Translation2d(4.6, FieldWidth), new Translation2d(FieldLength/2.0, FieldWidth/2.0))),
+            new Zone(new Shape.Rectangle(new Translation2d(FieldLength/2.0, FieldWidth/2.0), new Translation2d(11.9, 0))),
+            new Zone(new Shape.Rectangle(new Translation2d(11.9, FieldWidth), new Translation2d(FieldLength, FieldWidth/2.0)))
+        );
     }
 
     

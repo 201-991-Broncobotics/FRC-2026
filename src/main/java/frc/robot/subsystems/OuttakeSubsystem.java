@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.MotorConstants;
+import frc.robot.Constants.TraverseConstants;
 import frc.robot.Constants.TurretConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings;
@@ -100,6 +101,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     private double counterAngle = 0;
     private int ballsCounted = 0;
+    private boolean currentSpiking = false;
 
     // Only for testing
     private double TargetHoodAngle = 0, TargetTurretAngle = 0, TargetFlywheelRPM = 0;//Degrees
@@ -114,7 +116,7 @@ public class OuttakeSubsystem extends SubsystemBase {
     private boolean Shooting = false;
     private double turretStartingOffset = 0;
 
-    private boolean justChangedPower = false;
+    private boolean justChangedPower = false, loweredMaxCurrent = false;
 
     private Pose2d robotPose = new Pose2d(0,0, new Rotation2d(0));
     private Zoning FlyZoning = new Zoning(ZoneConstants.TrenchZones);
@@ -124,6 +126,9 @@ public class OuttakeSubsystem extends SubsystemBase {
     
     private ArrayList<Double> averageTurntableAngle = new ArrayList(), averageFlywheelRPM = new ArrayList(), averageHoodAngle = new ArrayList();
     private double[] averageData = new double[]{0, 0, 0};
+
+
+    public static boolean TurretWillMiss = true;
 
 
     public OuttakeSubsystem(CommandSwerveDrivetrain Drivetrain, CommandXboxController operator){
@@ -142,6 +147,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         averageFlywheelRPM.add(0.0);
         averageHoodAngle.add(0.0);
         
+        ballsCounted = 0;
 
         /*table.add(p1);
         table.add(p2);
@@ -431,16 +437,16 @@ public class OuttakeSubsystem extends SubsystemBase {
             }
 
             setTurntable(TargetTurretAngle);
+
+            TurretWillMiss = (TargetTurretAngle < TurretSettings.minTurretAngle || TargetTurretAngle > TurretSettings.maxTurretAngle) || autoLowered || hoodNeedsToBeCalibrated || localizationMode || (Math.abs(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble()) > 400);
             
         } else { // Not shooting
-            
             
             stopFlywheels();
             setHood(TurretConstants.minHoodAngle);
             hoodCalibrationPhase = 0;
+            TurretWillMiss = true;
             
-            //setTurntable(Math.toDegrees(180)); - AIDAN TS IS FOR THE TURNTABLE TO ALIGN WHEN THE PIVOT IS UP
-            //DrivingProfiles.allowedToUseLimelight = true;
         }
 
 
@@ -467,9 +473,9 @@ public class OuttakeSubsystem extends SubsystemBase {
         Rotation2d targetRotation = new Rotation2d(RelativeTarget.getX(), RelativeTarget.getY());
         targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
         double finalTurretAngle = targetRotation.getRadians();
-        //if (finalTurretAngle > TurretSettings.maxTurretAngle) finalTurretAngle -= 2*Math.PI;
-        //if (finalTurretAngle < TurretSettings.minTurretAngle) finalTurretAngle += 2*Math.PI;
-        finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
+
+        // Not wrapping this so I can see that the turret is aiming for a position it can't reach
+        // finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
 
         SmartDashboard.putNumber("Traj0 Turret", Math.toDegrees(finalTurretAngle));
 
@@ -482,7 +488,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         if (Double.isNaN(finalTargetRPM)) finalTargetRPM = 0;
 
-        double currentFlywheelRPM = finalTargetRPM;//CurrentFlywheelRPM.getAsDouble();
+        double currentFlywheelRPM = finalTargetRPM; //CurrentFlywheelRPM.getAsDouble();
 
         // assume minimum necessary flywheel rpm when no where close to the speed needed and end early
         SmartDashboard.putNumber("Traj1 Dist", 39.3701 * Distance);
@@ -574,9 +580,14 @@ public class OuttakeSubsystem extends SubsystemBase {
     // ==================================================================================================
 
     public void setTurntable(double Angle) {
-        TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
-        // turntableMotor.setControl(turretPositionRequest.withPosition(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
-        turntableMotor.setControl(new MotionMagicVoltage(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
+
+        // stop moving the turret when outside range
+        if (Angle <= TurretSettings.maxTurretAngle && Angle >= TurretSettings.minTurretAngle) {
+            TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
+            // turntableMotor.setControl(turretPositionRequest.withPosition(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
+            turntableMotor.setControl(new MotionMagicVoltage(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
+        }
+        
     }
 
     public void setHood(double Angle) {//Radians
@@ -856,37 +867,36 @@ public class OuttakeSubsystem extends SubsystemBase {
         Pose2d robotPose = drivetrain.getState().Pose;
         Pose2d turretPose = DrivingProfiles.getTurretPose();
 
+        if(TurretSettings.autoLowerHood){
+            // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
+            if ((FlyZoning.ifLeftZones(turretPose) && Shooting && !ZoneConstants.allianceZone.inZones(turretPose)) || FlyZoning.ifEnteredZones(turretPose) && Shooting && ZoneConstants.allianceZone.inZones(turretPose)) {
+                Shooting = false;
+            } else if ((FlyZoning.ifEnteredZones(turretPose) && !Shooting && !ZoneConstants.allianceZone.inZones(turretPose))) {
+                Shooting = true; 
+            }
+        }
 
-            if(TurretSettings.autoLowerHood){
-                // 4. Logic: Stop shooting if we left the trench and are not in the alliance zone
-                if ((FlyZoning.ifLeftZones(turretPose) && Shooting && !ZoneConstants.allianceZone.inZones(turretPose)) || FlyZoning.ifEnteredZones(turretPose) && Shooting && ZoneConstants.allianceZone.inZones(turretPose)) {
-                    Shooting = false;
-                } else if ((FlyZoning.ifEnteredZones(turretPose) && !Shooting && !ZoneConstants.allianceZone.inZones(turretPose))) {
-                    Shooting = true; 
-                }
+        // 5. Update the Trench (FlyZoning) state
+        FlyZoning.updateZones(turretPose);
+        ZoneConstants.allianceZone.updateZones(robotPose);
+        autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trench
+
+        //Change targeting
+        if(!ZoneConstants.allianceZone.getZoningState()){ // if not in alliance zone
+
+            alliance = DriverStation.getAlliance();
+            if (antiAirMode && (ZoneConstants.blueZone.inZone(robotPose) || ZoneConstants.redZone.inZone(robotPose))) { // if still in an alliance zone after checking if not in our alliance zone
+                SmartDashboard.putString("Successfully Activated Anti-Air", "yes");
+                if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.blueHub; // Target other hub
+                } else TARGET = ZoneConstants.redHub;
             }
 
-            // 5. Update the Trench (FlyZoning) state
-            FlyZoning.updateZones(turretPose);
-            ZoneConstants.allianceZone.updateZones(robotPose);
-            autoLowered = FlyZoning.getZoningState(); // autoLowered is true if inside the trenc
-
-            //Change targeting
-            if(!ZoneConstants.allianceZone.getZoningState()){ // if not in alliance zone
-
-                alliance = DriverStation.getAlliance();
-                if (antiAirMode && (ZoneConstants.blueZone.inZone(robotPose) || ZoneConstants.redZone.inZone(robotPose))) { // if still in an alliance zone after checking if not in our alliance zone
-                    SmartDashboard.putString("Successfully Activated Anti-Air", "yes");
-                    if (alliance.get() == Alliance.Red) { TARGET = ZoneConstants.blueHub; // Target other hub
-                    } else TARGET = ZoneConstants.redHub;
-                }
-
-                Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.25);
-                //Uses alliance hub as the regression already accounts for height
-                TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
-            } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
-                TARGET = ZoneConstants.allianceHub;
-            }
+            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.25);
+            //Uses alliance hub as the regression already accounts for height
+            TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
+        } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
+            TARGET = ZoneConstants.allianceHub;
+        }
 
 
         if (drivetrain != null) RobotState = drivetrain.getState();
@@ -930,6 +940,23 @@ public class OuttakeSubsystem extends SubsystemBase {
 
     
         try { // prevents crashing
+            if (DrivingProfiles.currentDriveSupplyCurrentLimit < 50 && !loweredMaxCurrent) {
+                currentLimits.SupplyCurrentLimit = TurretConstants.supplyCurrent / 2;
+
+                flywheelConfig.CurrentLimits = currentLimits; 
+                leftFlyMotor.getConfigurator().apply(flywheelConfig); 
+                rightFlyMotor.getConfigurator().apply(flywheelConfig); 
+
+                loweredMaxCurrent = true;
+            }
+
+            SmartDashboard.putNumber("Flywheel Motor Current", rightFlyMotor.getTorqueCurrent().getValueAsDouble());
+            if (rightFlyMotor.getTorqueCurrent().getValueAsDouble() > 15 && (Math.abs(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble()) < 400)) {
+                if (!currentSpiking) ballsCounted++;
+                currentSpiking = true;
+            } else if (rightFlyMotor.getTorqueCurrent().getValueAsDouble() < 10) currentSpiking = false;
+
+            SmartDashboard.putNumber("Total Balls Launched", ballsCounted);
 
             // Constantly keeps the range up to date since the hood motor cannot physically move outside mechanical stop 
             if (hoodMotor.getEncoder().getPosition() < lowestHoodMotorRev) lowestHoodMotorRev = hoodMotor.getEncoder().getPosition();

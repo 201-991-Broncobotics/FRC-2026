@@ -24,8 +24,14 @@ public class TraverseSubsystem extends SubsystemBase {
     public static boolean intakeAgitating = false;
     public boolean runningTransfer = false;
     public boolean runningScoop = false;
+    private boolean temporarilyReversed = false;
+    private boolean loweredMaxCurrent = false;
+
+    private ElapsedTime reverseTimer;
 
     public TraverseSubsystem(){
+
+        reverseTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         rollerMotor = new TalonFX(MotorConstants.traverseRollerID);
         rollerMotor2 = new TalonFX(MotorConstants.traverseRoller2ID);
@@ -71,7 +77,9 @@ public class TraverseSubsystem extends SubsystemBase {
 
     }
 
-    public void update() { // UNTESTED
+    public void update() { 
+
+        /* 
         if (agitateTraverse) {
             if (runningTransfer && intakeAgitating) {
                 rollerMotor.set(TraverseSettings.rollerMotorPower); 
@@ -84,7 +92,21 @@ public class TraverseSubsystem extends SubsystemBase {
 
             if (runningScoop && intakeAgitating) scoopMotor.set(-TraverseSettings.scoopMotorPower); 
             else if (runningScoop && !intakeAgitating) scoopMotor.set(TraverseSettings.scoopMotorPower); 
+        }*/
+
+        if (scoopMotor.getTorqueCurrent().getValueAsDouble() > 15 && reverseTimer.time() > 1) {
+            reverseTimer.reset();
+            temporarilyReversed = true;
         }
+        if (reverseTimer.time() < 0.5 && temporarilyReversed) {
+            if (runningTransfer) emergencyReverse();
+            if (runningScoop) emergencyReverseScoop();
+        } else if (temporarilyReversed) {
+            temporarilyReversed = false;
+            if (runningTransfer) transfer();
+            if (runningScoop) scoop();
+        }
+
     }
 
     public void enableAgitate() { agitateTraverse = true; }
@@ -95,9 +117,13 @@ public class TraverseSubsystem extends SubsystemBase {
         rollerMotor.set(-TraverseSettings.rollerMotorPower); 
         rollerMotor2.set(TraverseSettings.rollerMotorPower); 
     }
-    public void scoop() { 
-        runningScoop = true;
-        scoopMotor.set(TraverseSettings.scoopMotorPower); 
+
+    public void scoop() { // only run scoop if the turret has a chance of getting it in
+        if (!OuttakeSubsystem.TurretWillMiss) {
+            runningScoop = true;
+            scoopMotor.set(TraverseSettings.scoopMotorPower); 
+        } else if (runningScoop) stopScoop();
+        
     }
 
     public void emergencyReverse(){ 
@@ -120,6 +146,20 @@ public class TraverseSubsystem extends SubsystemBase {
     public void periodic(){
 
         try {
+
+            if (DrivingProfiles.currentDriveSupplyCurrentLimit < 70 && !loweredMaxCurrent) {
+                rollerCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent / 2; 
+                rollerMotorConfig.CurrentLimits = rollerCurrentLimits; 
+                scoopCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent / 2; 
+                scoopMotorConfig.CurrentLimits = scoopCurrentLimits; 
+
+                rollerMotor.getConfigurator().apply(rollerMotorConfig);
+                rollerMotor2.getConfigurator().apply(rollerMotorConfig);
+                scoopMotor.getConfigurator().apply(scoopMotorConfig);
+
+                loweredMaxCurrent = true;
+            }
+
             //SmartDashboard.putNumber("Traverse Roller Motor Temperature", rollerMotor.getDeviceTemp().getValueAsDouble());
             SmartDashboard.putNumber("Traverse Roller Motor RPM", rollerMotor.getVelocity().getValueAsDouble() * 60);
             SmartDashboard.putNumber("Traverse Roller Motor Current", rollerMotor.getTorqueCurrent().getValueAsDouble());

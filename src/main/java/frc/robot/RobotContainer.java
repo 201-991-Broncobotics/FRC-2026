@@ -32,7 +32,11 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.util.PixelFormat;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.XboxController.Button;
@@ -107,6 +111,11 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the trigger bindings
 
+        UsbCamera driverView = CameraServer.startAutomaticCapture(); // for usb camera, most likely on port 10.9.91.11
+        driverView.setExposureAuto();
+        driverView.setResolution(640, 480);
+        driverView.setPixelFormat(PixelFormat.kMJPEG);
+        driverView.setFPS(60);
         // "http://limelight.local:5800/stream.mjpg");
 
         NamedCommands.registerCommand("DropIntake", dropIntakeCommand);
@@ -132,8 +141,7 @@ public class RobotContainer {
             outtakeSubsystem.setController(override);
         }
 
-        LimelightHelpers.setupPortForwardingUSB(0);
-        LimelightHelpers.setupPortForwardingUSB(1);
+        
 
         configureBindings();
     }
@@ -156,6 +164,7 @@ public class RobotContainer {
                 () -> driver.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
                 () -> -driver.getRightX(), 
                 () -> 0.3 + 0.7 * driver.getLeftTriggerAxis(), 
+                () -> 0.5 + 0.5 * driver.getLeftTriggerAxis(), 
                 2, 2
             );
 
@@ -221,11 +230,12 @@ public class RobotContainer {
             //Override Version 
             //DRIVE CONTROLS
             drivingProfile.setUpControllerInputs(
-                () -> -override.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
-                () -> override.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
-                () -> -override.getRightX(), 
-                () -> 0.3 + 0.7 * override.getRightTriggerAxis(), 
-                2, 2
+                () -> -override.getLeftY(), // forward/backward
+                () -> override.getLeftX(), // strafe
+                () -> -override.getRightX(), // rotation
+                () -> 0.35 + 0.65 * override.getRightTriggerAxis(), // driving throttle
+                () -> 0.5 + 0.5 * override.getRightTriggerAxis(), // rotation throttle
+                2, 3 // applies quadratic/cubic/quartic/etc. normalization to the drive inputs
             );
 
             drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
@@ -238,12 +248,20 @@ public class RobotContainer {
                 )
             ); 
 
+            // Robot Centric while holding back pedal (needs to be programed on the controller to the back button)
+            override.back().onTrue(new InstantCommand(drivingProfile::enableRobotCentric))
+                .onFalse(new InstantCommand(drivingProfile::disableRobotCentric));
+
             //Brake (b)
             override.b().whileTrue(drivetrain.applyRequest(() -> brake));
             
             //Reset Heading (Y)
             override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()))
-                        .onTrue(drivetrain.runOnce(() -> drivetrain.seedLL4Imu()));
+                .onTrue(drivetrain.runOnce(() -> drivetrain.seedLL4Imu()));
+
+            //Auto Align For Trenches
+            override.rightStick().onTrue(new InstantCommand(drivingProfile::enableAutoAlign))
+                .onFalse(new InstantCommand(drivingProfile::disableAutoAlign));
 
             //Intake
             override.rightBumper().and(override.leftBumper().negate()) // just intake
@@ -301,6 +319,7 @@ public class RobotContainer {
 
         outtakeSubsystem.setDefaultCommand(new InstantCommand(outtakeSubsystem::update, outtakeSubsystem));
         intakeSubsystem.setDefaultCommand(new InstantCommand(intakeSubsystem::update, intakeSubsystem));
+        traverseSubsystem.setDefaultCommand(new InstantCommand(traverseSubsystem::update, traverseSubsystem));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -336,6 +355,10 @@ public class RobotContainer {
         drivetrain.runningLL4ImuMode();
         intakeSubsystem.resetPivotPosition();
     }
+
+    public void autoStarted() { drivingProfile.autoWasJustRun(); }
+    public void teleOpStarted() { drivingProfile.teleOpWasJustRun(); }
+
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

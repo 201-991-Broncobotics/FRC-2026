@@ -17,15 +17,16 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.Settings;
-import frc.robot.Constants.AutoDrivingConstants;
 import frc.robot.Constants.ZoneConstants;
 import frc.robot.Settings.AutoTargetingSettings;
 import frc.robot.generated.TunerConstants;
@@ -44,7 +45,7 @@ import frc.robot.utility.Vector2d;
  */
 public class DrivingProfiles extends SubsystemBase {
 
-    private DoubleSupplier fowardControllerInput, strafeControllerInput, rotationControllerInput, throttleControllerInput;
+    private DoubleSupplier fowardControllerInput, strafeControllerInput, rotationControllerInput, throttleControllerInput, rotationThrottleControllerInput;
 
     private double forwardOutput = 0, strafeOutput = 0, rotationOutput = 0;
 
@@ -70,10 +71,20 @@ public class DrivingProfiles extends SubsystemBase {
     private Pose2d ClosestFieldTargetPoint = new Pose2d();
 
     public static boolean allowedToUseLimelight = true;
+    public boolean robotCentricOverride = false;
 
     private double BatteryVoltage = 14;
-    private int currentDriveSupplyCurrentLimit = 100;
+    public static int currentDriveSupplyCurrentLimit = 120;
     private ElapsedTime CurrentLimitTimer;
+
+    private static CommandXboxController controller1, controller2;
+    private static boolean haveControllerObjects = false;
+    private int rumbleIndex = 0; 
+    private double rumbleEndTime = 0;
+    private ElapsedTime rumbleTimer;
+
+    public static boolean runRumble = false, autoWasJustRan = false;
+    private boolean autoAlign = false;
 
 
     public DrivingProfiles(CommandSwerveDrivetrain drivetrain) {
@@ -85,6 +96,7 @@ public class DrivingProfiles extends SubsystemBase {
 
         FPSTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
         CurrentLimitTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
+        rumbleTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
 
         if (Settings.tuningTelemetryEnabled) {
             /* 
@@ -100,18 +112,26 @@ public class DrivingProfiles extends SubsystemBase {
             SmartDashboard.putNumber("Auto Driving Power", AutoTargetingSettings.AutoDrivingPower);
             SmartDashboard.putNumber("Auto target percentage of blocked vision", AutoTargetingSettings.targetPercentageOfVisionBlocked); */
         }
-        // SmartDashboard.putBoolean("Keep Robot Within Perimeter", Settings.keepWithinPerimeter);
+        SmartDashboard.putBoolean("Keep Robot Within Perimeter", Settings.keepWithinPerimeter);
 
         LimelightHelpers.setPipelineIndex("limelight", 0);
 
     }
 
 
-    public void setUpControllerInputs(DoubleSupplier fowardInput, DoubleSupplier strafeInput, DoubleSupplier rotationInput, DoubleSupplier throttleInput, double driveCurveMag, double turnCurveMag) {
+    public void getControllers(CommandXboxController Controller1, CommandXboxController Controller2) {
+        controller1 = Controller1;
+        controller2 = Controller2;
+        haveControllerObjects = true;
+    }
+
+
+    public void setUpControllerInputs(DoubleSupplier fowardInput, DoubleSupplier strafeInput, DoubleSupplier rotationInput, DoubleSupplier throttleInput, DoubleSupplier rotationThrottleInput, double driveCurveMag, double turnCurveMag) {
         this.fowardControllerInput = fowardInput;
         this.strafeControllerInput = strafeInput;
         this.rotationControllerInput = rotationInput;
         this.throttleControllerInput = throttleInput;
+        this.rotationThrottleControllerInput = rotationThrottleInput;
         this.controllerDriveCurveMag = driveCurveMag;
         this.controllerTurnCurveMag = turnCurveMag;
     }
@@ -124,8 +144,7 @@ public class DrivingProfiles extends SubsystemBase {
         //if (useAutoDrivingThrottle) autoDriving = (AutoDrivingThrottle.getAsDouble() > AutoThrottleDeadband);
         if (autoDriving) updateAutoDriving();
 
-        //keepRobotInPerimeter();
-        //if (Settings.keepWithinPerimeter) 
+        keepRobotInPerimeter();
 
     }
 
@@ -137,8 +156,10 @@ public class DrivingProfiles extends SubsystemBase {
         double strafe = strafeControllerInput.getAsDouble();
         double turn = rotationControllerInput.getAsDouble();
         double throttle = throttleControllerInput.getAsDouble();
+        double rotationThrottle = rotationThrottleControllerInput.getAsDouble();
 
         double Direction = Math.atan2(forward, strafe);
+        if (robotCentricOverride) Direction += RobotPose.getRotation().getRadians();
         double joystickPower = Math.hypot(forward, strafe);
         double drivePower = Functions.throttleCurve(joystickPower, controllerDriveCurveMag) * throttle;
 
@@ -146,9 +167,21 @@ public class DrivingProfiles extends SubsystemBase {
 
         forwardOutput = Math.sin(Direction) * drivePower;
         strafeOutput = Math.cos(Direction) * drivePower;
-        rotationOutput = Functions.throttleCurve(turn, controllerTurnCurveMag) * throttle;
+        rotationOutput = Functions.throttleCurve(turn, controllerTurnCurveMag) * rotationThrottle;
 
         return !(joystickPower == 0.0 && turn == 0.0); // returns true if in use
+    }
+
+
+    public void updateAutoAlign() {
+
+        double angleDifference;
+        if (ZoneConstants.CCWTurnAreas.inZones(RobotPose)) angleDifference = Functions.angleDifference(RobotPose.getRotation().getRadians() + (Math.toRadians(45) - Settings.switchTurningDirection), 0, Math.toRadians(90)) + (Math.toRadians(45) - Settings.switchTurningDirection);
+        else angleDifference = Functions.angleDifference(RobotPose.getRotation().getRadians() - (Math.toRadians(45) - Settings.switchTurningDirection), 0, Math.toRadians(90)) - (Math.toRadians(45) - Settings.switchTurningDirection);
+
+        SmartDashboard.putNumber("Auto Align Power", angleDifference * 1.0);
+        if (autoAlign) rotationOutput += angleDifference * 1.0;
+
     }
 
 
@@ -262,6 +295,18 @@ public class DrivingProfiles extends SubsystemBase {
     public void enableAutoDriving() { autoDriving = true; }
     public void disableAutoDriving() { autoDriving = false; }
 
+    public void enableAutoAlign() { autoAlign = true; }
+    public void disableAutoAlign() { autoAlign = false; }
+
+    public void enableRobotCentric() { robotCentricOverride = true; }
+    public void disableRobotCentric() { robotCentricOverride = false; }
+
+    public void autoWasJustRun() { autoWasJustRan = true; }
+    public void teleOpWasJustRun() { 
+        if (autoWasJustRan) runRumble = true;
+        autoWasJustRan = false; 
+    }
+
     public void setupAutoDrivingThrottle(DoubleSupplier AutoThrottle) {
         //useAutoDrivingThrottle = true;
         //AutoDrivingThrottle = AutoThrottle;
@@ -285,27 +330,31 @@ public class DrivingProfiles extends SubsystemBase {
             if (FPSTimer.time() > 0) SmartDashboard.putNumber("FPS:", Functions.round(1.0 / FPSTimer.time(), 2));
             FPSTimer.reset();
         }
+
+
+        // FEEL THE RUMBLE
+        if (haveControllerObjects && runRumble) {
+            if (Settings.rumbleTimes[rumbleIndex][0] >= Timer.getMatchTime()) {
+                rumbleEndTime = Settings.rumbleTimes[rumbleIndex][1];
+                rumbleTimer.reset();
+                rumbleIndex++;
+            }
+
+            if (rumbleTimer.time() < rumbleEndTime) {
+                controller1.setRumble(RumbleType.kBothRumble, 0.5);
+                controller2.setRumble(RumbleType.kBothRumble, 0.5);
+            } else {
+                controller1.setRumble(RumbleType.kBothRumble, 0);
+                controller2.setRumble(RumbleType.kBothRumble, 0);
+            }
+        }
+
+
         
         try {
-            // PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
 
-            // this limelight sucks too much
-            /* 
-            if (LimelightPoseEstimate != null) {
-                double TurretAngle = OuttakeSubsystem.getTurretAngle();
-                // SmartDashboard.putNumber("TURRET driveprofile facing angle:", Math.toDegrees(TurretAngle));
-                Rotation2d CorrectFacingDirection = LimelightPoseEstimate.pose.getRotation().minus(new Rotation2d(TurretAngle));//.minus(new Rotation2d(Math.toRadians(180)));
-                Pose2d OffsetLimelightPose2d = new Pose2d( // 0.163027 meters forward from center of turret, 0.456593 meters above the ground, 15 degee pitch up
-                    LimelightPoseEstimate.pose.getX() + 0.237765 * Math.cos(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
-                    LimelightPoseEstimate.pose.getY() + 0.237765 * Math.sin(CorrectFacingDirection.getRadians() + Math.toRadians(55.885527)), 
-                    CorrectFacingDirection
-                );
-
-                SmartDashboard.putString("REAL TURRET POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
-
-                if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && allowedToUseLimelight) drivetrain.addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.6, 0.6, 20.0)); // standard deviation of vision measurements in meters and degrees
-            }*/
-
+            SmartDashboard.putBoolean("Localization Trustworthy:", drivetrain.isLocalizationTrustworthy());
+            SmartDashboard.putNumber("Distance Traveled since last seen apriltag:", drivetrain.distanceTraveledWithoutCorrection());
 
             RobotPose = drivetrain.getState().Pose;
             SmartDashboard.putString("ROBOT POSE:", "X:" + Functions.round(RobotPose.getX(), 3) + " Y:" + Functions.round(RobotPose.getY(), 3) + " R:" + Functions.round(RobotPose.getRotation().getDegrees(), 3));
@@ -345,7 +394,7 @@ public class DrivingProfiles extends SubsystemBase {
         }
 
 
-        // Settings.keepWithinPerimeter = SmartDashboard.getBoolean("Keep Robot Within Perimeter:", Settings.keepWithinPerimeter);
+        Settings.keepWithinPerimeter = SmartDashboard.getBoolean("Keep Robot Within Perimeter:", Settings.keepWithinPerimeter);
         
         //update settings
         if (Settings.tuningTelemetryEnabled) {

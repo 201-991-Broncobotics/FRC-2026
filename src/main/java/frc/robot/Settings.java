@@ -30,13 +30,29 @@ public class Settings {
 
     // Auto PathFinding constraints
     public static PathConstraints FollowerConstraints = new PathConstraints(
-                    3.0, 4.0,
+                    4.0, 5.0,
                     Units.degreesToRadians(540), Units.degreesToRadians(720));
 
 
     public static double safetyDistanceFromWall = (2.5) / 39.37; // the closest distance the robot will let the drive go to the wall in meters (inches)
     public static boolean keepWithinPerimeter = false;
     public static double TranslationKP = 0.5;
+
+    public static double switchTurningDirection = Math.toRadians(20);
+
+    public static double[][] rumbleTimes = new double[][]{ // (seconds left in the match, duration of rumble) MUST BE IN ORDER
+        new double[]{2*60+20, 0.5},
+        new double[]{2*60+10, 1},
+        new double[]{1*60+45, 1},
+        new double[]{1*60+20, 1},
+        new double[]{55, 1},
+        new double[]{30, 1},
+        new double[]{3, 0.25},
+        new double[]{2, 0.25},
+        new double[]{1, 0.25}
+    };
+
+    public static int minimumFramesToTrustLocalization = 100;
 
     public static class IntakeSettings {
 
