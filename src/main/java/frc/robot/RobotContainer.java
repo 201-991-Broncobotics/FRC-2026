@@ -238,6 +238,8 @@ public class RobotContainer {
                 2, 3 // applies quadratic/cubic/quartic/etc. normalization to the drive inputs
             );
 
+            drivingProfile.getControllers(driver, operator);
+
             drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
             drivetrain.setDefaultCommand(
                 // Drivetrain will execute this command periodically
@@ -248,8 +250,8 @@ public class RobotContainer {
                 )
             ); 
 
-            // Robot Centric while holding back pedal (needs to be programed on the controller to the back button)
-            override.back().onTrue(new InstantCommand(drivingProfile::enableRobotCentric))
+            // Robot Centric while holding back pedal (needs to be programed on the controller to the dpad up button)
+            override.povUp().onTrue(new InstantCommand(drivingProfile::enableRobotCentric))
                 .onFalse(new InstantCommand(drivingProfile::disableRobotCentric));
 
             //Brake (b)
@@ -260,7 +262,7 @@ public class RobotContainer {
                 .onTrue(drivetrain.runOnce(() -> drivetrain.seedLL4Imu()));
 
             //Auto Align For Trenches
-            override.rightStick().onTrue(new InstantCommand(drivingProfile::enableAutoAlign))
+            override.povDown().onTrue(new InstantCommand(drivingProfile::enableAutoAlign))
                 .onFalse(new InstantCommand(drivingProfile::disableAutoAlign));
 
             //Intake
@@ -351,7 +353,7 @@ public class RobotContainer {
     }
 
     public void whenStarted() {
-        drivetrain.seedLL4Imu();
+        // drivetrain.seedLL4Imu();
         drivetrain.runningLL4ImuMode();
         intakeSubsystem.resetPivotPosition();
     }

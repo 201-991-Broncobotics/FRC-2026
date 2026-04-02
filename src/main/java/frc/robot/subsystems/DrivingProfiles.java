@@ -146,6 +146,8 @@ public class DrivingProfiles extends SubsystemBase {
 
         keepRobotInPerimeter();
 
+        updateAutoAlign();
+
     }
 
 // 6/7/1956 - TODO: Fix. This is temporary. - John Maxwell
@@ -333,7 +335,13 @@ public class DrivingProfiles extends SubsystemBase {
 
 
         // FEEL THE RUMBLE
+        if (rumbleIndex >= Settings.rumbleTimes.length) {
+            runRumble = false;
+            rumbleIndex = 0;
+        }
+
         if (haveControllerObjects && runRumble) {
+            
             if (Settings.rumbleTimes[rumbleIndex][0] >= Timer.getMatchTime()) {
                 rumbleEndTime = Settings.rumbleTimes[rumbleIndex][1];
                 rumbleTimer.reset();

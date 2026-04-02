@@ -94,7 +94,7 @@ public class TraverseSubsystem extends SubsystemBase {
             else if (runningScoop && !intakeAgitating) scoopMotor.set(TraverseSettings.scoopMotorPower); 
         }*/
 
-        if (scoopMotor.getTorqueCurrent().getValueAsDouble() > 15 && reverseTimer.time() > 1) {
+        /*if (scoopMotor.getTorqueCurrent().getValueAsDouble() > 75 && reverseTimer.time() > 1) {
             reverseTimer.reset();
             temporarilyReversed = true;
         }
@@ -105,7 +105,7 @@ public class TraverseSubsystem extends SubsystemBase {
             temporarilyReversed = false;
             if (runningTransfer) transfer();
             if (runningScoop) scoop();
-        }
+        }*/
 
     }
 

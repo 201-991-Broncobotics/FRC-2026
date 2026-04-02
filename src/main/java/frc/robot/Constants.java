@@ -57,12 +57,12 @@ public final class Constants {
         public static final boolean currentLimitsEnabled = true;  
         public static final double supplyCurrent = 15; // helps prevent brownouts
         public static final double statorCurrent = 40; // helps prevent motor overheating
-        public static final double pivotSupplyCurrent = 20;
-        public static final double pivotStatorCurrent = 30; 
+        public static final double pivotSupplyCurrent = 50; // 20
+        public static final double pivotStatorCurrent = 50; // 30
 
         public static final double x60ShaftRadius = 4/25.4; //inches
         public static final double outIntakePosition = Math.toRadians(0); //radians, also I hate this cause I can't switch these without the motion profile breaking
-        public static final double upIntakePosition = Math.toRadians(95); //radians
+        public static final double upIntakePosition = Math.toRadians(95 + 1000); //radians
         //public static double maxPivotAngle = lowLimitAngle; //radians
         //public static double minPivotAngle = highLimitAngle; //radians
         //public static final double startingPosition = highLimitAngle; //radians
@@ -110,7 +110,7 @@ public final class Constants {
         public static final boolean currentLimitsEnabled = true; 
         public static final double supplyCurrent = 60; 
         public static final double statorCurrent = 80; // disabled
-        public static final int hoodMotorCurrent = 25;
+        public static final int hoodMotorCurrent = 30;
         public static final double turretSupplyCurrent = 40;
         public static final double turretStatorCurrent = 60;
 

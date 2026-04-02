@@ -41,11 +41,11 @@ public class Settings {
     public static double switchTurningDirection = Math.toRadians(20);
 
     public static double[][] rumbleTimes = new double[][]{ // (seconds left in the match, duration of rumble) MUST BE IN ORDER
-        new double[]{2*60+20, 0.5},
+        new double[]{2*60+20, 1},
         new double[]{2*60+10, 1},
-        new double[]{1*60+45, 1},
-        new double[]{1*60+20, 1},
-        new double[]{55, 1},
+        new double[]{1*60+45, 0.5},
+        new double[]{1*60+20, 0.5},
+        new double[]{55, 0.5},
         new double[]{30, 1},
         new double[]{3, 0.25},
         new double[]{2, 0.25},
@@ -85,8 +85,6 @@ public class Settings {
         public static double rollerMotorPower = -1.0; 
         public static double scoopMotorPower = 1.0;
 
-        
-
     }
 
     public static class ClimbingSettings{
@@ -125,12 +123,12 @@ public class Settings {
         public static double kS = 0; 
         public static double kV = 0.12; 
         public static double kA = 0; 
-        public static double tkP = 20; // turntable
+        public static double tkP = 7.0; // turntable
         public static double tkI = 0; 
-        public static double tkD = 0;  
-        public static double tkS = 1.5;
-        public static double tkV = 1;
-        public static double hkP = 1; // hood
+        public static double tkD = 0.25;  
+        public static double tkS = 0.5;
+        public static double tkV = 0.0;
+        public static double hkP = 1.2; // hood
         public static double hkI = 0; 
         public static double hkD = 0; 
         public static double setVelocities = 2000; // rpm
@@ -141,15 +139,15 @@ public class Settings {
 
         public static double hoodCalibrationDownTime = 0.1; // time spent going to down position (which should be short since it already is in the down position)
         public static double hoodCalibrationUpTime = 0.5; // time spent going up after it has reached its underestimate for max height
-        public static double hoodCalibrationPower = 0.4;
+        public static double hoodCalibrationPower = 0.5;
 
         public static double defaultTurretPosition = Math.toRadians(170); // position at slight angle to allow intake to go up
-        public static double minTurretAngle = Math.toRadians(-45);
-        public static double maxTurretAngle = Math.toRadians(180);
+        public static double minTurretAngle = Math.toRadians(-90);
+        public static double maxTurretAngle = Math.toRadians(225);
 
         public static double TurretAbsoluteOffset = Math.toRadians(130.9);
 
-        public static int numberOfIterations = 5; // 1 frame = about 20ms
+        public static int numberOfIterations = 4; // 1 frame = about 20ms
         public static double TurntableDeadband = Math.toRadians(1.5);
         public static double FlywheelDeadband = 30; // rpm
         public static double HoodDeadband = Math.toRadians(0.5);

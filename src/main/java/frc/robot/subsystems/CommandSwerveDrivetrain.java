@@ -376,11 +376,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         DistanceSinceLastSeenAprilTag += Math.hypot(getState().Speeds.vxMetersPerSecond, getState().Speeds.vyMetersPerSecond) * FrameTime;
         
-        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees() + Math.toDegrees(OuttakeSubsystem.getTurretAngle()), Math.toDegrees(getState().Speeds.omegaRadiansPerSecond), 0, 0, 0, 0);
 
-        if (visionLocalization) LimelightHelpers.SetIMUMode("limelight", 3); // use only limelight imu
+        LimelightHelpers.SetIMUAssistAlpha("limelight", 0.01);
+
+        if (visionLocalization) LimelightHelpers.SetIMUMode("limelight", 3);
         else LimelightHelpers.SetIMUMode("limelight", 1); // seeding Mode
 
+        visionLocalization = localizationTrustworthy;
         
         PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
         
@@ -391,10 +394,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             SmartDashboard.putString("LIMELIGHT POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
+            totalFramesWithAprilTags++;
+
             if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && visionLocalization) {
-                totalFramesWithAprilTags++;
+                
                 DistanceSinceLastSeenAprilTag = 0;
-                addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.2, 0.2, 1)); // standard deviation of vision measurements in meters and degrees
+                addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.2, 0.2, 9999)); // standard deviation of vision measurements in meters and degrees
             }
         }
         
@@ -515,8 +520,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         totalFramesWithAprilTags = 0;
         LimelightHelpers.SetIMUMode("limelight", 1);
         LimelightHelpers.SetIMUAssistAlpha("limelight", 1.0);
-        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.SetIMUAssistAlpha("limelight", 0.001);
+        LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees() + Math.toDegrees(OuttakeSubsystem.getTurretAngle()), 0, 0, 0, 0, 0);
+        LimelightHelpers.SetIMUAssistAlpha("limelight", 0.01);
         LimelightHelpers.SetIMUMode("limelight", 3);
     }
 

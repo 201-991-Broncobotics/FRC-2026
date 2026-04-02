@@ -270,15 +270,16 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Flywheel kS", TurretSettings.kS);
             SmartDashboard.putNumber("Flywheel kV", TurretSettings.kV);
             SmartDashboard.putNumber("Flywheel kA", TurretSettings.kA);
+            
+            SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
+            SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
+            SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
+            SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); */
             SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
             SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
             SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
             SmartDashboard.putNumber("Turntable kS", TurretSettings.tkS); 
             SmartDashboard.putNumber("Turntable kV", TurretSettings.tkV); 
-            SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
-            SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
-            SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
-            SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); */
         }
         
 
@@ -474,8 +475,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         targetRotation = targetRotation.minus(drivetrain.getState().Pose.getRotation());
         double finalTurretAngle = targetRotation.getRadians();
 
-        // Not wrapping this so I can see that the turret is aiming for a position it can't reach
-        // finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
+        finalTurretAngle = ((finalTurretAngle - TurretSettings.minTurretAngle)%Math.toRadians(360) + Math.toRadians(360)) % Math.toRadians(360) + TurretSettings.minTurretAngle;
 
         SmartDashboard.putNumber("Traj0 Turret", Math.toDegrees(finalTurretAngle));
 
@@ -583,9 +583,9 @@ public class OuttakeSubsystem extends SubsystemBase {
 
         // stop moving the turret when outside range
         if (Angle <= TurretSettings.maxTurretAngle && Angle >= TurretSettings.minTurretAngle) {
-            TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
+            Angle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
             // turntableMotor.setControl(turretPositionRequest.withPosition(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
-            turntableMotor.setControl(new MotionMagicVoltage(-((TargetTurretAngle - turretStartingOffset) / (2*Math.PI) * 10)));
+            turntableMotor.setControl(new MotionMagicVoltage(-((Angle - turretStartingOffset) / (2*Math.PI) * 10)));
         }
         
     }
@@ -926,16 +926,17 @@ public class OuttakeSubsystem extends SubsystemBase {
             TurretSettings.kS = SmartDashboard.getNumber("Flywheel kS", TurretSettings.kS);
             TurretSettings.kV = SmartDashboard.getNumber("Flywheel kV", TurretSettings.kV);
             TurretSettings.kA = SmartDashboard.getNumber("Flywheel kA", TurretSettings.kA);
+            
+            TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
+            TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
+            TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);*/
+            
             TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
             TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
             TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
             TurretSettings.tkS = SmartDashboard.getNumber("Turntable kS", TurretSettings.tkS);
             TurretSettings.tkV = SmartDashboard.getNumber("Turntable kV", TurretSettings.tkV);
-            TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
-            TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
-            TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);*/
             checkForTuning();
-
         }
 
     
