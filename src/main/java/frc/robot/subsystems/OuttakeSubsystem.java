@@ -274,12 +274,12 @@ public class OuttakeSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Hood kP", TurretSettings.hkP);
             SmartDashboard.putNumber("Hood kI", TurretSettings.hkI);
             SmartDashboard.putNumber("Hood kD", TurretSettings.hkD);
-            SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); */
+            SmartDashboard.putNumber("Turntable Velocity", getTurntableTrajectory()); 
             SmartDashboard.putNumber("Turntable kP", TurretSettings.tkP); 
             SmartDashboard.putNumber("Turntable kI", TurretSettings.tkI); 
             SmartDashboard.putNumber("Turntable kD", TurretSettings.tkD); 
             SmartDashboard.putNumber("Turntable kS", TurretSettings.tkS); 
-            SmartDashboard.putNumber("Turntable kV", TurretSettings.tkV); 
+            SmartDashboard.putNumber("Turntable kV", TurretSettings.tkV); */
         }
         
 
@@ -439,7 +439,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
             setTurntable(TargetTurretAngle);
 
-            TurretWillMiss = (TargetTurretAngle < TurretSettings.minTurretAngle || TargetTurretAngle > TurretSettings.maxTurretAngle) || autoLowered || hoodNeedsToBeCalibrated || localizationMode || (Math.abs(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble()) > 400);
+            TurretWillMiss = (TargetTurretAngle < TurretSettings.minTurretAngle || TargetTurretAngle > TurretSettings.maxTurretAngle) || autoLowered || hoodNeedsToBeCalibrated || localizationMode || (Math.abs(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble()) > 400) || (Math.abs(TargetTurretAngle - CurrentTurretAngle.getAsDouble()) > Math.toRadians(45));
             
         } else { // Not shooting
             
@@ -929,20 +929,20 @@ public class OuttakeSubsystem extends SubsystemBase {
             
             TurretSettings.hkP = SmartDashboard.getNumber("Hood kP", TurretSettings.hkP);
             TurretSettings.hkI = SmartDashboard.getNumber("Hood kI", TurretSettings.hkI);
-            TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);*/
+            TurretSettings.hkD = SmartDashboard.getNumber("Hood kD", TurretSettings.hkD);
             
             TurretSettings.tkP = SmartDashboard.getNumber("Turntable kP", TurretSettings.tkP); 
             TurretSettings.tkI = SmartDashboard.getNumber("Turntable kI", TurretSettings.tkI);
             TurretSettings.tkD = SmartDashboard.getNumber("Turntable kD", TurretSettings.tkD);
             TurretSettings.tkS = SmartDashboard.getNumber("Turntable kS", TurretSettings.tkS);
-            TurretSettings.tkV = SmartDashboard.getNumber("Turntable kV", TurretSettings.tkV);
+            TurretSettings.tkV = SmartDashboard.getNumber("Turntable kV", TurretSettings.tkV);*/
             checkForTuning();
         }
 
     
         try { // prevents crashing
             if (DrivingProfiles.currentDriveSupplyCurrentLimit < 50 && !loweredMaxCurrent) {
-                currentLimits.SupplyCurrentLimit = TurretConstants.supplyCurrent / 2;
+                currentLimits.SupplyCurrentLimit = TurretConstants.supplyCurrent * 0.65;
 
                 flywheelConfig.CurrentLimits = currentLimits; 
                 leftFlyMotor.getConfigurator().apply(flywheelConfig); 

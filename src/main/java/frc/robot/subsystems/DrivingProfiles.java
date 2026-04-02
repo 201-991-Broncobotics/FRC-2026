@@ -161,7 +161,7 @@ public class DrivingProfiles extends SubsystemBase {
         double rotationThrottle = rotationThrottleControllerInput.getAsDouble();
 
         double Direction = Math.atan2(forward, strafe);
-        if (robotCentricOverride) Direction += RobotPose.getRotation().getRadians();
+        if (robotCentricOverride) Direction += RobotPose.getRotation().getRadians() + Math.toRadians(180);
         double joystickPower = Math.hypot(forward, strafe);
         double drivePower = Functions.throttleCurve(joystickPower, controllerDriveCurveMag) * throttle;
 

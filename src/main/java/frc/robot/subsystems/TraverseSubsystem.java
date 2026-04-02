@@ -148,9 +148,9 @@ public class TraverseSubsystem extends SubsystemBase {
         try {
 
             if (DrivingProfiles.currentDriveSupplyCurrentLimit < 70 && !loweredMaxCurrent) {
-                rollerCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent / 2; 
+                rollerCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent * 0.6; 
                 rollerMotorConfig.CurrentLimits = rollerCurrentLimits; 
-                scoopCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent / 2; 
+                scoopCurrentLimits.SupplyCurrentLimit = TraverseConstants.rollerSupplyCurrent * 1;
                 scoopMotorConfig.CurrentLimits = scoopCurrentLimits; 
 
                 rollerMotor.getConfigurator().apply(rollerMotorConfig);

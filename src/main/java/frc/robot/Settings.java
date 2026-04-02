@@ -38,7 +38,7 @@ public class Settings {
     public static boolean keepWithinPerimeter = false;
     public static double TranslationKP = 0.5;
 
-    public static double switchTurningDirection = Math.toRadians(20);
+    public static double switchTurningDirection = Math.toRadians(25);
 
     public static double[][] rumbleTimes = new double[][]{ // (seconds left in the match, duration of rumble) MUST BE IN ORDER
         new double[]{2*60+20, 1},
@@ -62,7 +62,7 @@ public class Settings {
         public static double pivotMotorVelocity = 5; //7
         public static double pivotMotorAcceleration = 5; //2 
 
-        public static double pivotkP = 1.0; 
+        public static double pivotkP = 1.2; 
         public static double pivotkI = 0; 
         public static double pivotkD = 0; 
         public static double pivotkG = 0.0; // 0.35
@@ -77,7 +77,7 @@ public class Settings {
         public static double agitatePulsePeriod = 0.6; // seconds
 
         public static double customKP = 0.1;
-        public static double customKG = 0.07;
+        public static double customKG = 0.04; // 0.07
     }
 
     public static class TraverseSettings {
@@ -142,8 +142,8 @@ public class Settings {
         public static double hoodCalibrationPower = 0.5;
 
         public static double defaultTurretPosition = Math.toRadians(170); // position at slight angle to allow intake to go up
-        public static double minTurretAngle = Math.toRadians(-90);
-        public static double maxTurretAngle = Math.toRadians(225);
+        public static double minTurretAngle = Math.toRadians(-100);
+        public static double maxTurretAngle = Math.toRadians(210);
 
         public static double TurretAbsoluteOffset = Math.toRadians(130.9);
 
