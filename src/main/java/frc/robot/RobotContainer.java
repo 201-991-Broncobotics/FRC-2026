@@ -105,17 +105,20 @@ public class RobotContainer {
     private final DisableRightLimelightCommand disableRLimelightCommand = new DisableRightLimelightCommand();
     private final DisableLeftLimelightCommand disableLLimelightCommand = new DisableLeftLimelightCommand();
 
+    private UsbCamera driverView;
+
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
     public RobotContainer() {
         // Configure the trigger bindings
 
-        UsbCamera driverView = CameraServer.startAutomaticCapture(); // for usb camera, most likely on port 10.9.91.11
+        driverView = CameraServer.startAutomaticCapture(); // for usb camera, most likely on port 10.9.91.11
         driverView.setExposureAuto();
-        driverView.setResolution(640, 480);
+        driverView.setWhiteBalanceAuto();
+        driverView.setResolution(320, 240); //320, 240
         driverView.setPixelFormat(PixelFormat.kMJPEG);
-        driverView.setFPS(60);
+        driverView.setFPS(30);
         // "http://limelight.local:5800/stream.mjpg");
 
         NamedCommands.registerCommand("DropIntake", dropIntakeCommand);
@@ -356,6 +359,8 @@ public class RobotContainer {
         // drivetrain.seedLL4Imu();
         drivetrain.runningLL4ImuMode();
         intakeSubsystem.resetPivotPosition();
+        driverView.setExposureHoldCurrent();
+        driverView.setWhiteBalanceHoldCurrent();
     }
 
     public void autoStarted() { drivingProfile.autoWasJustRun(); }
