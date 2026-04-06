@@ -342,7 +342,10 @@ public class DrivingProfiles extends SubsystemBase {
 
         if (haveControllerObjects && runRumble) {
             
-            if (Settings.rumbleTimes[rumbleIndex][0] >= Timer.getMatchTime()) {
+            if (Timer.getMatchTime() == 0) {
+                controller1.setRumble(RumbleType.kBothRumble, 0);
+                controller2.setRumble(RumbleType.kBothRumble, 0);
+            } else if (Settings.rumbleTimes[rumbleIndex][0] > Timer.getMatchTime()) {
                 rumbleEndTime = Settings.rumbleTimes[rumbleIndex][1];
                 rumbleTimer.reset();
                 rumbleIndex++;

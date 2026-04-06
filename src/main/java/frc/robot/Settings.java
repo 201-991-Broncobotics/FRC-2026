@@ -40,6 +40,8 @@ public class Settings {
 
     public static double switchTurningDirection = Math.toRadians(25);
 
+    public static double limelightConvergence = 0.01; // idk why but the limelight imu might have stopped working
+
     public static double[][] rumbleTimes = new double[][]{ // (seconds left in the match, duration of rumble) MUST BE IN ORDER
         new double[]{2*60+20, 1},
         new double[]{2*60+10, 1},

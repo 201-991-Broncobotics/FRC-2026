@@ -78,8 +78,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private double lastAngVelX = 0, lastAngVelY = 0, lastAngVelZ = 0;
     private ElapsedTime gyroTimer = new ElapsedTime(ElapsedTime.Resolution.SECONDS);
-    private ArrayList<Double> limelightAX = new ArrayList<Double>(), limelightAY = new ArrayList<Double>();
-    private ArrayList<Double> limelightBX = new ArrayList<Double>(), limelightBY = new ArrayList<Double>();
     private boolean visionLocalization = false, localizationTrustworthy = false;
     private double DistanceSinceLastSeenAprilTag = 9999;
     private int totalFramesWithAprilTags = 0;
@@ -380,17 +378,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         LimelightHelpers.SetIMUAssistAlpha("limelight", 0.01);
 
-        if (visionLocalization) LimelightHelpers.SetIMUMode("limelight", 3);
+        if (visionLocalization) LimelightHelpers.SetIMUMode("limelight", 0);
         else LimelightHelpers.SetIMUMode("limelight", 1); // seeding Mode
 
         visionLocalization = localizationTrustworthy;
         
+        Rotation2d limelightVisualHeading = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight").pose.getRotation();
         PoseEstimate LimelightPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
         
         if (LimelightPoseEstimate != null) {
             double TurretAngle = OuttakeSubsystem.getTurretAngle();
+            // limelightConvergence
 
             Pose2d OffsetLimelightPose2d = convertTurretPose(LimelightPoseEstimate.pose, TurretAngle);
+
+            double newHeading = limelightVisualHeading.getRadians() - OuttakeSubsystem.getTurretAngle(); // OffsetLimelightPose2d.getRotation().getRadians() + Settings.limelightConvergence * ((limelightVisualHeading.getRadians() - OuttakeSubsystem.getTurretAngle()) - OffsetLimelightPose2d.getRotation().getRadians());
+            OffsetLimelightPose2d = new Pose2d(OffsetLimelightPose2d.getX(), OffsetLimelightPose2d.getY(), new Rotation2d(newHeading));
+
+            SmartDashboard.putNumber("Limelight new heading", Functions.normalizeAngleDeg(Math.toDegrees(newHeading)));
 
             SmartDashboard.putString("LIMELIGHT POSE:", Functions.stringifyPose(LimelightPoseEstimate.pose));
 
@@ -399,7 +404,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (LimelightHelpers.validPoseEstimate(LimelightPoseEstimate) && visionLocalization) {
                 
                 DistanceSinceLastSeenAprilTag = 0;
-                addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.2, 0.2, 9999)); // standard deviation of vision measurements in meters and degrees
+                addVisionMeasurement(OffsetLimelightPose2d, LimelightPoseEstimate.timestampSeconds, VecBuilder.fill(0.2, 0.2, 100)); // standard deviation of vision measurements in meters and degrees
             }
         }
         
@@ -522,7 +527,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         LimelightHelpers.SetIMUAssistAlpha("limelight", 1.0);
         LimelightHelpers.SetRobotOrientation("limelight", getState().Pose.getRotation().getDegrees() + Math.toDegrees(OuttakeSubsystem.getTurretAngle()), 0, 0, 0, 0, 0);
         LimelightHelpers.SetIMUAssistAlpha("limelight", 0.01);
-        LimelightHelpers.SetIMUMode("limelight", 3);
+        LimelightHelpers.SetIMUMode("limelight", 0);
     }
 
     public void defaultLL4ImuMode() {

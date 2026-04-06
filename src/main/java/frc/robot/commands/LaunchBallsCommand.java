@@ -19,6 +19,7 @@ public class LaunchBallsCommand extends Command {
     public void initialize() {
         intake.feed();
         intake.agitate();
+        intake.drop();
         intake.update();
         traverse.transfer();
         traverse.scoop();
