@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "DisableRightLimelight"
-          }
-        },
-        {
           "type": "deadline",
           "data": {
             "commands": [
@@ -23,7 +17,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "RightPath1A"
+                  "pathName": "RightScoopA"
                 }
               },
               {
@@ -58,7 +52,7 @@
                     {
                       "type": "wait",
                       "data": {
-                        "waitTime": 3.0
+                        "waitTime": 2.6
                       }
                     },
                     {

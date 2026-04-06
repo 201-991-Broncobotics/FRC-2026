@@ -23,7 +23,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "RightPath1A"
+                  "pathName": "RightRushA"
                 }
               },
               {
@@ -105,7 +105,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "RightPath1B"
+                  "pathName": "RightRushB"
                 }
               },
               {
@@ -149,7 +149,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "RightAuto1C"
+                  "pathName": "RightRushC"
                 }
               },
               {
