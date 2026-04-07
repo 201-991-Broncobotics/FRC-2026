@@ -340,6 +340,7 @@ public class DrivingProfiles extends SubsystemBase {
             rumbleIndex = 0;
         }
 
+        /* 
         if (haveControllerObjects && runRumble) {
             
             if (Timer.getMatchTime() == 0) {
@@ -358,7 +359,7 @@ public class DrivingProfiles extends SubsystemBase {
                 controller1.setRumble(RumbleType.kBothRumble, 0);
                 controller2.setRumble(RumbleType.kBothRumble, 0);
             }
-        }
+        }*/
 
 
         
@@ -470,6 +471,13 @@ public class DrivingProfiles extends SubsystemBase {
         double ay = angAccel * turretTranslation.getX() - angVel * angVel * turretTranslation.getY();
 
         return robotAccel.plus(new Translation3d(ax, ay, 0));
+    }
+
+    public void stopRumble() {
+        if (haveControllerObjects && runRumble) {
+            controller1.setRumble(RumbleType.kBothRumble, 0);
+            controller2.setRumble(RumbleType.kBothRumble, 0);
+        }
     }
 
 }

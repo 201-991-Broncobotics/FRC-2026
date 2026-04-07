@@ -78,7 +78,7 @@ public class Settings {
 
         public static double agitatePulsePeriod = 0.6; // seconds
 
-        public static double customKP = 0.1;
+        public static double customKP = 0.14;
         public static double customKG = 0.04; // 0.07
     }
 
@@ -144,8 +144,8 @@ public class Settings {
         public static double hoodCalibrationPower = 0.5;
 
         public static double defaultTurretPosition = Math.toRadians(170); // position at slight angle to allow intake to go up
-        public static double minTurretAngle = Math.toRadians(-100);
-        public static double maxTurretAngle = Math.toRadians(210);
+        public static double minTurretAngle = Math.toRadians(-125);
+        public static double maxTurretAngle = Math.toRadians(205);
 
         public static double TurretAbsoluteOffset = Math.toRadians(130.9);
 

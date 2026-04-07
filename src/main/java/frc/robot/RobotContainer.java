@@ -353,6 +353,7 @@ public class RobotContainer {
 
     public void whileStopped() {
         drivetrain.defaultLL4ImuMode();
+        drivingProfile.stopRumble();
     }
 
     public void whenStarted() {
