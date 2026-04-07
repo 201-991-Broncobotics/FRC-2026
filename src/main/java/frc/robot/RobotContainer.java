@@ -11,7 +11,7 @@ import frc.robot.commands.DisableRightLimelightCommand;
 import frc.robot.commands.DropIntakeCommand;
 import frc.robot.commands.EnableTurretCommand;
 import frc.robot.commands.LaunchBallsCommand;
-import frc.robot.commands.LaunchBallsFasterCommand;
+import frc.robot.commands.IntakeAndLaunchBalls;
 import frc.robot.commands.LiftIntakeCommand;
 import frc.robot.commands.ResetElevatorCommand;
 import frc.robot.Constants.OperatorConstants;
@@ -101,7 +101,7 @@ public class RobotContainer {
     private final EnableTurretCommand enableTurretCommand = new EnableTurretCommand(outtakeSubsystem);
     //private final ResetElevatorCommand resetElevatorCommand = new ResetElevatorCommand(climbingSubsystem);
     private final LaunchBallsCommand launchBallsCommand = new LaunchBallsCommand(intakeSubsystem, traverseSubsystem);
-    private final LaunchBallsFasterCommand launchBallsFasterCommand = new LaunchBallsFasterCommand(intakeSubsystem, traverseSubsystem);
+    private final IntakeAndLaunchBalls IntakeAndLaunchBallsCommand = new IntakeAndLaunchBalls(intakeSubsystem, traverseSubsystem);
     private final DisableRightLimelightCommand disableRLimelightCommand = new DisableRightLimelightCommand();
     private final DisableLeftLimelightCommand disableLLimelightCommand = new DisableLeftLimelightCommand();
 
@@ -125,7 +125,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("LiftIntake", liftIntakeCommand);
         NamedCommands.registerCommand("StartIntaking", startIntakingCommand);
         NamedCommands.registerCommand("LaunchBalls", launchBallsCommand);
-        NamedCommands.registerCommand("LaunchBallsFaster", launchBallsFasterCommand);
+        NamedCommands.registerCommand("IntakeAndLaunchBalls", IntakeAndLaunchBallsCommand);
         NamedCommands.registerCommand("StopIntaking", new ParallelCommandGroup(
             new InstantCommand(intakeSubsystem::stopRollers, intakeSubsystem), 
             new InstantCommand(traverseSubsystem::stopRoller, traverseSubsystem))); // just by requiring these subsystems it should run the end part of the intaking command

@@ -17,7 +17,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "RightSweepA"
+                  "pathName": "LeftScoopA"
                 }
               },
               {
@@ -31,22 +31,53 @@
                       }
                     },
                     {
-                      "type": "parallel",
+                      "type": "deadline",
                       "data": {
                         "commands": [
                           {
-                            "type": "named",
+                            "type": "wait",
                             "data": {
-                              "name": "IntakeAndLaunchBalls"
+                              "waitTime": 3.6
                             }
                           },
                           {
                             "type": "named",
                             "data": {
-                              "name": "EnableTurret"
+                              "name": "StartIntaking"
                             }
                           }
                         ]
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 2.6
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "LaunchBalls"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 5.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "EnableTurret"
                       }
                     }
                   ]

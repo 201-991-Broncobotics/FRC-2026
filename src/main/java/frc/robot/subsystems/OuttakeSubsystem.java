@@ -439,7 +439,7 @@ public class OuttakeSubsystem extends SubsystemBase {
 
             setTurntable(TargetTurretAngle);
 
-            TurretWillMiss = (TargetTurretAngle < TurretSettings.minTurretAngle || TargetTurretAngle > TurretSettings.maxTurretAngle) || autoLowered || hoodNeedsToBeCalibrated || localizationMode || (Math.abs(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble()) > 400) || (Math.abs(TargetTurretAngle - CurrentTurretAngle.getAsDouble()) > Math.toRadians(45));
+            TurretWillMiss = (TargetTurretAngle < TurretSettings.minTurretAngle || TargetTurretAngle > TurretSettings.maxTurretAngle) || autoLowered || hoodNeedsToBeCalibrated || localizationMode || (Math.abs(TargetFlywheelRPM - CurrentFlywheelRPM.getAsDouble()) > 400) || (Math.abs(TargetTurretAngle - CurrentTurretAngle.getAsDouble()) > Math.toRadians(25));
             
         } else { // Not shooting
             

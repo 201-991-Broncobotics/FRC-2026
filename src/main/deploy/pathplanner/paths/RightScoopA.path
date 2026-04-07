@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 4.205803016858917,
-        "y": 0.6347559893522623
+        "y": 0.6349999999999998
       },
       "prevControl": null,
       "nextControl": {
         "x": 5.262043931393512,
-        "y": 0.6347559893522623
+        "y": 0.6349999999999998
       },
       "isLocked": false,
       "linkedName": "RightRushStart"
@@ -117,7 +117,7 @@
       },
       "prevControl": {
         "x": 3.2138119652157737,
-        "y": 0.672381591796875
+        "y": 0.6723815917968752
       },
       "nextControl": null,
       "isLocked": false,
