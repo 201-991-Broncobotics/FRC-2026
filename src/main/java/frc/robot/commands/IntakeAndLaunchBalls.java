@@ -28,6 +28,7 @@ public class IntakeAndLaunchBalls extends Command {
     @Override
     public void execute() {
         intake.update();
+        traverse.scoop();
     }
 
     @Override
