@@ -155,8 +155,6 @@ public class Settings {
         public static double HoodDeadband = Math.toRadians(0.5);
 
         public static boolean tuningMode = false;
-
-        public static double shootToAllianceSideTolerance = 0.5;
     }
 
 

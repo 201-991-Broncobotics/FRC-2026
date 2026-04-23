@@ -891,11 +891,7 @@ public class OuttakeSubsystem extends SubsystemBase {
                 } else TARGET = ZoneConstants.redHub;
             }
 
-<<<<<<< HEAD
             Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.5);
-=======
-            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), TurretSettings.shootToAllianceSideTolerance);
->>>>>>> f3fa2fde8875f7dd68d691c26a678092ff878dcd
             //Uses alliance hub as the regression already accounts for height
             TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){
@@ -975,7 +971,7 @@ public class OuttakeSubsystem extends SubsystemBase {
             // SmartDashboard.putNumber("Turntable Error (Deg)", Math.toDegrees(TargetTurretAngle) - Functions.round(Math.toDegrees(getAbsoluteTurretAngle()), 2));
             SmartDashboard.putString("Shooter TARGET", Functions.stringifyTrans(TARGET));
 
-            SmartDashboard.putString("Middle Aim", Functions.stringifyTrans(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), TurretSettings.shootToAllianceSideTolerance)));
+            SmartDashboard.putString("Middle Aim", Functions.stringifyTrans(calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.5)));
 
             SmartDashboard.putNumber("ThroughBore 19 Pos:", throughBore19.getAbsoluteAngle());
             SmartDashboard.putNumber("ThroughBore 21 Pos:", throughBore21.getAbsoluteAngle());
