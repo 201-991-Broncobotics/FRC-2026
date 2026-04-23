@@ -349,7 +349,7 @@ public class OuttakeSubsystem extends SubsystemBase {
         TargetTurretAngle = Functions.minMaxValue(TurretSettings.minTurretAngle, TurretSettings.maxTurretAngle, TargetTurretAngle);
         */
         
-        lastTargettingData = getTargettingData(TARGET, 0.2, 0); // turret, flywheel, hood, air time
+        lastTargettingData = getTargettingData(TARGET, -0.3, 0.2); // turret, flywheel, hood, air time
 
         averageTurntableAngle.add(lastTargettingData[0]);
         averageFlywheelRPM.add(lastTargettingData[1]);
@@ -891,7 +891,7 @@ public class OuttakeSubsystem extends SubsystemBase {
                 } else TARGET = ZoneConstants.redHub;
             }
 
-            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.25);
+            Translation2d aimPoint = calculateTargetForHub(ZoneConstants.allianceHub.toTranslation2d(), turretPose.getTranslation(), 0.5);
             //Uses alliance hub as the regression already accounts for height
             TARGET = new Translation3d(aimPoint.getX(), aimPoint.getY(), ZoneConstants.allianceHub.getZ());
         } else if (ZoneConstants.allianceZone.getZoningState() && !(TARGET.equals(ZoneConstants.allianceHub))){

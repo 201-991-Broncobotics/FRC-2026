@@ -393,10 +393,10 @@ public class DrivingProfiles extends SubsystemBase {
             SmartDashboard.putNumber("BATTERY VOLTAGE:", BatteryVoltage);
 
             // I still don't think it needs to go back up since almost everything is running constantly anyways
-            if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 10 && CurrentLimitTimer.time() > 1) {
+            if (BatteryVoltage < 8 && currentDriveSupplyCurrentLimit > 30 && CurrentLimitTimer.time() > 1) {
                 CurrentLimitTimer.reset();
                 currentDriveSupplyCurrentLimit -= 20;
-                if (currentDriveSupplyCurrentLimit < 10) currentDriveSupplyCurrentLimit = 10;
+                if (currentDriveSupplyCurrentLimit < 30) currentDriveSupplyCurrentLimit = 30;
                 drivetrain.setDriveMotorCurrentLimit(currentDriveSupplyCurrentLimit);
             }
             SmartDashboard.putNumber("Drive Motors Supply Current Limit:", currentDriveSupplyCurrentLimit);

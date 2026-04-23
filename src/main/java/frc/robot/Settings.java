@@ -199,7 +199,7 @@ public class Settings {
     }
 
     public static class RobotSettings{
-        public static final boolean overrideMode = true;
+        public static final boolean overrideMode = false;
     }
 
 }

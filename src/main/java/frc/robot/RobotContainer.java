@@ -38,6 +38,7 @@ import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.util.PixelFormat;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -81,6 +82,9 @@ public class RobotContainer {
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController driver = new CommandXboxController(OperatorConstants.driverControllerPort);
     private final CommandXboxController operator = new CommandXboxController(OperatorConstants.operatorControllerPort);
+    private final XboxController driverHID = driver.getHID();
+    private final XboxController operatorHID = operator.getHID();
+
 
     private final OverrideController override = new OverrideController(5, driver, operator, 0.05);
 
@@ -105,22 +109,28 @@ public class RobotContainer {
     private final DisableRightLimelightCommand disableRLimelightCommand = new DisableRightLimelightCommand();
     private final DisableLeftLimelightCommand disableLLimelightCommand = new DisableLeftLimelightCommand();
 
-    private UsbCamera driverView;
+    private UsbCamera driverView, driverView2;
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
     public RobotContainer() {
         // Configure the trigger bindings
-
-        driverView = CameraServer.startAutomaticCapture(); // for usb camera, most likely on port 10.9.91.11
+        driverView = CameraServer.startAutomaticCapture(0); // for usb camera, most likely on port 10.9.91.11
         driverView.setExposureAuto();
-        driverView.setWhiteBalanceAuto();
-        driverView.setResolution(320, 240); //320, 240
+        driverView.setWhiteBalanceAuto();//setWhiteBalanceManual(0);
+        driverView.setResolution(160, 120); //320, 240 // 16:9 aspect ratio for amcrest web cams
         driverView.setPixelFormat(PixelFormat.kMJPEG);
-        driverView.setFPS(30);
-        // "http://limelight.local:5800/stream.mjpg");
+        driverView.setFPS(15);
 
+        driverView2 = CameraServer.startAutomaticCapture(1); // for usb camera, most likely on port 10.9.91.11
+        driverView2.setExposureAuto();
+        driverView2.setWhiteBalanceAuto();
+        driverView2.setResolution(160, 120); //320, 240
+        driverView2.setPixelFormat(PixelFormat.kMJPEG);
+        driverView2.setFPS(15);
+        // "http://limelight.local:5800/stream.mjpg");
+        
         NamedCommands.registerCommand("DropIntake", dropIntakeCommand);
         NamedCommands.registerCommand("LiftIntake", liftIntakeCommand);
         NamedCommands.registerCommand("StartIntaking", startIntakingCommand);
@@ -147,6 +157,11 @@ public class RobotContainer {
         
 
         configureBindings();
+
+        /*driverView.setExposureHoldCurrent();
+        driverView.setWhiteBalanceHoldCurrent();
+        driverView2.setExposureHoldCurrent();
+        driverView2.setWhiteBalanceHoldCurrent();*/
     }
 
     /**
@@ -161,15 +176,18 @@ public class RobotContainer {
     private void configureBindings() {
 
         if(!RobotSettings.overrideMode){
-            //DRIVER CONTROLS
+            //Override Version 
+            //DRIVE CONTROLS
             drivingProfile.setUpControllerInputs(
-                () -> -driver.getLeftY(), // + ((driverJoystick.povUp().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povDown().getAsBoolean())? -0.15:0.0), 
-                () -> driver.getLeftX(), // + ((driverJoystick.povRight().getAsBoolean())? 0.15:0.0) + ((driverJoystick.povLeft().getAsBoolean())? -0.15:0.0), 
-                () -> -driver.getRightX(), 
-                () -> 0.3 + 0.7 * driver.getLeftTriggerAxis(), 
-                () -> 0.5 + 0.5 * driver.getLeftTriggerAxis(), 
-                2, 2
+                () -> -driverHID.getLeftY(), // forward/backward
+                () -> driverHID.getLeftX(), // strafe
+                () -> -driverHID.getRightX(), // rotation
+                () -> 0.35 + 0.65 * driverHID.getRightTriggerAxis(), // driving throttle
+                () -> 0.5 + 0.8 * driverHID.getRightTriggerAxis(), // rotation throttle
+                2, 3 // applies quadratic/cubic/quartic/etc. normalization to the drive inputs
             );
+
+            // drivingProfile.getControllers(driver, operator);
 
             drivingProfile.setDefaultCommand(new RunCommand(drivingProfile::update, drivingProfile));
             drivetrain.setDefaultCommand(
@@ -181,53 +199,72 @@ public class RobotContainer {
                 )
             ); 
 
-            driver.x().whileTrue(drivetrain.applyRequest(() -> brake));
-            driver.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric())); // resets heading
-            driver.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedLL4Imu()));
-            // driver.a().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
+            // Robot Centric while holding back pedal (needs to be programed on the controller to the dpad up button)
+            override.povUp().onTrue(new InstantCommand(drivingProfile::enableRobotCentric))
+                .onFalse(new InstantCommand(drivingProfile::disableRobotCentric));
 
-            //Driver should probably do climbing
-            //driver.povUp().toggleOnTrue(new InstantCommand(climbingSubsystem::extend, climbingSubsystem));
-            //driver.povDown().toggleOnTrue(new InstantCommand(climbingSubsystem::retract, climbingSubsystem));
-            //driver.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
-            //driver.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop)); 
-
+            //Brake (b)
+            override.b().whileTrue(drivetrain.applyRequest(() -> brake));
             
+            //Reset Heading (Y)
+            override.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()))
+                .onTrue(drivetrain.runOnce(() -> drivetrain.seedLL4Imu()));
 
-            //OPERATOR CONTROLS 
-            operator.b().toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
-            operator.x().toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
+            //Auto Align For Trenches
+            override.povDown().onTrue(new InstantCommand(drivingProfile::enableAutoAlign))
+                .onFalse(new InstantCommand(drivingProfile::disableAutoAlign));
 
-            operator.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
-            operator.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
-            driver.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
-            driver.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
-            //operator.rightTrigger(0.05).whileTrue(new InstantCommand(outtakeSubsystem::tuneFlywheel, outtakeSubsystem)); 
-            operator.rightBumper().and(operator.rightTrigger(0.05))
+            //Intake
+            override.rightBumper().and(override.leftBumper().negate()) // just intake
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::transfer));
+
+            //Reverse Intake
+            override.rightBumper().and(override.leftBumper())
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
-                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers));
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse));
 
-            operator.rightBumper()
+            // Stop Intake
+            override.rightBumper().negate()
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::stopRoller));
+
+            //Pivot (POV Left + Right)
+            override.povLeft().toggleOnTrue(new InstantCommand(intakeSubsystem::lift));
+            override.povRight().toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+
+            //Flywheel (A)
+            override.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
+
+            override.back().toggleOnTrue(new InstantCommand(intakeSubsystem::slightlyRaise)).toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
+
+            //Climb (POV Up + Down (driver only if fly speed is not automated))
+            //override.povUp().whileTrue(new InstantCommand(climbingSubsystem::justExtend, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem)); 
+            //override.povDown().whileTrue(new InstantCommand(climbingSubsystem::justRetract, climbingSubsystem)).toggleOnFalse(new InstantCommand(climbingSubsystem::stop, climbingSubsystem));
+
+            override.x().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleDumbShooter));
+            
+            //Scoop (RS)
+            override.leftTrigger(0.8).or(override.rightBumper()).and(override.leftBumper().negate()) // either shoot or intake
                 .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-                .onTrue(new InstantCommand(traverseSubsystem::transfer))
-                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-            driver.rightBumper()
-                .toggleOnTrue(new InstantCommand(intakeSubsystem::feed))
-                .onTrue(new InstantCommand(traverseSubsystem::transfer))
-                .toggleOnFalse(new InstantCommand(intakeSubsystem::stopRollers))
-                .toggleOnFalse(new InstantCommand(traverseSubsystem::stopRoller));
-            driver.b().toggleOnTrue(new InstantCommand(intakeSubsystem::agitate)).toggleOnFalse(new InstantCommand(intakeSubsystem::stopAgitate));
-
-
-
-            driver.rightTrigger(0.05).toggleOnTrue(new InstantCommand(traverseSubsystem::scoop)).toggleOnFalse(new InstantCommand(traverseSubsystem::stopScoop));
-            // operator.leftTrigger(0.2).toggleOnTrue(new InstantCommand(outtakeSubsystem::startShooting)).onFalse(new InstantCommand(outtakeSubsystem::stopShooting))
-            //temporary
-            operator.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));//, new InstantCommand(intakeSubsystem::aidFly)));//.toggleOnFalse(new InstantCommand(intakeSubsystem::drop));
-            operator.leftBumper().toggleOnTrue(new InstantCommand(outtakeSubsystem::changeRPMFast)).toggleOnFalse(new InstantCommand(outtakeSubsystem::changeRPMSlow));
-
-            driver.a().toggleOnTrue(new InstantCommand(outtakeSubsystem::toggleShooting));
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::transfer));
+            override.rightBumper().and(override.leftBumper()) //  intake but with reverse
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::reverseFeed))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverse));
+            override.leftTrigger(0.8).and(override.leftBumper()) // shoot but with reverse
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::emergencyReverseScoop));
+            override.leftTrigger(0.8).and(override.rightBumper().negate()).and(override.leftBumper().negate()) // if just shoot
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::scoop))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::agitate));
+                //.toggleOnTrue(new InstantCommand(intakeSubsystem::slightlyRaise));
+            override.rightBumper() // if intake is pressed at all
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::drop));
+            override.leftTrigger(0.8).negate().and(override.rightBumper().negate()) // nothing
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::stopScoop))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopRollers))
+                .toggleOnTrue(new InstantCommand(traverseSubsystem::stopRoller))
+                .toggleOnTrue(new InstantCommand(intakeSubsystem::stopAgitate));
 
         } else {
             //Override Version 
@@ -237,7 +274,7 @@ public class RobotContainer {
                 () -> override.getLeftX(), // strafe
                 () -> -override.getRightX(), // rotation
                 () -> 0.35 + 0.65 * override.getRightTriggerAxis(), // driving throttle
-                () -> 0.5 + 0.5 * override.getRightTriggerAxis(), // rotation throttle
+                () -> 0.5 + 0.8 * override.getRightTriggerAxis(), // rotation throttle
                 2, 3 // applies quadratic/cubic/quartic/etc. normalization to the drive inputs
             );
 
@@ -360,8 +397,6 @@ public class RobotContainer {
         // drivetrain.seedLL4Imu();
         drivetrain.runningLL4ImuMode();
         intakeSubsystem.resetPivotPosition();
-        driverView.setExposureHoldCurrent();
-        driverView.setWhiteBalanceHoldCurrent();
     }
 
     public void autoStarted() { drivingProfile.autoWasJustRun(); }
